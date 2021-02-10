@@ -3,15 +3,14 @@ echo > /home/root/vnstat.txt
 echo "Vnstats as of:" >> /home/root/vnstat.txt
 echo >> /home/root/vnstat.txt
 date >> /home/root/vnstat.txt
-# echo "...Which is (vnstat tracks in UTC)..." >> /home/root/vnstat.txt
+# echo "...Which is (vnstat time in UTC)..." >> /home/root/vnstat.txt
 # date -u >> /home/root/vnstat.txt
 # echo >> /home/root/vnstat.txt
-/mnt/AWMX_120G/entware/bin/vnstat -m >> /home/root/vnstat.txt
-/mnt/AWMX_120G/entware/bin/vnstat -w >> /home/root/vnstat.txt
-/mnt/AWMX_120G/entware/bin/vnstat -d >> /home/root/vnstat.txt
+/opt/bin/vnstat -m >> /home/root/vnstat.txt
+/opt/bin/vnstat -w >> /home/root/vnstat.txt
+/opt/bin/vnstat -d >> /home/root/vnstat.txt
 echo >> /home/root/vnstat.txt
 cat /home/root/vnstat.txt
 cat /home/root/vnstat.txt | convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- /tmp/var/wwwext/vnstat/vnstat.png
-logger -s -t vnstat_daily daily summary complete
-#backup copy
-# cp -a skynet.txt "/tmp/mnt/AWMX_120G/Traffic/skynet-$(date +"%y-%m-%d").txt"
+logger -s -t vnstat_totals summary generated
+
