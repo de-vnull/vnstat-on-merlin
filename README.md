@@ -189,7 +189,8 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 3. Create a folder on your usb/thumb drive called "Traffic"
 4. Verify wan interface with `nvram get wan0_ifname` - note if different from eth0.
 5. Modify `/opt/etc/vnstat.conf` file to update the interface ~~and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)~~ *This latter change is no longer recommended.*
-6. Modify `/opt/etc/init.d/S32vnstat` file to update the interface ~~and location of the db (eth0) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the `PATH=` variable.~~ *This latter change is no longer recommended.*
+6. Modify `/opt/etc/init.d/S32vnstat` file to update the interface 
+~~and location of the db (eth0) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the `PATH=` variable.~~ *This latter change is no longer recommended.*
 7. After updating conf files, restart vnstat with `/opt/etc/init.d/S32vnstat restart` command
 8. See testing procedures above (vnstat core functionality)
 9. For UI, copy/create the scripts in the /jffs/scripts directory:
