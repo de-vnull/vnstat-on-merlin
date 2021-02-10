@@ -1,4 +1,6 @@
 #!/opt/bin/sh
+ver=1.0.0
+# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
 #Parameters passed#
 mailsubject=$1
 mailbody=$2
