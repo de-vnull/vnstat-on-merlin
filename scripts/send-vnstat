@@ -1,9 +1,11 @@
 #!/bin/sh
 # ver=1.0.0
-# created by dev_null
+# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
+# the use of the div-email script is preferred as that script uses Diversions encrypted email password - this script should be used only if Diversion is not being used
 #
 # the next line is a reminder in the syslog that credentials have not been set up - comment out this line once credential have been entered
 logger -s -t vnstat-email vnstat email setup not completed - check send-vnstat and update credentials
+#
 #
 FROM="Router vnstat report"
 AUTH="username@gmail.com"
