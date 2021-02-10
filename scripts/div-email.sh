@@ -1,6 +1,8 @@
 #!/opt/bin/sh
-ver=1.0.0
+# ver=1.0.0
 # Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
+# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
+# It can also be used to email other text-derived reports by passing the mailbody parameter which would be the path to a text file
 #Parameters passed#
 mailsubject=$1
 mailbody=$2
