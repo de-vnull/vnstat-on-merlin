@@ -72,7 +72,8 @@ Please note: this approach and view was created for my personal use and thus the
 	- ~~I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the `/opt/` folder, then this step can be omitted.**~~ *This change is no longer recommended.*
 		- There are other settings in this file that you may wish to tweak, including unit options (MB vs MiB), sampling rate, etc.
 			- Changing the setting BandwidthDetection to 0 in vnstat.conf may be required as the interface speed detection may lead to excess log entries.
-		- You will need to modify `/opt/etc/init.d/S32vnstat` file to update the interface  ~~and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive. ~~
+		- You will need to modify `/opt/etc/init.d/S32vnstat` file to update the interface
+~~and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive.~~ *This change is no longer recommended.*
 			- ~~I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the `/opt/` folder, then this step can be omitted.**~~ *This change is no longer recommended.*
 			- ~~I also added the path to the db files to the end of the PATH= variable (only if you change the location of the database files)~~ *This change is no longer recommended.*
 			- When done editing, issue `/opt/etc/init.d/S32vnstat restart` command after editing these configurations
