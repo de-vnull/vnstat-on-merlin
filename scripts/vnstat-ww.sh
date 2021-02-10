@@ -4,7 +4,7 @@ vnstat -u
 # mkdir /www/user/vnstat && cp /jffs/scripts/vnstat.htm /www/user/vnstat/vnstat.htm
 
 # vnstati image generation script.
-# Source: http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
+# Original source: http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 #
 WWW_D=/www/user/vnstat # output images to here
 LIB_D=/mnt/AWMX_120G/entware/var/lib/vnstat # db location
