@@ -3,7 +3,7 @@
 #################################################################
 ##                                                             ##
 ##          vnstat and vnstati data usage statistics           ##
-##                     version 0.0.1 (alpha)                   ##
+##                     version 0.9.0 (beta)                    ##
 ##            Created by dev_null with assistance              ##
 ##         from JackYaz - cribbing from his script base        ##
 ##                                                             ##
@@ -11,7 +11,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="vnstat-ui"
-readonly SCRIPT_VERSION="v0.0.1"
+readonly SCRIPT_VERSION="v0.9.0"
 readonly SCRIPT_BRANCH="master"
 readonly OLD_SCRIPT_DIR="/jffs/scripts/$SCRIPT_NAME.d"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
