@@ -1,10 +1,10 @@
 #!/bin/sh
-logger -s -t vnstati vnstati updated stats
+# ver=1.0.0
+# This script is used to refresh the daily/weekly/monthly vnstati - images - usage for the Vnstat on Merlin UI - by dev_null at snbforums
+# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
+# mkdir /www/user/vnstat && cp /jffs/scripts/vnstat.htm /www/user/vnstat/vnstat.htm # not needed for Vnstat on Merlin
+logger -s -t vnstats vnstati updating stats for UI
 vnstat -u
-# mkdir /www/user/vnstat && cp /jffs/scripts/vnstat.htm /www/user/vnstat/vnstat.htm
-
-# vnstati image generation script.
-# Original source: http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 #
 WWW_D=/www/user/vnstat # output images to here
 LIB_D=/opt/var/lib/vnstat # db location - verify matches your install
