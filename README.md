@@ -190,6 +190,7 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 9. For UI, copy/create the scripts in the /jffs/scripts directory:
 	- vnstat-ui
 	- vnstat-ww.sh
+	- div-email.sh
 	- vnstat-stats	
 	- send-vnstat	
 	
