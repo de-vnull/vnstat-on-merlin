@@ -24,8 +24,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 For more information, please refer to <https://unlicense.org>
 
 This process is unlicensed, but certain components, while all are publically 
-available, may have different licensing requirements. To the best of my 
-knowledge, the methods outlined above do not violate any existing licensing terms.
+available, may have different licensing requirements. 
+
+To the best of my knowledge, the methods outlined above do not violate 
+any existing licensing terms.
+
+Where practical, permissons have been sought and granted for use of 
+certain techniques (e.g., AddOns UI and Diversion email).
 
 If you port, improve, extend or otherwise modify the concepts included in this 
 process, I only ask for a courtesy attribution, a reference back to this work.
