@@ -85,7 +85,7 @@ Please note: this approach and view was created for my personal use and thus the
 	- This type of deployment still supports daily or other frequency of email ("vnstat-stats" followed by "send-vnstat" - see below)
 
 * The CLI vnstat report and options view
-![CLI](https://bitbucket.org/vnstat-on-merlin-v001/vnstat_on_merlin/downloads/vnstat-cli-red.PNG)
+![CLI](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-cli-red.PNG)
 
 
 * Deployment instructions for the UI
@@ -102,7 +102,7 @@ Please note: this approach and view was created for my personal use and thus the
 	- Be sure all scripts have execute permission (octal 0755).
 	
 * The AddOns tab showing the vnstat/vnstati view and daily email report collapsed
-![Collapsed](https://bitbucket.org/vnstat-on-merlin-v001/vnstat_on_merlin/downloads/Screenshot_2021-02-Vnstat-xp.png)
+![Collapsed](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Screenshot_2021-02-Vnstat-xp.png)
 		
 * Purpose of each component is described below - be sure to note where modifications are needed:
 	- __vnstat-ui__: script that creates and loads the UI page. This script is mandatory.
@@ -145,7 +145,7 @@ Please note: this approach and view was created for my personal use and thus the
 
 * A sample of the email message output - sent as an attachment
 
-![Email_sample](https://bitbucket.org/vnstat-on-merlin-v001/vnstat_on_merlin/downloads/vnstat-email-xp.png){width=640 height=480}
+![Email_sample](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-email-xp.png){width=640 height=480}
 
 
 * How to run tests
