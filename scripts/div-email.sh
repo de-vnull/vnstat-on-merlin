@@ -25,3 +25,4 @@ PASSWORD=$(openssl aes-256-cbc -d  -in /opt/share/diversion/.conf/emailpw.enc -p
                     --user "$USERNAME:$PASSWORD" $SSL_FLAG
           
 rm /tmp/mail.txt
+logger -s -t div-email email event processed
