@@ -1,0 +1,22 @@
+#!/bin/sh
+FROM="Router vnstat report"
+AUTH="username@gmail.com"
+PASS="userpassword"
+TO="recepient@gmail.com"
+SUBJECT="VNSTAT report"
+FRIENDLY_ROUTER_NAME=Your router friendly name
+
+makemime /home/root/vnstat.txt
+# makemime -c "image/png" -a "Content-Disposition: attachment" -o /home/root/summary3.png /home/root/summary3.png
+makemime -a"Subject: $FRIENDLY_ROUTER_NAME vnstat Stats at $(date +"%H.%M on %F")" -a"From: $FROM" -o /home/root/output.msg /home/root/vnstat.txt
+
+cat /home/root/output.msg | sendmail -H"exec openssl s_client -quiet \
+-CAfile /jffs/configs/Equifax_Secure_Certificate_Authority.pem \
+-connect smtp.gmail.com:587 -tls1 -starttls smtp" \
+-f"$FROM" \
+-au"$AUTH" -ap"$PASS" $TO
+
+logger -s -p user.info vnstat email complete
+
+cp -a /home/root/vnstat.txt "/tmp/mnt/your_drive_path/Traffic/vnstat-$(date +"%F_%H.%M").txt" # edit the path to your Traffic folder
+rm  /home/root/vnstat.txt
