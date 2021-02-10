@@ -124,9 +124,9 @@ Please note: this approach and view was created for my personal use and thus the
 			- Use at your own risk (obviously).	
 			
 
-* __Email update__: thanks to @elorimer 's script, there is now a better option for the vnstat-stats email process.
+* __Email update__: thanks to @elorimer's script, and with the agreement of @theloneycoder, there is now a better option for the vnstat-stats email process.
 
-	- This adds another dependency - leveraging @thelonelycoder 's Diversion "communication" email process - but solves other issues, including support for platforms other than gmail, secure storage of passwords, etc.
+	- This adds another dependency - leveraging @thelonelycoder's Diversion "communication" email process - but solves other issues, including support for platforms other than gmail, secure storage of passwords, etc.
 
 	- Here are the steps to follow to use Diversion's email process:
 
