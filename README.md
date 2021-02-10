@@ -3,8 +3,6 @@ vnstat-on-merlin
 
 # README #
 
-Please note: this approach and view was created for my personal use and thus the steps you will see below seem complicated and not at all user friendly. I have not (yet anyway) tried to automate any of this because it works. I welcome your feedback - and more importantly your collaboration - to improve and/or automate sections of (or the entire) script. The below is complete to the best of my recollection; use is at your own risk (but simply deleting the scripts and rebooting should fix most issues).
-
 ### What is this repository for? ###
 
 * This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use locally, to replace the internal monitoring tool, `Traffic Analyzer > Traffic Monitor`, which suffers from (false) “17GB” usage bursts on some routers on some firmware (e.g., RT-AC68U on 386.1). This became a particular concern when Xfinity began implementing 1.2GB caps nationwide in January 2021 (note: postponed in the Northeast until 3Q2021).
@@ -14,8 +12,8 @@ Please note: this approach and view was created for my personal use and thus the
 - This was created with support from @Jack Yaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting. 
 	  - Many thanks, Jack!
 		
-- There is a "beta install" script created by @Martineau of snbforums. This is a work in progres. See additional notes below.
-  - My gratitude (and those of the users) to @Martineau for collaborating with me on this.
+- There is a "beta install" script created by @Martineau of snbforums. This is a work in progress. See additional notes below.
+  - My gratitude (and those of the users) to @Martineau for collaborating on this.
   
  - My thanks also to @thelonelycoder of snbforums, for the use of his emailing process, which is part of his Diversion ad-blocking application for Merlin.
  
@@ -170,8 +168,10 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 * The vnstats UI page may require a hard refresh (CTRL+F5 or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse. 
 * On 386.1 I have noticed that cronjobs are occassionally deleted. If you find that happening, my workaround is to add custom cron entries to the "nat-start" script. This will write/re-write the cronjob entries. Be sure that you update both locations if you make any changes.
 * Note: db files can in some instances be moved across devices, but only of the same architecture (e.g., ARM7 to ARM7). Different architecture will result in an error and call for a db reinitialization. I have not found a workaround to cross-architecture errors.
-* There is also the ability to export the data for review within other programs ("vnstat --dumpdb"). I have not used this functionality.
-* Make sure your scripts are executable (chgmod).
+* There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). I have not used this functionality.
+* Make sure your scripts are executable (chmod).
+* It has been reported that with _hardware acceleration_ implemented, the data counts provided by vnstat are no more accurate than the built-in tools (which is to say, not accurate).
+
 
 
 ### TL;DR - checklist: just the steps sans context and commentary ###
