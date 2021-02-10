@@ -7,7 +7,7 @@ Please note: this approach and view was created for my personal use and thus the
 
 ### What is this repository for? ###
 
-* This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use locally, to replace the internal monitoring tool, Traffic Analyzer > Traffic Monitor, which suffers from (false) “17GB” usage bursts on some routers on some firmware (e.g., RT-AC68U on 386.1). This became a particular concern when Xfinity began implementing 1.2GB caps nationwide in January 2021 (note: postponed in the Northeast until 3Q2021).
+* This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use locally, to replace the internal monitoring tool, `Traffic Analyzer > Traffic Monitor`, which suffers from (false) “17GB” usage bursts on some routers on some firmware (e.g., RT-AC68U on 386.1). This became a particular concern when Xfinity began implementing 1.2GB caps nationwide in January 2021 (note: postponed in the Northeast until 3Q2021).
 
 ### Acknowlegements ###
 
@@ -41,21 +41,22 @@ Please note: this approach and view was created for my personal use and thus the
 	- AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release version. 
 		- This has not been tested on Johns LTS firmware, so compatibility is unknown (please report success or failure!).
 	- Diversion and it's corresponding install of Entware. Diversion does not need to be running, as long as Entware is installed.
-    - Properly setup email (Diversion "communications" option) to use the encrypted username/password to email vnstat reports.
+    - Properly setup email (`Diversion` "communications" option) to use the encrypted username/password to email vnstat reports.
 		- Please run an Entware update to ensure the most current repository lists are available.
 		- You may be able to install Entware separately from Diversion but I have not tested this method.
 	- For UI functionality: one or more @JackYaz scripts must be installed to establish the minimum file and folder structure. 
-		- Connmon is recommended (the vnstat-ui is based on connmon), since it creates the Add-On tab in AsusWRT-Merlin.
+		- `Connmon` is recommended (the vnstat-ui is based on connmon), since it creates the `Add-On` tab in AsusWRT-Merlin.
 			
 * Configuration
 	- The Enware application vnstat can be run without any UI, 100% from the CLI via ssh.
 		- In this use case, requirements are simply to install (via entware) the vnstat executable.
-		- The configuration (vnstat.conf) **may** need to be updated to create and store the database files in a non-volitile location (such as an attached drive). __If the default storage is to the /opt/ directory (as it is on some versions), no change is required.__ See notes below.
+		- The configuration (`vnstat.conf`) **may** need to be updated to create and store the database files in a non-volitile location (such as an attached drive). __If the default storage is to the /opt/ directory (as it is on some versions), no change is required.__ See notes below.
 		- Note: if running solely from the CLI, there is no need to install vnstati, which exports vnstats to image form, or imagemagick, which is used to create an image of the daily report - both are components of the UI (see below).
 	- The following packages must be installed:
-		- vnstat and vnstati: install using command “opkg install vnstat” and “opkg install vnstati” 
+		- vnstat and vnstati: install using command `opkg install vnstat` and `opkg install vnstati`
 			- Note: in some cases vnstati may install with vnstat, so the separate vnstati install may not be required.
-		- Optional: imagemagick – install using command “opkg install imagemagick”. This program is used to create an image of the daily (or weekly) email message with the recent totals. If this functionality is not desired, this application is not required.
+		- Optional: imagemagick – install using command `opkg install imagemagick`. This program is used to create an image of the daily (or weekly) email message with the recent totals. If this functionality is not desired, this application is not required.
+		- Required: `opkg install libjpeg-turbo` to render the images on the UI.
 
 * Dependencies
 	- Applications described above. Scripts as described below.
@@ -65,24 +66,24 @@ Please note: this approach and view was created for my personal use and thus the
 		- The default db location on at least one install was to a volitile storage area which meant that the history was lost on reboot.
     - **If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**
 	- Edit the following configurations:
-		- Verify the interface your router uses for wan by issuing "nvram get wan0_ifname" from the cli 
+		- Verify the interface your router uses for wan by issuing `nvram get wan0_ifname` from the cli 
 			- In most instances this will be *eth0*, but the AX58U has been reported to use eth4, for example. I do not have an AX58U so cannot verify that this is the only change required to ensure accurate monitoring.
-	- ** You will need to modify "/opt/etc/vnstat.conf" file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive.
-	- I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**
+	- ** You will need to modify `/opt/etc/vnstat.conf` file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive.
+	- I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the `/opt/` folder, then this step can be omitted.**
 		- There are other settings in this file that you may wish to tweak, including unit options (MB vs MiB), sampling rate, etc.
 			- Changing the setting BandwidthDetection to 0 in vnstat.conf may be required as the interface speed detection may lead to excess log entries.
-		- You will need to modify "/opt/etc/init.d/S32vnstat" file to update the interface and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive. 
-			- I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**
+		- You will need to modify `/opt/etc/init.d/S32vnstat` file to update the interface and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive. 
+			- I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the `/opt/` folder, then this step can be omitted.**
 			- I also added the path to the db files to the end of the PATH= variable (only if you change the location of the database files)		
-			- When done editing, issue "/opt/etc/init.d/S32vnstat restart" command after editing these configurations
+			- When done editing, issue `/opt/etc/init.d/S32vnstat restart` command after editing these configurations
 				- If there is an error stating that the eth0 file can't be found, reinitialize vnstat (e.g., force it to create a new db)
-				- This can be accomplished by running the command "vnstat -u -i eth0" (where eth0 is the proper wan interface)
+				- This can be accomplished by running the command `vnstat -u -i eth0` (where eth0 is the proper wan interface)
 
 
 * Deployment instructions for the non-UI (CLI via SSH) version
 	- No additional steps are required. Usage should be recorded automatically circa every 30 seconds to the db file.
-	- To view current status, issue the "vnstat" command from the CLI. There are several additional CLI options (view days, top ten, hourly, monthly, etc) - see image below.
-	- This type of deployment still supports daily or other frequency of email ("vnstat-stats" followed by "send-vnstat" - see below)
+	- To view current status, issue the `vnstat` command from the CLI. There are several additional CLI options (view days, top ten, hourly, monthly, etc) - see image below.
+	- This type of deployment still supports daily or other frequency of email (`vnstat-stats` followed by `send-vnstat` - or `div-email.sh` - see below)
 
 * The CLI vnstat report and options view
 
@@ -111,14 +112,14 @@ Please note: this approach and view was created for my personal use and thus the
 	- __vnstat-ui__: script that creates and loads the UI page. This script is mandatory.
 	- __vnstat-ww.sh__: script that calls the vnstati (image view of usage details). If using the UI, this script is mandatory and a cronjob needs to be set to call it every X number of minutes (I update every 13 minutes, just to offset from when other scripts might be running. This frequency is set by cron entry - see below).
 		- **You will need to modify the "LIB D" and "BIN" paths to reflect the location of your vnstat and vnstati install.
-	- __vnstat-stats__: script that creates the "daily" report (which I run at 23:59 local every day via a cron job). The output from this script is used in the UI (Vnstat CLI section) and can be emailed either on daily or other periodic basis. 
+	- __vnstat-stats__: script that creates the "daily" report. The output from this script is used in the UI (Vnstat CLI section) and can be emailed either on daily or other periodic basis. 
 		- **You need to update the paths in this script to reflect the location of the vnstat application.
 		- If this functionality is not desired, this script is not needed (the UI has the option of hiding this daily report). Note: if this is used in the UI, imagemagick is also required.
 	- __vnstat-ui.asp__: this is the UI page. This is somewhat customizable (for example, the order of the display can be modified if you want to dabble in the code). This template is used to create the userX.asp dynamically when the "AddOns" tab is created.
 	- __div-email.sh__ - script which sends vnstat reports by email to one or more users. Uses the email configuration from Diversion. See notes below.
 	OR
 	- __send-vnstat__: optional script that takes the output from vnstat-stats.sh and emails it to one or more users. It is launched by cron job (I run it at 23:59 local each evening).
-		- If you use send-vnstat, you need to update the email address (from, password, and to), your router name, and the path to your "Traffic" directory (this script aggregates the message components and then backs them up to the Traffic folder for future reference.).
+		- If you use `send-vnstat`, you need to update the email address (from, password, and to), your router name, and the path to your "Traffic" directory (this script aggregates the message components and then backs them up to the Traffic folder for future reference.).
 		- This script is a kludge and stores email credentials in plain text - see alternative option below.
 			- __This script should be used only when Diversion's email communication is not enabled or available.__
 			- Use at your own risk (obviously).	
@@ -148,31 +149,26 @@ Please note: this approach and view was created for my personal use and thus the
 
 
 * How to run tests
-	- Test for core vnstat functionality: after a period of usage, issue "vnstat" from the CLI. You should see a report of data usage. If not, reinstall vnstat or check that the correct interface is being monitored.
-	- UI functionality: reboot or re-run the "/jffs/services-start" script (or other location if you call the UI from a different location). Check that the cron job calling the vnstati update is working (or execute the "vnstat-ww.sh" script). You should see the usage as images in the vnstat UI tab under AddOns (see picture below).
-		- If you receive the error "vnstati: error while loading shared libraries: libjpeg.so.62: cannot open shared object file: No such file or directory", then you may need to run "opkg install libjpeg-turbo" (reported by a user on an RT-AX88U).
-	- Note: the daily total image will not appear until the following day - to manually test, run the script "vnstat-stats" then hard-refresh the UI page.
+	- Test for core vnstat functionality: after a period of usage, issue `vnstat` from the CLI. You should see a report of data usage. If not, reinstall vnstat or check that the correct interface is being monitored.
+	- UI functionality: reboot or re-run the `/jffs/services-start` script (or other location if you call the UI from a different location). Check that the cron job calling the vnstati update is working (or execute the `vnstat-ww.sh` script). You should see the usage as images in the vnstat UI tab under AddOns (see picture below).
+
+	- Note: the daily total image will not appear until the following day - to manually test, run the script `vnstat-stats` then hard-refresh the UI page.
 
 * Final installation steps after validation complete
 	- Modify startup scripts and add cronjobs
 	- Edit services-start (or other appropriate script) to load the vnstat-ui page (add these lines at bottom of script - without the bullets)
->
-
 
 ```
-	sleep 60 # to give the other services time to start properly
-
-	/jffs/scripts/vnstat-ui # the vnstat ui script
-	
-	cru a vnstat_update "*/13 * * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-ww.sh" # this forces a data use update and creates the UI graphics for data usage
-
-    cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
+sleep 60 # to give the other services time to start properly
+/jffs/scripts/vnstat-ui # the vnstat ui script
+cru a vnstat_update "*/13 * * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-ww.sh" # this forces a data use update and creates the UI graphics for data usage
+cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
 
 ```
-Instead of the last line, use this if you're running the send-vnstat script:
+Instead of the last line, use this if you're running the `send-vnstat` (non-Diversion based email) script:
 
 ```
-	cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/send-vnstat" # this forces a data use update refreshes the vnstat daily use report and emails it
+cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/send-vnstat" # this forces a data use update refreshes the vnstat daily use report and emails it
 ```
 
 
@@ -187,13 +183,14 @@ Instead of the last line, use this if you're running the send-vnstat script:
 ### TL;DR - checklist: just the steps sans context and commentary ###
 
 [ ] 1. Min requirements: Merlin 384.19 or later, Entware, for UI view: 1 or more Jack Yaz scripts
-[ ] 2. SSH into router and install vnstat and vnstati: "opkg install vnstat" and "opkg install vnstati". 
-	- Install imagemagick if full UI functionality is desired: "opkg install imagemagick".
+[ ] 2. SSH into router and install vnstat and vnstati: `opkg install vnstat` and `opkg install vnstati`. 
+	- Install imagemagick if full UI functionality is desired: `opkg install imagemagick`.
+	- Install image rendering libraries: `opkg install libjpeg-turbo`
 [ ] 3. Create a folder on your usb/thumb drive called "Traffic"
-[ ] 4. Verify wan interface with "nvram get wan0_ifname" - note if different from eth0.
-[ ] 5. Modify "/opt/etc/vnstat.conf" file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)
-[ ] 6. Modify "/opt/etc/init.d/S32vnstat" file to update the interface and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the PATH= variable.
-[ ] 7. After updating conf files, restart vnstat with "/opt/etc/init.d/S32vnstat restart" command
+[ ] 4. Verify wan interface with `nvram get wan0_ifname` - note if different from eth0.
+[ ] 5. Modify `/opt/etc/vnstat.conf` file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)
+[ ] 6. Modify `/opt/etc/init.d/S32vnstat` file to update the interface and location of the db (eth0) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the `PATH=` variable.
+[ ] 7. After updating conf files, restart vnstat with `/opt/etc/init.d/S32vnstat restart` command
 [ ] 8. See testing procedures above (vnstat core functionality)
 [ ] 9. For UI, copy/create the scripts in the /jffs/scripts directory:
 	[ ] - vnstat-ui
@@ -206,28 +203,24 @@ Instead of the last line, use this if you're running the send-vnstat script:
 	[ ] - File: copy vnstat-ui.asp into this folder
 	
 [ ] 11. Ensure all scripts have execute permission (octal 0755).
-[ ] 12. In the vnstat-ui and vnstat-stats scripts, modify the paths to reflect the location of your vnstat and vnstati install (full path to Entware), eg "LIB D" and "BIN" 
-[ ] 13. In the send-vnstat script, modify attributes for email of usage stats (sample is for gmail)
-[ ] 14. In services-start script (or other appropriate script), add the cronjob commands (without the bullets, but with the quotes):
+[ ] 12. In the `vnstat-ui` and `vnstat-stats` scripts, modify the paths to reflect the location of your vnstat and vnstati install (full path to Entware), eg "LIB D" and "BIN" 
+[ ] 13. In the 'send-vnstat' (if used) script, modify attributes for email of usage stats (sample is for gmail)
+[ ] 14. In `services-start` script (or other appropriate script), add the `cronjob` commands (without the bullets, but with the quotes):
 
 ```
-	sleep 60 # to give the other services time to start properly
-
-	/jffs/scripts/vnstat-ui # the vnstat ui script
-	
-	cru a vnstat_update "*/13 * * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-ww.sh" # this forces a data use update and creates the UI graphics for data usage
-
-    cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
+sleep 60 # to give the other services time to start properly
+/jffs/scripts/vnstat-ui # the vnstat ui script
+cru a vnstat_update "*/13 * * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-ww.sh" # this forces a data use update and creates the UI graphics for data usage
+cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
 
 ```
 Instead of the last line, use this if you're running the send-vnstat script:
 
 ```
-	cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/send-vnstat" # this forces a data use update refreshes the vnstat daily use report and emails it
+cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/send-vnstat" # this forces a data use update refreshes the vnstat daily use report and emails it
 ```
 
-	
-15. See testing procedures for the UI functionality above
+[ ] 15. See testing procedures for the UI functionality above
 
 ### Install script ###
 
