@@ -50,7 +50,7 @@ Please note: this approach and view was created for my personal use and thus the
 * Configuration
 	- The Enware application vnstat can be run without any UI, 100% from the CLI via ssh.
 		- In this use case, requirements are simply to install (via entware) the vnstat executable.
-		- The configuration (vnstat.conf) **may** need to be updated to create and store the database files in a non-volitile location (such as an attached drive). If the default installation is to the /opt/ directory (as it is on some versions), no change is required. See notes below.
+		- The configuration (vnstat.conf) **may** need to be updated to create and store the database files in a non-volitile location (such as an attached drive). __If the default storage is to the /opt/ directory (as it is on some versions), no change is required.__ See notes below.
 		- Note: if running solely from the CLI, there is no need to install vnstati, which exports vnstats to image form, or imagemagick, which is used to create an image of the daily report - both are components of the UI (see below).
 	- The following packages must be installed:
 		- vnstat and vnstati: install using command “opkg install vnstat” and “opkg install vnstati” 
@@ -67,12 +67,12 @@ Please note: this approach and view was created for my personal use and thus the
 	- Edit the following configurations:
 		- Verify the interface your router uses for wan by issuing "nvram get wan0_ifname" from the cli 
 			- In most instances this will be *eth0*, but the AX58U has been reported to use eth4, for example. I do not have an AX58U so cannot verify that this is the only change required to ensure accurate monitoring.
-		- ** You will need to modify "/opt/etc/vnstat.conf" file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive. 
-      - I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**
-			- There are other settings in this file that you may wish to tweak, including unit options (MB vs MiB), sampling rate, etc.
+	- ** You will need to modify "/opt/etc/vnstat.conf" file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive.
+	- I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**
+		- There are other settings in this file that you may wish to tweak, including unit options (MB vs MiB), sampling rate, etc.
 			- Changing the setting BandwidthDetection to 0 in vnstat.conf may be required as the interface speed detection may lead to excess log entries.
 		- You will need to modify "/opt/etc/init.d/S32vnstat" file to update the interface and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive. 
-      - I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**
+			- I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**
 			- I also added the path to the db files to the end of the PATH= variable (only if you change the location of the database files)		
 			- When done editing, issue "/opt/etc/init.d/S32vnstat restart" command after editing these configurations
 				- If there is an error stating that the eth0 file can't be found, reinitialize vnstat (e.g., force it to create a new db)
