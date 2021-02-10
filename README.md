@@ -85,6 +85,8 @@ Please note: this approach and view was created for my personal use and thus the
 	- This type of deployment still supports daily or other frequency of email ("vnstat-stats" followed by "send-vnstat" - see below)
 
 * The CLI vnstat report and options view
+
+
 ![CLI](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-cli-red.PNG)
 
 
@@ -102,6 +104,7 @@ Please note: this approach and view was created for my personal use and thus the
 	- Be sure all scripts have execute permission (octal 0755).
 	
 * The AddOns tab showing the vnstat/vnstati view and daily email report collapsed
+
 ![Collapsed](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Screenshot_2021-02-Vnstat-xp.png)
 		
 * Purpose of each component is described below - be sure to note where modifications are needed:
@@ -115,9 +118,9 @@ Please note: this approach and view was created for my personal use and thus the
 	- __div-email.sh__ - script which sends vnstat reports by email to one or more users. Uses the email configuration from Diversion. See notes below.
 	OR
 	- __send-vnstat__: optional script that takes the output from vnstat-stats.sh and emails it to one or more users. It is launched by cron job (I run it at 23:59 local each evening).
-		- **You need to update the email address (from, password, and to), your router name, and the path to your "Traffic" directory (this script aggregates the message components and then backs them up to the Traffic folder for future reference. You can delete this line if you don't want to save these reports).
+		- If you use send-vnstat, you need to update the email address (from, password, and to), your router name, and the path to your "Traffic" directory (this script aggregates the message components and then backs them up to the Traffic folder for future reference.).
 		- This script is a kludge and stores email credentials in plain text - see alternative option below.
-			- This script should be used only when Diversion's email communication is not enabled
+			- __This script should be used only when Diversion's email communication is not enabled or available.__
 			- Use at your own risk (obviously).	
 			
 
@@ -133,12 +136,8 @@ Please note: this approach and view was created for my personal use and thus the
 ```
     cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
 ```
->
->
     4. Test by running /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt
-
->
-> 	
+	
     5. If not using send-vnstat, you can delete it (to secure your email details).
 
 
@@ -187,31 +186,29 @@ Instead of the last line, use this if you're running the send-vnstat script:
 
 ### TL;DR - checklist: just the steps sans context and commentary ###
 
-1. Min requirements: Merlin 384.19 or later, Entware, for UI view: 1 or more Jack Yaz scripts
-2. SSH into router and install vnstat and vnstati: "opkg install vnstat" and "opkg install vnstati". 
+[ ] 1. Min requirements: Merlin 384.19 or later, Entware, for UI view: 1 or more Jack Yaz scripts
+[ ] 2. SSH into router and install vnstat and vnstati: "opkg install vnstat" and "opkg install vnstati". 
 	- Install imagemagick if full UI functionality is desired: "opkg install imagemagick".
-3. Create a folder on your usb/thumb drive called "Traffic"
-4. Verify wan interface with "nvram get wan0_ifname" - note if different from eth0.
-5. Modify "/opt/etc/vnstat.conf" file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)
-6. Modify "/opt/etc/init.d/S32vnstat" file to update the interface and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the PATH= variable.
-7. After updating conf files, restart vnstat with "/opt/etc/init.d/S32vnstat restart" command
-8. See testing procedures above (vnstat core functionality)
-9. For UI, copy/create the scripts in the /jffs/scripts directory:
-	- vnstat-ui
-	- vnstat-ww.sh
-	- vnstat-stats	
-	- send-vnstat	
+[ ] 3. Create a folder on your usb/thumb drive called "Traffic"
+[ ] 4. Verify wan interface with "nvram get wan0_ifname" - note if different from eth0.
+[ ] 5. Modify "/opt/etc/vnstat.conf" file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)
+[ ] 6. Modify "/opt/etc/init.d/S32vnstat" file to update the interface and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the PATH= variable.
+[ ] 7. After updating conf files, restart vnstat with "/opt/etc/init.d/S32vnstat restart" command
+[ ] 8. See testing procedures above (vnstat core functionality)
+[ ] 9. For UI, copy/create the scripts in the /jffs/scripts directory:
+	[ ] - vnstat-ui
+	[ ] - vnstat-ww.sh
+	[ ] - vnstat-stats	
+	[ ] - send-vnstat	
 	
-10. Create the following file and folder in /jffs/add-ons:
-	- Folder: vnstat-ui.d
-	- File: copy vnstat-ui.asp into this folder
+[ ] 10. Create the following file and folder in /jffs/add-ons:
+	[ ] - Folder: vnstat-ui.d
+	[ ] - File: copy vnstat-ui.asp into this folder
 	
-11. Ensure all scripts have execute permission (octal 0755).
-12. In the vnstat-ui and vnstat-stats scripts, modify the paths to reflect the location of your vnstat and vnstati install (full path to Entware), eg "LIB D" and "BIN" 
-13. In the send-vnstat script, modify attributes for email of usage stats (sample is for gmail)
-14. In services-start script (or other appropriate script), add the cronjob commands (without the bullets, but with the quotes):
->
-
+[ ] 11. Ensure all scripts have execute permission (octal 0755).
+[ ] 12. In the vnstat-ui and vnstat-stats scripts, modify the paths to reflect the location of your vnstat and vnstati install (full path to Entware), eg "LIB D" and "BIN" 
+[ ] 13. In the send-vnstat script, modify attributes for email of usage stats (sample is for gmail)
+[ ] 14. In services-start script (or other appropriate script), add the cronjob commands (without the bullets, but with the quotes):
 
 ```
 	sleep 60 # to give the other services time to start properly
@@ -239,7 +236,7 @@ Instead of the last line, use this if you're running the send-vnstat script:
 	- NOTE: The script does not alter the Database location and cannot modify the email send-vnstatscript with the user credentials. You will need to make these changes manually.
 
 ### Legal and licensing ###
-
+	
 * This process is unlicensed, but certain components, while all are publically available, may have different licensing requirements. To the best of my knowledge, the methods outlined above do not violate any existing licensing terms.
 * If you port, improve, extend or otherwise modify the concepts included in this process, I only ask for a courtesy attribution, a reference back to this work.
 * Please publish any modifications or improvements back for the general community to benefit.
