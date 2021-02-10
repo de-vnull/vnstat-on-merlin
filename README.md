@@ -89,6 +89,7 @@ vnstat-on-merlin
 	- Copy the scripts to the /jffs/scripts directory:
 		- vnstat-ui
 		- vnstat-ww.sh
+		- div-email.sh
 		- vnstat-stats	
 		- send-vnstat		
 	- Create the following file and folder in /jffs/add-ons:
