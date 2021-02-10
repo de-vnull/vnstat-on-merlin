@@ -7,8 +7,8 @@ vnstat -u
 # Original source: http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 #
 WWW_D=/www/user/vnstat # output images to here
-LIB_D=/mnt/AWMX_120G/entware/var/lib/vnstat # db location
-BIN=/mnt/AWMX_120G/entware/bin/vnstati  # which vnstati
+LIB_D=/opt/var/lib/vnstat # db location - verify matches your install
+BIN=/opt/bin/vnstati  # which vnstati - verify matches your install
 # 
 outputs="s h d t m hs"   # what images to generate
 # 
