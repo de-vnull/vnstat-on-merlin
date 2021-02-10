@@ -182,30 +182,30 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 
 ### TL;DR - checklist: just the steps sans context and commentary ###
 
-[ ] 1. Min requirements: Merlin 384.19 or later, Entware, for UI view: 1 or more Jack Yaz scripts
-[ ] 2. SSH into router and install vnstat and vnstati: `opkg install vnstat` and `opkg install vnstati`. 
+1. Min requirements: Merlin 384.19 or later, Entware, for UI view: 1 or more Jack Yaz scripts
+2. SSH into router and install vnstat and vnstati: `opkg install vnstat` and `opkg install vnstati`. 
 	- Install imagemagick if full UI functionality is desired: `opkg install imagemagick`.
 	- Install image rendering libraries: `opkg install libjpeg-turbo`
-[ ] 3. Create a folder on your usb/thumb drive called "Traffic"
-[ ] 4. Verify wan interface with `nvram get wan0_ifname` - note if different from eth0.
-[ ] 5. Modify `/opt/etc/vnstat.conf` file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)
-[ ] 6. Modify `/opt/etc/init.d/S32vnstat` file to update the interface and location of the db (eth0) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the `PATH=` variable.
-[ ] 7. After updating conf files, restart vnstat with `/opt/etc/init.d/S32vnstat restart` command
-[ ] 8. See testing procedures above (vnstat core functionality)
-[ ] 9. For UI, copy/create the scripts in the /jffs/scripts directory:
-	[ ] - vnstat-ui
-	[ ] - vnstat-ww.sh
-	[ ] - vnstat-stats	
-	[ ] - send-vnstat	
+3. Create a folder on your usb/thumb drive called "Traffic"
+4. Verify wan interface with `nvram get wan0_ifname` - note if different from eth0.
+5. Modify `/opt/etc/vnstat.conf` file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)
+6. Modify `/opt/etc/init.d/S32vnstat` file to update the interface and location of the db (eth0) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the `PATH=` variable.
+7. After updating conf files, restart vnstat with `/opt/etc/init.d/S32vnstat restart` command
+8. See testing procedures above (vnstat core functionality)
+9. For UI, copy/create the scripts in the /jffs/scripts directory:
+	- vnstat-ui
+	- vnstat-ww.sh
+	- vnstat-stats	
+	- send-vnstat	
 	
-[ ] 10. Create the following file and folder in /jffs/add-ons:
-	[ ] - Folder: vnstat-ui.d
-	[ ] - File: copy vnstat-ui.asp into this folder
+10. Create the following file and folder in /jffs/add-ons:
+	- Folder: vnstat-ui.d
+	- File: copy vnstat-ui.asp into this folder
 	
-[ ] 11. Ensure all scripts have execute permission (octal 0755).
-[ ] 12. In the `vnstat-ui` and `vnstat-stats` scripts, modify the paths to reflect the location of your vnstat and vnstati install (full path to Entware), eg "LIB D" and "BIN" 
-[ ] 13. In the 'send-vnstat' (if used) script, modify attributes for email of usage stats (sample is for gmail)
-[ ] 14. In `services-start` script (or other appropriate script), add the `cronjob` commands (without the bullets, but with the quotes):
+11. Ensure all scripts have execute permission (octal 0755).
+12. In the `vnstat-ui` and `vnstat-stats` scripts, modify the paths to reflect the location of your vnstat and vnstati install (full path to Entware), eg "LIB D" and "BIN" 
+13. In the 'send-vnstat' (if used) script, modify attributes for email of usage stats (sample is for gmail)
+14. In `services-start` script (or other appropriate script), add the `cronjob` commands (without the bullets, but with the quotes):
 
 ```
 sleep 60 # to give the other services time to start properly
@@ -220,7 +220,7 @@ Instead of the last line, use this if you're running the send-vnstat script:
 cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/send-vnstat" # this forces a data use update refreshes the vnstat daily use report and emails it
 ```
 
-[ ] 15. See testing procedures for the UI functionality above
+15. See testing procedures for the UI functionality above
 
 ### Install script ###
 
