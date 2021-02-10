@@ -50,7 +50,7 @@ Please note: this approach and view was created for my personal use and thus the
 * Configuration
 	- The Enware application vnstat can be run without any UI, 100% from the CLI via ssh.
 		- In this use case, requirements are simply to install (via entware) the vnstat executable.
-		- The configuration (`vnstat.conf`) **may** need to be updated to create and store the database files in a non-volitile location (such as an attached drive). __If the default storage is to the /opt/ directory (as it is on some versions), no change is required.__ See notes below.
+		- ~~The configuration (`vnstat.conf`) **may** need to be updated to create and store the database files in a non-volitile location (such as an attached drive). __If the default storage is to the /opt/ directory (as it is on some versions), no change is required.__ See notes below.~~ This change is no longer recommended.
 		- Note: if running solely from the CLI, there is no need to install vnstati, which exports vnstats to image form, or imagemagick, which is used to create an image of the daily report - both are components of the UI (see below).
 	- The following packages must be installed:
 		- vnstat and vnstati: install using command `opkg install vnstat` and `opkg install vnstati`
@@ -62,19 +62,19 @@ Please note: this approach and view was created for my personal use and thus the
 	- Applications described above. Scripts as described below.
 
 * Database configuration
-	- Once the applications are installed, path changes, particularly for the vnstat db files, may be required in order to preserve data between reboots.
-		- The default db location on at least one install was to a volitile storage area which meant that the history was lost on reboot.
-    - **If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**
+	- ~~Once the applications are installed, path changes, particularly for the vnstat db files, may be required in order to preserve data between reboots.~~
+		- ~~The default db location on at least one install was to a volatile storage area which meant that the history was lost on reboot.~~
+    - ~~**If the install on your router shows the database in the /opt/ folder, then this step can be omitted.**~~
 	- Edit the following configurations:
 		- Verify the interface your router uses for wan by issuing `nvram get wan0_ifname` from the cli 
 			- In most instances this will be *eth0*, but the AX58U has been reported to use eth4, for example. I do not have an AX58U so cannot verify that this is the only change required to ensure accurate monitoring.
-	- ** You will need to modify `/opt/etc/vnstat.conf` file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive.
-	- I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the `/opt/` folder, then this step can be omitted.**
+	- ** You will need to modify `/opt/etc/vnstat.conf` file to update the interface ~~and location of db file to a non-volitile location on your thumb/ssd drive.~~
+	- ~~I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the `/opt/` folder, then this step can be omitted.**~~ This change is no longer recommended.
 		- There are other settings in this file that you may wish to tweak, including unit options (MB vs MiB), sampling rate, etc.
 			- Changing the setting BandwidthDetection to 0 in vnstat.conf may be required as the interface speed detection may lead to excess log entries.
-		- You will need to modify `/opt/etc/init.d/S32vnstat` file to update the interface and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive. 
-			- I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the `/opt/` folder, then this step can be omitted.**
-			- I also added the path to the db files to the end of the PATH= variable (only if you change the location of the database files)		
+		- You will need to modify `/opt/etc/init.d/S32vnstat` file to update the interface ~~and location of the db (ethX) files to a non-volitile location on your thumb/ssd drive. ~~
+			- ~~I suggest creating a folder called "Traffic" on your attached drive. **If the install on your router shows the database in the `/opt/` folder, then this step can be omitted.**~~ This change is no longer recommended.
+			- ~~I also added the path to the db files to the end of the PATH= variable (only if you change the location of the database files)~~
 			- When done editing, issue `/opt/etc/init.d/S32vnstat restart` command after editing these configurations
 				- If there is an error stating that the eth0 file can't be found, reinitialize vnstat (e.g., force it to create a new db)
 				- This can be accomplished by running the command `vnstat -u -i eth0` (where eth0 is the proper wan interface)
@@ -111,9 +111,9 @@ Please note: this approach and view was created for my personal use and thus the
 * Purpose of each component is described below - be sure to note where modifications are needed:
 	- __vnstat-ui__: script that creates and loads the UI page. This script is mandatory.
 	- __vnstat-ww.sh__: script that calls the vnstati (image view of usage details). If using the UI, this script is mandatory and a cronjob needs to be set to call it every X number of minutes (I update every 13 minutes, just to offset from when other scripts might be running. This frequency is set by cron entry - see below).
-		- **You will need to modify the "LIB D" and "BIN" paths to reflect the location of your vnstat and vnstati install.
+		- ~~You will need to modify the "LIB D" and "BIN" paths to reflect the location of your vnstat and vnstati install.~~
 	- __vnstat-stats__: script that creates the "daily" report. The output from this script is used in the UI (Vnstat CLI section) and can be emailed either on daily or other periodic basis. 
-		- **You need to update the paths in this script to reflect the location of the vnstat application.
+		- ~~You need to update the paths in this script to reflect the location of the vnstat application.~~
 		- If this functionality is not desired, this script is not needed (the UI has the option of hiding this daily report). Note: if this is used in the UI, imagemagick is also required.
 	- __vnstat-ui.asp__: this is the UI page. This is somewhat customizable (for example, the order of the display can be modified if you want to dabble in the code). This template is used to create the userX.asp dynamically when the "AddOns" tab is created.
 	- __div-email.sh__ - script which sends vnstat reports by email to one or more users. Uses the email configuration from Diversion. See notes below.
@@ -188,8 +188,8 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 	- Install image rendering libraries: `opkg install libjpeg-turbo`
 3. Create a folder on your usb/thumb drive called "Traffic"
 4. Verify wan interface with `nvram get wan0_ifname` - note if different from eth0.
-5. Modify `/opt/etc/vnstat.conf` file to update the interface and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)
-6. Modify `/opt/etc/init.d/S32vnstat` file to update the interface and location of the db (eth0) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the `PATH=` variable.
+5. Modify `/opt/etc/vnstat.conf` file to update the interface ~~and location of db file to a non-volitile location on your thumb/ssd drive (Traffic folder)~~
+6. Modify `/opt/etc/init.d/S32vnstat` file to update the interface ~~and location of the db (eth0) files to a non-volitile location on your thumb/ssd drive (Traffic folder). Also add path to the db files to the end of the `PATH=` variable.~~
 7. After updating conf files, restart vnstat with `/opt/etc/init.d/S32vnstat restart` command
 8. See testing procedures above (vnstat core functionality)
 9. For UI, copy/create the scripts in the /jffs/scripts directory:
@@ -204,7 +204,7 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 	
 11. Ensure all scripts have execute permission (octal 0755).
 12. In the `vnstat-ui` and `vnstat-stats` scripts, modify the paths to reflect the location of your vnstat and vnstati install (full path to Entware), eg "LIB D" and "BIN" 
-13. In the 'send-vnstat' (if used) script, modify attributes for email of usage stats (sample is for gmail)
+13. In the `send-vnstat` (if used) script, modify attributes for email of usage stats (sample is for gmail)
 14. In `services-start` script (or other appropriate script), add the `cronjob` commands (without the bullets, but with the quotes):
 
 ```
