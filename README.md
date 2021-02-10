@@ -145,7 +145,7 @@ Please note: this approach and view was created for my personal use and thus the
 
 * A sample of the email message output - sent as an attachment
 
-![Email_sample](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-email-xp.png){width=640 height=480}
+![Email_sample](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-email-xp.png)
 
 
 * How to run tests
