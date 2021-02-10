@@ -1,4 +1,10 @@
 #!/bin/sh
+# ver=1.0.0
+# created by dev_null
+#
+# the next line is a reminder in the syslog that credentials have not been set up - comment out this line once credential have been entered
+logger -s -t vnstat-email vnstat email setup not completed - check send-vnstat and update credentials
+#
 FROM="Router vnstat report"
 AUTH="username@gmail.com"
 PASS="userpassword"
@@ -16,7 +22,8 @@ cat /home/root/output.msg | sendmail -H"exec openssl s_client -quiet \
 -f"$FROM" \
 -au"$AUTH" -ap"$PASS" $TO
 
-logger -s -p user.info vnstat email complete
+logger -s -t vnstat-email vnstat email complete
 
-cp -a /home/root/vnstat.txt "/tmp/mnt/your_drive_path/Traffic/vnstat-$(date +"%F_%H.%M").txt" # edit the path to your Traffic folder
+# optional save of message
+# cp -a /home/root/vnstat.txt "/tmp/mnt/your_drive_path/Traffic/vnstat-$(date +"%F_%H.%M").txt" # edit the path to your Traffic folder
 rm  /home/root/vnstat.txt
