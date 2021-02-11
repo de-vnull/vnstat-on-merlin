@@ -105,8 +105,11 @@ Purpose of each component is described below - be sure to note where modificatio
 ```sh
 cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
 ```
-  4.Test by running `/opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt`
-  5.If not using send-vnstat, you can delete it (to secure your email details).
+    4. Test by running
+```sh
+/opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt
+```
+    5.  If not using send-vnstat, you can delete it (to secure your email details).
 -   A sample of the email message output - sent as an attachment
 ![Email_sample](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-email-xp.png)
 
