@@ -9,7 +9,7 @@ vnstat-on-merlin
 
 ### Acknowlegements ###
 
-- This was created with support from @Jack Yaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting. 
+- This was created with support from @Jack Yaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting.
 	  - Many thanks, Jack!
 		
 - There is a "beta install" script created by @Martineau of snbforums. This is a work in progress. See additional notes below.
@@ -35,14 +35,14 @@ vnstat-on-merlin
 
 * Note: there is a "TL;DR checklist" at the bottom for an ordered list of actions; being familiar with the design, rationale and constraints is encouraged.
 
-* Minimum requirements: 
-	- AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release version. 
+* Minimum requirements:
+	- AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release version.
 		- This has not been tested on Johns LTS firmware, so compatibility is unknown (please report success or failure!).
 	- Diversion and it's corresponding install of Entware. Diversion does not need to be running, as long as Entware is installed.
     - Properly setup email (`Diversion` "communications" option) to use the encrypted username/password to email vnstat reports.
 		- Please run an Entware update to ensure the most current repository lists are available.
 		- You may be able to install Entware separately from Diversion but I have not tested this method.
-	- For UI functionality: one or more @JackYaz scripts must be installed to establish the minimum file and folder structure. 
+	- For UI functionality: one or more @JackYaz scripts must be installed to establish the minimum file and folder structure.
 		- `Connmon` is recommended (the vnstat-ui is based on connmon), since it creates the `Add-On` tab in AsusWRT-Merlin.
 			
 * Configuration
@@ -61,7 +61,7 @@ vnstat-on-merlin
 
 * Database configuration
 	- Edit the following configurations:
-		- Verify the interface your router uses for wan by issuing `nvram get wan0_ifname` from the cli 
+		- Verify the interface your router uses for wan by issuing `nvram get wan0_ifname` from the cli
 			- In most instances this will be *eth0*, but the AX58U has been reported to use eth4, for example. I do not have an AX58U so cannot verify that this is the only change required to ensure accurate monitoring.
 	- ** You will need to modify `/opt/etc/vnstat.conf` file to update the interface (eth0 or other)
 		- There are other settings in this file that you may wish to tweak, including unit options (MB vs MiB), sampling rate, etc.
@@ -90,11 +90,11 @@ vnstat-on-merlin
 		- vnstat-ui
 		- vnstat-ww.sh
 		- div-email.sh
-		- vnstat-stats	
+		- vnstat-stats
 		- send-vnstat		
 	- Create the following file and folder in /jffs/add-ons:
 		- Folder: vnstat-ui.d
-		- File: copy vnstat-ui.asp into this folder 
+		- File: copy vnstat-ui.asp into this folder
 	- Be sure all scripts have execute permission (octal 0755).
 	
 * The AddOns tab showing the vnstat/vnstati view and daily email report collapsed
@@ -105,7 +105,7 @@ vnstat-on-merlin
 	- __vnstat-ui__: script that creates and loads the UI page. This script is mandatory.
 	- __vnstat-ww.sh__: script that calls the vnstati (image view of usage details). If using the UI, this script is mandatory and a cronjob needs to be set to call it every X number of minutes (I update every 13 minutes, just to offset from when other scripts might be running. This frequency is set by cron entry - see below).
 		- You should verify that the "LIB D" and "BIN" paths to reflect the location of your vnstat and vnstati install.
-	- __vnstat-stats__: script that creates the "daily" report. The output from this script is used in the UI (Vnstat CLI section) and can be emailed either on daily or other periodic basis. 
+	- __vnstat-stats__: script that creates the "daily" report. The output from this script is used in the UI (Vnstat CLI section) and can be emailed either on daily or other periodic basis.
 		- You should verify that the paths in this script to reflect the location of the vnstat application.
 		- If this functionality is not desired, this script is not needed (the UI has the option of hiding this daily report). Note: if this is used in the UI, imagemagick is also required.
 	- __vnstat-ui.asp__: this is the UI page. This is somewhat customizable (for example, the order of the display can be modified if you want to dabble in the code). This template is used to create the userX.asp dynamically when the "AddOns" tab is created.
@@ -115,7 +115,7 @@ vnstat-on-merlin
 		- If you use `send-vnstat`, you need to update the email address (from, password, and to), your router name, and the path to your "Traffic" directory (this script aggregates the message components and then backs them up to the Traffic folder for future reference.).
 		- This script is a kludge and stores email credentials in plain text - see alternative option below.
 			- __This script should be used only when Diversion's email communication is not enabled or available.__
-			- Use at your own risk (obviously).	
+			- Use at your own risk (obviously).
 			
 
 * __Email update__: thanks to @elorimer's script, and with the agreement of @theloneycoder, there is now a better option for the vnstat-stats email process.
@@ -166,7 +166,7 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 
 
 ### Miscellaneous notes ###
-* The vnstats UI page may require a hard refresh (CTRL+F5 or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse. 
+* The vnstats UI page may require a hard refresh (CTRL+F5 or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse.
 * On 386.1 I have noticed that cronjobs are occassionally deleted. If you find that happening, my workaround is to add custom cron entries to the "nat-start" script. This will write/re-write the cronjob entries. Be sure that you update both locations if you make any changes.
 * Note: db files can in some instances be moved across devices, but only of the same architecture (e.g., ARM7 to ARM7). Different architecture will result in an error and call for a db reinitialization. I have not found a workaround to cross-architecture errors.
 * There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). I have not used this functionality.
@@ -178,7 +178,7 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 ### TL;DR - checklist: just the steps sans context and commentary ###
 
 1. Min requirements: Merlin 384.19 or later, Entware, for UI view: 1 or more Jack Yaz scripts
-2. SSH into router and install vnstat and vnstati: `opkg install vnstat` and `opkg install vnstati`. 
+2. SSH into router and install vnstat and vnstati: `opkg install vnstat` and `opkg install vnstati`.
 	- Install imagemagick if full UI functionality is desired: `opkg install imagemagick`.
 	- Install image rendering libraries: `opkg install libjpeg-turbo`
 3. Create a folder on your usb/thumb drive called "Traffic"
@@ -191,15 +191,15 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 	- vnstat-ui
 	- vnstat-ww.sh
 	- div-email.sh
-	- vnstat-stats	
-	- send-vnstat	
+	- vnstat-stats
+	- send-vnstat
 	
 10. Create the following file and folder in /jffs/add-ons:
 	- Folder: vnstat-ui.d
 	- File: copy vnstat-ui.asp into this folder
 	
 11. Ensure all scripts have execute permission (octal 0755).
-12. In the `vnstat-ui` and `vnstat-stats` scripts, verify the paths to reflect the location of your vnstat and vnstati install (usually /opt/), eg "LIB D" and "BIN" 
+12. In the `vnstat-ui` and `vnstat-stats` scripts, verify the paths to reflect the location of your vnstat and vnstati install (usually /opt/), eg "LIB D" and "BIN"
 13. In the `send-vnstat` (if used) script, modify attributes for email of usage stats (sample is for gmail)
 14. In `services-start` script (or other appropriate script), add the `cronjob` commands (without the bullets, but with the quotes):
 

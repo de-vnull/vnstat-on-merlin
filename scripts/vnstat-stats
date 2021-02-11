@@ -15,4 +15,3 @@ echo >> /home/root/vnstat.txt
 cat /home/root/vnstat.txt
 cat /home/root/vnstat.txt | convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- /tmp/var/wwwext/vnstat/vnstat.png
 logger -s -t vnstat_totals summary generated
-
