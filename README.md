@@ -97,19 +97,20 @@ Purpose of each component is described below - be sure to note where modificatio
         -   Use at your own risk (obviously).
 
 **Email update**: thanks to @elorimer's script, and with the agreement of @theloneycoder, there is now a better option for the vnstat-stats email process.
--   This adds another dependency - leveraging @thelonelycoder's Diversion "communication" email process - but solves other issues, including support for platforms other than gmail, secure storage of passwords, etc.
--   Here are the steps to follow to use Diversion's email process:
-    1.  Make sure that Diversion's email communication is set up (amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email)) with the account of your choice.
-    2.  In /jffs/scripts, create the div-email.sh from the scripts folder. Make sure it's executable (octal 0755).
-    3.  Update the cron job via SSH to point to this script rather than the send-vnstat script (all on a single line):
+This adds another dependency - leveraging @thelonelycoder's Diversion "communication" email process - but solves other issues, including support for platforms other than gmail, secure storage of passwords, etc.
+
+Here are the steps to follow to use Diversion's email process:
+1.  Make sure that Diversion's email communication is set up (amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email)) with the account of your choice.
+2.  In /jffs/scripts, create the div-email.sh from the scripts folder. Make sure it's executable (octal 0755).
+3.  Update the cron job via SSH to point to this script rather than the send-vnstat script (all on a single line):
 ```sh
 cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
 ```
-    4. Test by running
+4.  Test by running
 ```sh
 /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt
 ```
-    5.  If not using send-vnstat, you can delete it (to secure your email details).
+5.  If not using send-vnstat, you can delete it (to secure your email details).
 -   A sample of the email message output - sent as an attachment
 ![Email_sample](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-email-xp.png)
 
