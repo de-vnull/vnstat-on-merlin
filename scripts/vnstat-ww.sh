@@ -9,20 +9,20 @@ vnstat -u
 WWW_D=/www/user/vnstat # output images to here
 LIB_D=/opt/var/lib/vnstat # db location - verify matches your install
 BIN=/opt/bin/vnstati  # which vnstati - verify matches your install
-# 
+#
 outputs="s h d t m hs"   # what images to generate
-# 
+#
 # Sanity checks
 [ -d "$WWW_D" ] || mkdir -p "$WWW_D" # make the folder if it dont exist.
-# 
+#
 # You might want to setup a link if it dont exist.
 # [ -L /www/vnstat ] || ln -sf /www/vnstat /www/user/
 # was /tmp/www/
-# 
+#
 # End of config changes
 interfaces="eth0"
 # was "$(ls -1 $LIB_D)"
-# 
+#
 if [ -z "$interfaces" ]; then
     echo "No database found, nothing to do."
     echo "A new database can be created with the following command: "
@@ -35,5 +35,5 @@ else
         done
     done
 fi
-# 
+#
 exit 1
