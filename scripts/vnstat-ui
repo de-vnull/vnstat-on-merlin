@@ -126,5 +126,36 @@ Mount_WebUI(){
 	fi
 }
 
-Create_Dirs
-Mount_WebUI
+LOCKFILE=/tmp/addonwebui.lock
+FD=386
+
+case $1 in                                                                # Martineau
+    uninstall)
+   
+        eval exec "$FD>$LOCKFILE"
+        flock -x "$FD"
+   
+        Get_WebUI_Page "$SCRIPT_DIR/vnstat-ui.asp"
+        if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
+            sed -i "\\~$MyPage~d" /tmp/menuTree.js
+            umount /www/require/modules/menuTree.js
+            mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+            rm -rf "{$SCRIPT_WEBPAGE_DIR:?}/$MyPage"
+        fi
+       
+        flock -u "$FD"
+       
+        Print_Output true "Unmounted $SCRIPT_NAME WebUI page as $MyPage" "$PASS"      
+    ;;
+    *)
+        Create_Dirs
+       
+        eval exec "$FD>$LOCKFILE"
+        flock -x "$FD"
+       
+        Mount_WebUI
+       
+        flock -u "$FD"
+       
+    ;;
+esac
