@@ -31,7 +31,7 @@ if [ -z "$interfaces" ]; then
 else
     for interface in $interfaces ; do
         for output in $outputs ; do
-            $BIN -${output} -i $interface -o $WWW_D/vnstat_eth0_${output}.png
+            $BIN -${output} -i $interface -o $WWW_D/vnstat_${interface}_${output}.png
         done
     done
 fi
