@@ -12,7 +12,8 @@ vnstat-on-merlin
 - This was created with support from @Jack Yaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting. 
 	  - Many thanks, Jack!
 		
-- There is a "beta install" script created by @Martineau of snbforums. This is a work in progress. See additional notes below.
+- ~~There is a "beta install" script created by @Martineau of snbforums. This is a work in progress. See additional notes below.~~
+  - The install script is offline at the current time (15 February 2021). Working to get it back online.
   - My gratitude (and those of the users) to @Martineau for collaborating on this.
   
  - My thanks also to @thelonelycoder of snbforums, for the use of his emailing process, which is part of his Diversion ad-blocking application for Merlin.
@@ -28,7 +29,7 @@ vnstat-on-merlin
 	- Any errors or omissions will be corrected upon notice, but the user assumes all risk.
 
 ### Version ###
-* Version: 0.0.1
+* Version: 0.9.1
 * Install script version: 1.4 (see below)
 
 ### How do I get set up? ###
@@ -220,9 +221,10 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 
 ### Install script ###
 
-* A "beta install" script has been generously created by @Martineau from snbforums: https://www.snbforums.com/threads/beta-vnstat-on-merlin-cli-ui-and-email-data-use-monitoring-with-install-script-too.70091/post-661207
+~~* A "beta install" script has been generously created by @Martineau from snbforums: https://www.snbforums.com/threads/beta-vnstat-on-merlin-cli-ui-and-email-data-use-monitoring-with-install-script-too.70091/post-661207
 	- You may wish to verify that the install, particularly the conf files, match your set-up.
-	- NOTE: The script does not alter the Database location and cannot modify the email send-vnstatscript with the user credentials. You will need to make these changes manually.
+	- NOTE: The script does not alter the Database location and cannot modify the email send-vnstatscript with the user credentials. You will need to make these changes manually.~~
+	- The install script is currently offline (15 February 2021). Working to get it back.
 
 ### Legal and licensing ###
 	
