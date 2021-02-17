@@ -157,7 +157,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_eth0_m.png" alt="Monthly"/></div>
+<div><img src="/user/vnstat/vnstat_iface_m.png" alt="Monthly"/></div>
 </td>
 </tr>
 </table>
@@ -172,7 +172,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_eth0_d.png" alt="Daily"/></div>
+<div><img src="/user/vnstat/vnstat_iface_d.png" alt="Daily"/></div>
 </td>
 </tr>
 </table>
@@ -186,7 +186,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_eth0_h.png" alt="Hourly" /></div>
+<div><img src="/user/vnstat/vnstat_iface_h.png" alt="Hourly" /></div>
 </td>
 </tr>
 </table>
@@ -200,7 +200,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_eth0_s.png" alt="Hourly" /></div>
+<div><img src="/user/vnstat/vnstat_iface_s.png" alt="Hourly" /></div>
 </td>
 </tr>
 </table>
@@ -214,7 +214,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_eth0_t.png" alt="Hourly" /></div>
+<div><img src="/user/vnstat/vnstat_iface_t.png" alt="Hourly" /></div>
 </td>
 </tr>
 </table>
