@@ -128,7 +128,7 @@ function reload(){
 <tr bgcolor="#4D595D">
 <td valign="top">
 <div>&nbsp;</div>
-<div class="formfonttitle" id="scripttitle" style="text-align:center;">Vnstat on Merlin - v 0.9.0 (beta)</div>
+<div class="formfonttitle" id="scripttitle" style="text-align:center;">Vnstat on Merlin - v 0.9.1 (beta)</div>
 <div id="statstitle" style="text-align:center;"><p> This page last refreshed: <p id="P1">
 <script>
 
