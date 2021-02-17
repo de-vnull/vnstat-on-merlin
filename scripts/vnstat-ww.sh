@@ -1,5 +1,5 @@
 #!/bin/sh
-# ver=1.0.0
+# ver=1.0.1
 # This script is used to refresh the daily/weekly/monthly vnstati - images - usage for the Vnstat on Merlin UI - by dev_null at snbforums
 # Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 # mkdir /www/user/vnstat && cp /jffs/scripts/vnstat.htm /www/user/vnstat/vnstat.htm # not needed for Vnstat on Merlin
