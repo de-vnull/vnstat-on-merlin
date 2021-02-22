@@ -587,6 +587,7 @@ Menu_Install(){
 	
 	Update_File vnstat.conf
 	
+	Print_Output true "WAN Interface detected as $(Get_WAN_IFace)" "$PASS"
 	sed -i 's/^Interface .*$/Interface "'"$(Get_WAN_IFace)"'"/' "$SCRIPT_DIR/vnstat.conf"
 	
 	Update_File vnstat-ui.asp
@@ -598,7 +599,14 @@ Menu_Install(){
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
 	
-	## get stats
+	if [ -n "$(pidof vnstatd)" ];then
+		Print_Output true "Sleeping for 5s before generating initial stats" "$WARN"
+		sleep 5
+		Generate_Stats
+		Generate_Images
+	else
+		Print_Output true "vnstatd not running, please check system log" "$ERR"
+	fi
 	
 	Clear_Lock
 }
