@@ -753,7 +753,6 @@ if [ -z "$1" ]; then
 	Entware_Ready
 	
 	Create_Dirs
-	Conf_Exists
 	Set_Version_Custom_Settings local
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
