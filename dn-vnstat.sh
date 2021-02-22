@@ -640,7 +640,7 @@ vnstat_stats(){
 	vnstat -d >> /tmp/vnstat.txt
 	echo >> /tmp/vnstat.txt
 	cat /tmp/vnstat.txt
-	cat /tmp/vnstat.txt | convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- /tmp/var/wwwext/vnstat/vnstat.png
+	cat /tmp/vnstat.txt | convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png"
 	logger -s -t vnstat_totals summary generated
 }
 
