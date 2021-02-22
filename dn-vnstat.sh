@@ -590,7 +590,6 @@ Menu_Startup(){
 		sleep 5
 	fi
 	Create_Dirs
-	Conf_Exists
 	Set_Version_Custom_Settings local
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
