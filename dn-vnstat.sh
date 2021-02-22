@@ -552,6 +552,9 @@ Menu_Install(){
 	Create_Symlinks
 	
 	Download_File "$SCRIPT_REPO/vnstat.conf" "$SCRIPT_DIR/vnstat.conf"
+	
+	sed -i 's/^Interface .*$/Interface "'"$(Get_WAN_IFace)"'"/' "$SCRIPT_DIR/vnstat.conf"
+	
 	Update_File vnstat-ui.asp
 	Update_File S33vnstat
 	Update_File shared-jy.tar.gz
