@@ -1,6 +1,6 @@
 #!/bin/sh
-VER="v1.08b"
-#============================================================================================ © 2021 Martineau v1.08
+VER="v1.08b2"
+#============================================================================================ © 2021 Martineau v1.08b2
 #
 # Usage:    vnstat-install  {'install' [wan_interface] ['dev'] [email_script_name]| 'uninstall'}
 #
@@ -77,7 +77,7 @@ mkdir -p $INSTALL_DIR
 mkdir -p /jffs/addons/vnstat-ui.d
 
 # Help request ?
-if [ "$1" == "help" ] || [ "$1" == "-h" ];then
+if [ "$1" == "help" ] || [ "$1" == "-h" ];then	# v1.08
 	echo -e $cBWHT
 	ShowHelp							# Show help
 	echo -e $cRESET
@@ -123,7 +123,11 @@ case $ACTION in
 
 	install)																	# v1.07 {install ['dev']}
 
+		echo -e $cRESET
+		
 		logger -st "$0" $VER "Installing 'vnstat'...."
+		
+		echo -e
 
 		logger -st "$0" "   Installing 'vnstat' Entware modules"
 		echo -en $cBGRA 2>&1
@@ -142,14 +146,6 @@ case $ACTION in
 		Download_file "div-email.sh"    "$BRANCH"			# v1.07 v1.05
 
 		echo -en $cRESET
-
-		# Create Addons GUI Tab
-		logger -st "$0" "   Creating Addons GUI TAB"
-		echo -en $cBGRA 2>&1
-
-		curl -# -L https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/${BRANCH}/scripts/vnstat-ui.asp -o /jffs/addons/vnstat-ui.d/vnstat-ui.asp && dos2unix /jffs/addons/vnstat-ui.d/vnstat-ui.asp
-		echo -en $cRESET
-		$INSTALL_DIR/vnstat-ui
 
 		# Ensure Addon GUI tab will be created @boot ***v1.07 HACK moved to 'post-mount' ***
 		#logger -st "$0" "   Adding 'vnstat-ui' Addons GUI TAB creation service-event (@boot)"
@@ -192,14 +188,22 @@ case $ACTION in
 		logger -st "$0" "   Customising 'vnstat.conf' $TXT 'Interface" $WAN_IF"'"
 		sed -i "/^Interface/ s/[^ ]*[^ ]/$WAN_IF/2" /opt/etc/vnstat.conf
 
+		# Create Addons GUI Tab
+		logger -st "$0" "   Creating Addons GUI TAB"
+		echo -en $cBGRA 2>&1
+
+		curl -# -L https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/${BRANCH}/scripts/vnstat-ui.asp -o /jffs/addons/vnstat-ui.d/vnstat-ui.asp && dos2unix /jffs/addons/vnstat-ui.d/vnstat-ui.asp
+		echo -en $cRESET
+		
 		# Ensure GUI .asp refers to actual data files
 		# <div><img src="/user/vnstat/vnstat_eth0_m.png" alt="Monthly"/></div>
 		# <div><img src="/user/vnstat/vnstat_eth0_d.png" alt="Daily"/></div>
 		# <div><img src="/user/vnstat/vnstat_eth0_h.png" alt="Hourly" /></div>
 		# <div><img src="/user/vnstat/vnstat_eth0_s.png" alt="Hourly" /></div>
 		# <div><img src="/user/vnstat/vnstat_eth0_t.png" alt="Hourly" /></div>
-		logger -st "$0" "   Customising 'vnstat-ui.asp' $TXT GUI file references to '/vnstat_${WAN_IF}_?.png'"
-		sed -i "s~/vnstat_eth0_~/vnstat_${WAN_IF}_~g" /jffs/addons/vnstat-ui.d/vnstat-ui.asp	# v1.08
+		logger -st "$0" "   Customising 'vnstat-ui.asp' $TXT GUI file references to '/vnstat_${WAN_IF}_?.png'"	# v1.08
+		sed -i "s~/vnstat_.*_~/vnstat_${WAN_IF}_~g" /jffs/addons/vnstat-ui.d/vnstat-ui.asp	# v1.08
+		$INSTALL_DIR/vnstat-ui
 
 		# Bug report unable to correctly detect Interface Bandwidth @ColinTaylor see http://www.snbforums.com/threads/vnstat-on-merlin-cli-ui-and-email-data-use-monitoring.70091/post-661241
 		#    vnstatd[nnnn]: Monitoring: vlan2 (10 Mbit) br0 (1000 Mbit)
@@ -210,7 +214,7 @@ case $ACTION in
 		# Ensure '[ -f "/opt/var/lib/vnstat.d/*" ] || vnstat -u -i xxx' refers to current WAN interface
 		logger -st "$0" "   Customising 'S32vnstat/vnstat-ww.sh' scripts $TXT 'Interface" $WAN_IF"'"
 		sed -i "s/\(vnstat -u -i\)\(.*$\)/\1 $WAN_IF/" /opt/etc/init.d/S32vnstat
-		sed -i "s/eth0/$WAN_IF/g" $INSTALL_DIR/vnstat-ww.sh
+		sed -i "s/\(_eth0\|_iface\)/_${WAN_IF}/g" $INSTALL_DIR/vnstat-ww.sh					# v1.08
 
 		# Use Entware repository
 		sed -i 's~mnt/your_drive_name/entware~opt~g' $INSTALL_DIR/vnstat-ww.sh
