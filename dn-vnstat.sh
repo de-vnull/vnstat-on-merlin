@@ -538,6 +538,31 @@ Check_Requirements(){
 	fi
 }
 
+Generate_Images(){
+	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
+	Print_Output true "vnstati updating stats for UI" "$PASS"
+	vnstat -u
+	
+	outputs="s h d t m hs"   # what images to generate
+	
+	interface="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	
+	for output in $outputs ; do
+		vnstati -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
+	done
+}
+
+Generate_Stats(){
+	printf "\\nvnstats as of:\\n%s" "$(date)" > /tmp/vnstat.txt
+	vnstat -u
+	vnstat -m >> /tmp/vnstat.txt
+	vnstat -w >> /tmp/vnstat.txt
+	vnstat -d >> /tmp/vnstat.txt
+	cat /tmp/vnstat.txt
+	cat /tmp/vnstat.txt | convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png"
+	Print_Output true "vnstat_totals summary generated" "$PASS"
+}
+
 Menu_Install(){
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null"
 	sleep 1
@@ -606,8 +631,8 @@ Menu_Startup(){
 }
 
 Menu_GenerateStats(){
-	vnstat_ww
-	vnstat_stats
+	Generate_Images
+	Generate_Stats
 	Clear_Lock
 }
 
@@ -724,13 +749,26 @@ case "$1" in
 	generate)
 		NTP_Ready
 		Entware_Ready
-		Check_Lock
-		Menu_GenerateStats
+		Generate_Images
+		Generate_Stats
+		exit 0
+	;;
+	generateimages)
+		NTP_Ready
+		Entware_Ready
+		Generate_Images
+		exit 0
+	;;
+	generatestats)
+		NTP_Ready
+		Entware_Ready
+		Generate_Stats
 		exit 0
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
-			Menu_GenerateStats
+			Generate_Images
+			Generate_Stats
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
 			Update_Check
