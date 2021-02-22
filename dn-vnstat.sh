@@ -557,13 +557,14 @@ Generate_Images(){
 }
 
 Generate_Stats(){
-	printf "\\nvnstats as of:\\n%s" "$(date)" > /tmp/vnstat.txt
+	printf "vnstats as of:\\n%s" "$(date)" > /tmp/vnstat.txt
 	vnstat -u
 	vnstat -m >> /tmp/vnstat.txt
 	vnstat -w >> /tmp/vnstat.txt
 	vnstat -d >> /tmp/vnstat.txt
 	cat /tmp/vnstat.txt
 	cat /tmp/vnstat.txt | convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png"
+	printf "\\n"
 	Print_Output true "vnstat_totals summary generated" "$PASS"
 }
 
@@ -581,14 +582,47 @@ Menu_Install(){
 		exit 1
 	fi
 	
+	IFACE=""
+	printf "\\n\\e[1mWAN Interface detected as %s\\e[0m\\n" "$(Get_WAN_IFace)"
+	while true; do
+		printf "\\n\\e[1mIs this correct? (y/n)\\e[0m    "
+		read -r confirm
+		case "$confirm" in
+			y|Y)
+				IFACE="$(Get_WAN_IFace)"
+				break
+			;;
+			n|N)
+				while true; do
+					printf "\\n\\e[1mPlease enter correct interface:\\e[0m    "
+					read -r iface
+					iface_lower="$(echo "$iface" | tr "A-Z" "a-z")"
+					if [ "$iface" = "e" ]; then
+						Clear_Lock
+						rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
+						exit 1
+					elif [ ! -f "/sys/class/net/$iface_lower/operstate" ] || [ "$(cat "/sys/class/net/$iface_lower/operstate")" = "down" ]; then
+						printf "\\n\\e[31mInput is not a valid interface or interface not up, please try again\\e[0m\\n"
+					else
+						IFACE="$iface_lower"
+						break
+					fi
+				done
+			;;
+			*)
+				:
+			;;
+		esac
+	done
+	
+	printf "\\n"
+	
 	Create_Dirs
 	Set_Version_Custom_Settings local
 	Create_Symlinks
 	
 	Update_File vnstat.conf
-	
-	Print_Output true "WAN Interface detected as $(Get_WAN_IFace)" "$PASS"
-	sed -i 's/^Interface .*$/Interface "'"$(Get_WAN_IFace)"'"/' "$SCRIPT_DIR/vnstat.conf"
+	sed -i 's/^Interface .*$/Interface "'"$IFACE"'"/' "$SCRIPT_DIR/vnstat.conf"
 	
 	Update_File vnstat-ui.asp
 	Update_File S33vnstat
