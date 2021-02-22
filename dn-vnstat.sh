@@ -392,11 +392,16 @@ Auto_Startup(){
 Auto_Cron(){
 	case $1 in
 		create)
-			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME")
-			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_images")
 			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
-				: #cru a "$SCRIPT_NAME" "*/10 * * * * /jffs/scripts/$SCRIPT_NAME check"
+				cru a "${SCRIPT_NAME}_images" "*/5 * * * * /jffs/scripts/$SCRIPT_NAME generateimages"
 			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
+			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
+				cru a "${SCRIPT_NAME}_stats" "59 23 * * * /jffs/scripts/$SCRIPT_NAME generatestats"
+			fi
+			# TODO: sh $EMAIL_CMD
 		;;
 		delete)
 			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME")
