@@ -124,7 +124,7 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 -   Edit services-start (or other appropriate script) to load the vnstat-ui page (add these lines at bottom of script - without the bullets)
 ```sh
 sleep 60 # to give the other services time to start properly
-/jffs/scripts/vnstat-ui # the vnstat ui script
+/jffs/scripts/vnstat-on-merlin # the vnstat ui script
 cru a vnstat_update "*/13 * * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-ww.sh" # this forces a data use update and creates the UI graphics for data usage
 cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
 ```
@@ -153,7 +153,7 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 7.  After updating conf files, restart vnstat with `/opt/etc/init.d/S32vnstat restart` command
 8.  See testing procedures above (vnstat core functionality)
 9.  For UI, copy/create the scripts in the /jffs/scripts directory:
-    -   vnstat-ui
+    -   vnstat-on-merlin
     -   vnstat-ww.sh
     -   div-email.sh
     -   vnstat-stats
@@ -162,12 +162,12 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
     -   Folder: vnstat-ui.d
     -   File: copy vnstat-ui.asp into this folder
 11. Ensure all scripts have execute permission (octal 0755).
-12. In the `vnstat-ui` and `vnstat-stats` scripts, verify the paths to reflect the location of your vnstat and vnstati install (usually /opt/), eg "LIB D" and "BIN"
+12. In the `vnstat-on-merlin` and `vnstat-stats` scripts, verify the paths to reflect the location of your vnstat and vnstati install (usually /opt/), eg "LIB D" and "BIN"
 13. In the `send-vnstat` (if used) script, modify attributes for email of usage stats (sample is for gmail)
 14. In `services-start` script (or other appropriate script), add the `cronjob` commands (without the bullets, but with the quotes):
 ```sh
 sleep 60 # to give the other services time to start properly
-/jffs/scripts/vnstat-ui # the vnstat ui script
+/jffs/scripts/vnstat-on-merlin # the vnstat ui script
 cru a vnstat_update "*/13 * * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-ww.sh" # this forces a data use update and creates the UI graphics for data usage
 cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
 ```
