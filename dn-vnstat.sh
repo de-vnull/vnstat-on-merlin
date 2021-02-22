@@ -671,8 +671,8 @@ Menu_Uninstall(){
 		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 		rm -rf "{$SCRIPT_WEBPAGE_DIR:?}/$MyPage"
 	fi
-	rm -f "$SCRIPT_DIR/vnstat-ui.asp" 2>/dev/null
-	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
+	rm -f "$SCRIPT_DIR/vnstat-ui.asp"
+	rm -rf "$SCRIPT_WEB_DIR"
 	
 	Shortcut_Script delete
 	/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
@@ -690,15 +690,16 @@ Menu_Uninstall(){
 	read -r confirm
 	case "$confirm" in
 		y|Y)
-			rm -rf "$SCRIPT_DIR" 2>/dev/null
+			rm -rf "$SCRIPT_DIR"
 			rm -rf /opt/var/lib/vnstat
+			rm -f /opt/etc/vnstat.conf
 		;;
 		*)
 			:
 		;;
 	esac
 	
-	rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
+	rm -f "/jffs/scripts/$SCRIPT_NAME"
 	Clear_Lock
 	Print_Output true "Uninstall completed" "$PASS"
 }
