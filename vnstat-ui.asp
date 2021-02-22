@@ -89,6 +89,11 @@ function initial(){
 	SetCurrentPage();
 	show_menu();
 	AddEventHandlers();
+	var today = new Date();
+	var date = today.getFullYear()+'-'+("0" + (today.getMonth()+1)).slice(-2) +'-'+("0" + today.getDate()).slice(-2);
+	var time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2);
+	var dateTime = date+' '+time;
+	document.getElementById("statstitle").innerHTML = "This page last refreshed: " + dateTime;
 }
 
 function reload(){
@@ -129,20 +134,9 @@ function reload(){
 <td valign="top">
 <div>&nbsp;</div>
 <div class="formfonttitle" id="scripttitle" style="text-align:center;">dn-vnstat</div>
-<div id="statstitle" style="text-align:center;"><p> This page last refreshed: <p id="P1">
-<script>
-
-var today = new Date();
-var date = today.getFullYear()+'-'+("0" + (today.getMonth()+1)).slice(-2) +'-'+("0" + today.getDate()).slice(-2);
-var time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2);
-var dateTime = date+' '+time;
-
-document.getElementById("P1").innerHTML = dateTime;
-
-</script>
-</div>
+<div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
-<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5). </i></u>vnstat and vnstati are linux data usage reporting tools.</div>
+<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5).</i></u> vnstat and vnstati are linux data usage reporting tools.</div>
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
@@ -157,7 +151,6 @@ document.getElementById("P1").innerHTML = dateTime;
 </td>
 </tr>
 </table>
-
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
@@ -214,7 +207,6 @@ document.getElementById("P1").innerHTML = dateTime;
 </td>
 </tr>
 </table>
-
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
