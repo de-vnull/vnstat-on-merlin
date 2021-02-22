@@ -92,6 +92,7 @@ Clear_Lock(){
 }
 
 ############################################################################
+
 Set_Version_Custom_Settings(){
 	SETTINGSFILE=/jffs/addons/custom_settings.txt
 	case "$1" in
@@ -531,7 +532,10 @@ Check_Requirements(){
 	if [ "$CHECKSFAILED" = "false" ]; then
 		Print_Output true "Installing required packages from Entware" "$PASS"
 		opkg update
-		opkg install vnstat vnstati libjpeg-turbo imagemagick
+		opkg install vnstat
+		opkg install vnstati
+		opkg install libjpeg-turbo
+		opkg install imagemagick
 		return 0
 	else
 		return 1
@@ -646,32 +650,49 @@ Menu_ForceUpdate(){
 	Clear_Lock
 }
 
-vnstat_ww(){
-	# This script is used to refresh the daily/weekly/monthly vnstati - images - usage for the Vnstat on Merlin UI - by dev_null at snbforums
-	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
-	Print_Output true "vnstati updating stats for UI" "$PASS"
-	vnstat -u
+Menu_Uninstall(){
+	Print_Output true "Removing $SCRIPT_NAME..." "$PASS"
+	Auto_Startup delete 2>/dev/null
+	Auto_Cron delete 2>/dev/null
+	Auto_ServiceEvent delete 2>/dev/null
 	
-	outputs="s h d t m hs"   # what images to generate
+	Get_WebUI_Page "$SCRIPT_DIR/vnstat-ui.asp"
+	if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
+		sed -i "\\~$MyPage~d" /tmp/menuTree.js
+		umount /www/require/modules/menuTree.js
+		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+		rm -rf "{$SCRIPT_WEBPAGE_DIR:?}/$MyPage"
+	fi
+	rm -f "$SCRIPT_DIR/vnstat-ui.asp" 2>/dev/null
+	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
 	
-	interface="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	Shortcut_Script delete
+	/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
 	
-	for output in $outputs ; do
-		vnstati -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
-	done
-}
-
-vnstat_stats(){
-	# This script is used to create the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
-	printf "\\nVnstats as of:\\n%s" "$(date)" >> /tmp/vnstat.txt
-	vnstat -u
-	vnstat -m >> /tmp/vnstat.txt
-	vnstat -w >> /tmp/vnstat.txt
-	vnstat -d >> /tmp/vnstat.txt
-	echo >> /tmp/vnstat.txt
-	cat /tmp/vnstat.txt
-	cat /tmp/vnstat.txt | convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png"
-	logger -s -t vnstat_totals summary generated
+	opkg remove --autoremove vnstat
+	opkg remove --autoremove vnstati
+	opkg remove --autoremove imagemagick
+	
+	rm -f /opt/etc/init.d/S33vnstat
+	
+	sed -i '/dn-vnstat_version_local/d' "$SETTINGSFILE"
+	sed -i '/dn-vnstat_version_server/d' "$SETTINGSFILE"
+	
+	printf "\\n\\e[1mDo you want to delete %s configuration file and stats? (y/n)\\e[0m\\n" "$SCRIPT_NAME"
+	read -r confirm
+	case "$confirm" in
+		y|Y)
+			rm -rf "$SCRIPT_DIR" 2>/dev/null
+			rm -rf /opt/var/lib/vnstat
+		;;
+		*)
+			:
+		;;
+	esac
+	
+	rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
+	Clear_Lock
+	Print_Output true "Uninstall completed" "$PASS"
 }
 
 NTP_Ready(){
