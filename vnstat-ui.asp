@@ -8,7 +8,7 @@
 <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
 <link rel="shortcut icon" href="images/favicon.png">
 <link rel="icon" href="images/favicon.png">
-<title>Vnstat</title>
+<title>dn-vnstat</title>
 <link rel="stylesheet" type="text/css" href="index_style.css">
 <link rel="stylesheet" type="text/css" href="form_style.css">
 <style>
@@ -105,7 +105,7 @@ function reload(){
 <input type="hidden" name="next_page" value="">
 <input type="hidden" name="modified" value="0">
 <input type="hidden" name="action_mode" value="apply">
-<input type="hidden" name="action_script" value="start_connmon">
+<input type="hidden" name="action_script" value="start_dn-vnstat">
 <input type="hidden" name="action_wait" value="45">
 <input type="hidden" name="first_time" value="">
 <input type="hidden" name="SystemCmd" value="">
@@ -128,16 +128,13 @@ function reload(){
 <tr bgcolor="#4D595D">
 <td valign="top">
 <div>&nbsp;</div>
-<div class="formfonttitle" id="scripttitle" style="text-align:center;">Vnstat on Merlin - v 0.9.0 (beta)</div>
+<div class="formfonttitle" id="scripttitle" style="text-align:center;">dn-vnstat</div>
 <div id="statstitle" style="text-align:center;"><p> This page last refreshed: <p id="P1">
 <script>
 
 var today = new Date();
-
 var date = today.getFullYear()+'-'+("0" + (today.getMonth()+1)).slice(-2) +'-'+("0" + today.getDate()).slice(-2);
-
 var time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2);
-
 var dateTime = date+' '+time;
 
 document.getElementById("P1").innerHTML = dateTime;
@@ -145,8 +142,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </script>
 </div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
-<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5). </i></u>Vnstat and vnstati are linux data usage reporting tools.</div>
-
+<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5). </i></u>vnstat and vnstati are linux data usage reporting tools.</div>
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
@@ -157,7 +153,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_m.png" alt="Monthly"/></div>
+<div><img src="/user/dn-vnstat/vnstat_m.png" alt="Monthly"/></div>
 </td>
 </tr>
 </table>
@@ -172,7 +168,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_d.png" alt="Daily"/></div>
+<div><img src="/user/dn-vnstat/vnstat_d.png" alt="Daily"/></div>
 </td>
 </tr>
 </table>
@@ -186,7 +182,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_h.png" alt="Hourly" /></div>
+<div><img src="/user/dn-vnstat/vnstat_h.png" alt="Hourly" /></div>
 </td>
 </tr>
 </table>
@@ -200,7 +196,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_s.png" alt="Hourly" /></div>
+<div><img src="/user/dn-vnstat/vnstat_s.png" alt="Hourly" /></div>
 </td>
 </tr>
 </table>
@@ -214,7 +210,7 @@ document.getElementById("P1").innerHTML = dateTime;
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_t.png" alt="Hourly" /></div>
+<div><img src="/user/dn-vnstat/vnstat_t.png" alt="Hourly" /></div>
 </td>
 </tr>
 </table>
@@ -224,12 +220,12 @@ document.getElementById("P1").innerHTML = dateTime;
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="chart_linequality">
 <tr>
-<td colspan="2">Vnstat CLI (click to expand/collapse)</td>
+<td colspan="2">vnstat CLI (click to expand/collapse)</td>
 </tr>
 </thead>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat.png" alt="Monthly" /></div>
+<div><img src="/user/dn-vnstat/vnstat.png" alt="Monthly" /></div>
 </td>
 </tr>
 </table>
