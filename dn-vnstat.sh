@@ -551,7 +551,7 @@ Menu_Install(){
 	Set_Version_Custom_Settings local
 	Create_Symlinks
 	
-	Download_File "$SCRIPT_REPO/vnstat.conf" "$SCRIPT_DIR/vnstat.conf"
+	Update_File vnstat.conf
 	
 	sed -i 's/^Interface .*$/Interface "'"$(Get_WAN_IFace)"'"/' "$SCRIPT_DIR/vnstat.conf"
 	
