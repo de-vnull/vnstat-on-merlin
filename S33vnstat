@@ -8,16 +8,22 @@ if [ -f /opt/etc/init.d/S32vnstat ]; then
 	rm -f /opt/etc/init.d/S32vnstat
 fi
 
-# Point right interfaces to monitor.
-if [ -f "$SCRIPT_DIR/vnstat.conf" ]; then
-	IFACE="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-	logger -st "vnstat" "Starting monitoring for interface $IFACE"
-else
-	logger -st "vnstat" "Configuration file missing - $SCRIPT_DIR/vnstat.conf - please check"
-	exit 1
+if [ "$1" = "start" ] || [ "$1" = "restart" ]; then
+	if [ -f "$SCRIPT_DIR/vnstat.conf" ]; then
+		IFACE="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+		logger -st "vnstat" "Starting monitoring for interface $IFACE"
+	else
+		logger -st "vnstat" "Configuration file missing - $SCRIPT_DIR/vnstat.conf - please check"
+		exit 1
+	fi
+	
+	if [ "$(nvram get ntp_ready)" -eq 0 ]; then
+		logger -st "vnstat" "NTP not synced, exiting"
+		exit 1
+	fi
+	
+	[ -f "/opt/var/lib/vnstat/*" ] || vnstat -u -i "$IFACE"
 fi
-
-[ -f "/opt/var/lib/vnstat/*" ] || vnstat -u -i "$IFACE"
 
 ENABLED=yes
 PROCS=vnstatd
