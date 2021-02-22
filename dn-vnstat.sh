@@ -1,12 +1,13 @@
 #!/bin/sh
 
-#################################################################
-##                                                             ##
-##          vnstat and vnstati data usage statistics           ##
-##                     version 0.0.1 (alpha)                   ##
-##                      Created by dev_null                    ##
-##                                                             ##
-#################################################################
+#################################################
+##                                             ##
+##  vnstat and vnstati data usage statistics   ##
+##              for AsusWRT-Merlin             ##
+##                                             ##
+##              Created by dev_null            ##
+##                                             ##
+#################################################
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
@@ -578,6 +579,90 @@ Generate_Email(){
 	#fi
 }
 
+ScriptHeader(){
+	clear
+	printf "\\n"
+	printf "\\e[1m#################################################\\e[0m\\n"
+	printf "\\e[1m##                                             ##\\e[0m\\n"
+	printf "\\e[1m##  vnstat and vnstati data usage statistics   ##\\e[0m\\n"
+	printf "\\e[1m##              for AsusWRT-Merlin             ##\\e[0m\\n"
+	printf "\\e[1m##                                             ##\\e[0m\\n"
+	printf "\\e[1m##              %s on %-9s            ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "\\e[1m##                                             ## \\e[0m\\n"
+	printf "\\e[1m##              Created by dev_null            ##\\e[0m\\n"
+	printf "\\e[1m##                                             ##\\e[0m\\n"
+	printf "\\e[1m#################################################\\e[0m\\n"
+	printf "\\n"
+}
+
+MainMenu(){
+	printf "1.    Update stats now\\n\\n"
+	printf "u.    Check for updates\\n"
+	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
+	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
+	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
+	printf "\\n"
+	printf "\\e[1m#################################################\\e[0m\\n"
+	printf "\\n"
+	
+	while true; do
+		printf "Choose an option:    "
+		read -r menu
+		case "$menu" in
+			1)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_GenerateStats
+				fi
+				PressEnter
+				break
+			;;
+			u)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_Update
+				fi
+				PressEnter
+				break
+			;;
+			uf)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_ForceUpdate
+				fi
+				PressEnter
+				break
+			;;
+			e)
+				ScriptHeader
+				printf "\\n\\e[1mThanks for using %s!\\e[0m\\n\\n\\n" "$SCRIPT_NAME"
+				exit 0
+			;;
+			z)
+				while true; do
+					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m\\n" "$SCRIPT_NAME"
+					read -r confirm
+					case "$confirm" in
+						y|Y)
+							Menu_Uninstall
+							exit 0
+						;;
+						*)
+							break
+						;;
+					esac
+				done
+			;;
+			*)
+				printf "\\nPlease choose a valid option\\n\\n"
+			;;
+		esac
+	done
+	
+	ScriptHeader
+	MainMenu
+}
+
 Menu_Install(){
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null"
 	sleep 1
@@ -796,7 +881,6 @@ Entware_Ready(){
 if [ -z "$1" ]; then
 	NTP_Ready
 	Entware_Ready
-	
 	Create_Dirs
 	Set_Version_Custom_Settings local
 	Create_Symlinks
@@ -804,8 +888,8 @@ if [ -z "$1" ]; then
 	Auto_Cron create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
-	#ScriptHeader
-	#MainMenu
+	ScriptHeader
+	MainMenu
 	exit 0
 fi
 
