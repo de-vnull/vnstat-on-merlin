@@ -98,28 +98,28 @@ Set_Version_Custom_Settings(){
 	case "$1" in
 		local)
 			if [ -f "$SETTINGSFILE" ]; then
-				if [ "$(grep -c "vnstat_version_local" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$SCRIPT_VERSION" != "$(grep "vnstat_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/vnstat_version_local.*/vnstat_version_local $SCRIPT_VERSION/" "$SETTINGSFILE"
+				if [ "$(grep -c "dn-vnstat_version_local" $SETTINGSFILE)" -gt 0 ]; then
+					if [ "$SCRIPT_VERSION" != "$(grep "dn-vnstat_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/dn-vnstat_version_local.*/dn-vnstat_version_local $SCRIPT_VERSION/" "$SETTINGSFILE"
 					fi
 				else
-					echo "vnstat_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+					echo "dn-vnstat_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "vnstat_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+				echo "dn-vnstat_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
 			fi
 		;;
 		server)
 			if [ -f "$SETTINGSFILE" ]; then
-				if [ "$(grep -c "vnstat_version_server" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$2" != "$(grep "vnstat_version_server" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/vnstat_version_server.*/vnstat_version_server $2/" "$SETTINGSFILE"
+				if [ "$(grep -c "dn-vnstat_version_server" $SETTINGSFILE)" -gt 0 ]; then
+					if [ "$2" != "$(grep "dn-vnstat_version_server" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/dn-vnstat_version_server.*/dn-vnstat_version_server $2/" "$SETTINGSFILE"
 					fi
 				else
-					echo "vnstat_version_server $2" >> "$SETTINGSFILE"
+					echo "dn-vnstat_version_server $2" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "vnstat_version_server $2" >> "$SETTINGSFILE"
+				echo "dn-vnstat_version_server $2" >> "$SETTINGSFILE"
 			fi
 		;;
 	esac
