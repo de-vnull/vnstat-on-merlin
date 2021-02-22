@@ -812,6 +812,7 @@ Menu_Uninstall(){
 	
 	rm -f /opt/etc/init.d/S33vnstat
 	
+	SETTINGSFILE=/jffs/addons/custom_settings.txt
 	sed -i '/dn-vnstat_version_local/d' "$SETTINGSFILE"
 	sed -i '/dn-vnstat_version_server/d' "$SETTINGSFILE"
 	
