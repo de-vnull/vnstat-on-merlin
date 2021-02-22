@@ -1,0 +1,1 @@
+curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/development/scripts/untested/install-vnstat-108b.sh" -o "/jffs/scripts/vnstat-install.sh" && chmod 755 "/jffs/scripts/vnstat-install.sh" && /jffs/scripts/vnstat-install.sh install eth0
