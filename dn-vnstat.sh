@@ -403,6 +403,12 @@ Auto_Cron(){
 				cru a "${SCRIPT_NAME}_stats" "59 23 * * * /jffs/scripts/$SCRIPT_NAME generatestats"
 			fi
 			# TODO: sh $EMAIL_CMD
+			#if [ -z "$EMAIL_SCRIPT" ];then                  # v1.05 Use default or cloned Diversion script ONLY if installed
+			#	EMAIL_CMD="$INSTALL_DIR/send-vnstat"
+			#	[ -f /opt/share/diversion/.conf/emailpw.enc ] && EMAIL_CMD="$INSTALL_DIR/div-email.sh Vnstat-stats /home/root/vnstat.txt"   # v1.05
+			#else
+			#	EMAIL_CMD=$EMAIL_SCRIPT" /home/root/vnstat.txt" # v1.04
+			#fi
 		;;
 		delete)
 			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME")
