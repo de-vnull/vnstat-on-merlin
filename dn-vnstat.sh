@@ -350,13 +350,6 @@ Auto_ServiceEvent(){
 Auto_Startup(){
 	case $1 in
 		create)
-			if [ -f /jffs/scripts/services-start ]; then
-				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
-				
-				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
-				fi
-			fi
 			if [ -f /jffs/scripts/post-mount ]; then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/post-mount)
 				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"$SCRIPT_NAME" /jffs/scripts/post-mount)
@@ -376,13 +369,6 @@ Auto_Startup(){
 			fi
 		;;
 		delete)
-			if [ -f /jffs/scripts/services-start ]; then
-				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)
-				
-				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
-				fi
-			fi
 			if [ -f /jffs/scripts/post-mount ]; then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/post-mount)
 				
