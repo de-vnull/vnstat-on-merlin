@@ -8,7 +8,7 @@
 <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
 <link rel="shortcut icon" href="images/favicon.png">
 <link rel="icon" href="images/favicon.png">
-<title>Vnstat</title>
+<title>dn-vnstat</title>
 <link rel="stylesheet" type="text/css" href="index_style.css">
 <link rel="stylesheet" type="text/css" href="form_style.css">
 <style>
@@ -89,6 +89,11 @@ function initial(){
 	SetCurrentPage();
 	show_menu();
 	AddEventHandlers();
+	var today = new Date();
+	var date = today.getFullYear()+'-'+("0" + (today.getMonth()+1)).slice(-2) +'-'+("0" + today.getDate()).slice(-2);
+	var time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2);
+	var dateTime = date+' '+time;
+	document.getElementById("statstitle").innerHTML = "This page last refreshed: " + dateTime;
 }
 
 function reload(){
@@ -105,7 +110,7 @@ function reload(){
 <input type="hidden" name="next_page" value="">
 <input type="hidden" name="modified" value="0">
 <input type="hidden" name="action_mode" value="apply">
-<input type="hidden" name="action_script" value="start_connmon">
+<input type="hidden" name="action_script" value="start_dn-vnstat">
 <input type="hidden" name="action_wait" value="45">
 <input type="hidden" name="first_time" value="">
 <input type="hidden" name="SystemCmd" value="">
@@ -128,110 +133,69 @@ function reload(){
 <tr bgcolor="#4D595D">
 <td valign="top">
 <div>&nbsp;</div>
-<div class="formfonttitle" id="scripttitle" style="text-align:center;">Vnstat on Merlin - v 0.9.0 (beta)</div>
-<div id="statstitle" style="text-align:center;"><p> This page last refreshed: <p id="P1">
-<script>
-
-var today = new Date();
-
-var date = today.getFullYear()+'-'+("0" + (today.getMonth()+1)).slice(-2) +'-'+("0" + today.getDate()).slice(-2);
-
-var time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2);
-
-var dateTime = date+' '+time;
-
-document.getElementById("P1").innerHTML = dateTime;
-
-</script>
-</div>
+<div class="formfonttitle" id="scripttitle" style="text-align:center;">dn-vnstat</div>
+<div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
-<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5). </i></u>Vnstat and vnstati are linux data usage reporting tools.</div>
-
-
-<div style="line-height:10px;">&nbsp;</div>
-<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="chart_ping">
-<tr>
-<td colspan="2">Monthly usage (click to expand/collapse)</td>
-</tr>
-</thead>
-<tr>
-<td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_ppp0_m.png" alt="Monthly"/></div>
-</td>
-</tr>
-</table>
-
+<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5).</i></u> vnstat and vnstati are linux data usage reporting tools.</div>
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="chart_jitter">
-<tr>
-<td colspan="2">Daily usage (click to expand/collapse)</td>
-</tr>
+<thead class="collapsible-jquery" id="thead_monthly">
+<tr><td colspan="2">Monthly usage (click to expand/collapse)</td></tr>
 </thead>
-<tr>
-<td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_ppp0_d.png" alt="Daily"/></div>
-</td>
-</tr>
+<tr><td colspan="2" align="center" style="padding: 0px;">
+<div><img src="/user/dn-vnstat/images/vnstat_m.png" id="img_monthly" alt="Monthly"/></div>
+</td></tr>
 </table>
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="chart_linequality">
-<tr>
-<td colspan="2">Hourly usage (click to expand/collapse)</td>
-</tr>
+<thead class="collapsible-jquery" id="thead_daily">
+<tr><td colspan="2">Daily usage (click to expand/collapse)</td></tr>
 </thead>
-<tr>
-<td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_ppp0_h.png" alt="Hourly" /></div>
-</td>
-</tr>
+<tr><td colspan="2" align="center" style="padding: 0px;">
+<div><img src="/user/dn-vnstat/images/vnstat_d.png" id="img_daily" alt="Daily"/></div>
+</td></tr>
 </table>
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="chart_linequality">
-<tr>
-<td colspan="2">Summary of all usage (click to expand/collapse)</td>
-</tr>
+<thead class="collapsible-jquery" id="thead_hourly">
+<tr><td colspan="2">Hourly usage (click to expand/collapse)</td></tr>
 </thead>
-<tr>
-<td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_ppp0_s.png" alt="Hourly" /></div>
-</td>
-</tr>
+<tr><td colspan="2" align="center" style="padding: 0px;">
+<div><img src="/user/dn-vnstat/images/vnstat_h.png" id="img_hourly" alt="Hourly" /></div>
+</td></tr>
 </table>
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="chart_linequality">
-<tr>
-<td colspan="2">Top 10 usage (click to expand/collapse)</td>
-</tr>
+<thead class="collapsible-jquery" id="thead_summary">
+<tr><td colspan="2">Summary of all usage (click to expand/collapse)</td></tr>
 </thead>
-<tr>
-<td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat_ppp0_t.png" alt="Hourly" /></div>
-</td>
-</tr>
+<tr><td colspan="2" align="center" style="padding: 0px;">
+<div><img src="/user/dn-vnstat/images/vnstat_s.png" id="img_summary" alt="Summary" /></div>
+</td></tr>
 </table>
-
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="chart_linequality">
-<tr>
-<td colspan="2">Vnstat CLI (click to expand/collapse)</td>
-</tr>
+<thead class="collapsible-jquery" id="thead_top10">
+<tr><td colspan="2">Top 10 usage (click to expand/collapse)</td></tr>
 </thead>
-<tr>
-<td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/vnstat/vnstat.png" alt="Monthly" /></div>
-</td>
-</tr>
+<tr><td colspan="2" align="center" style="padding: 0px;">
+<div><img src="/user/dn-vnstat/images/vnstat_t.png" id="img_top10" alt="Top10" /></div>
+</td></tr>
+</table>
+
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+<thead class="collapsible-jquery" id="thead_cli">
+<tr><td colspan="2">vnstat CLI (click to expand/collapse)</td></tr>
+</thead>
+<tr><td colspan="2" align="center" style="padding: 0px;">
+<div><img src="/user/dn-vnstat/images/vnstat.png" id="img_cli" alt="CLI" /></div>
+</td></tr>
 </table>
 
 <p align="right"><small><i>dev_null - snbforums - 02-21</i></small></td>
