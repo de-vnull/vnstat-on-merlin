@@ -408,9 +408,14 @@ Auto_Cron(){
 			fi
 		;;
 		delete)
-			STARTUPLINECOUNT=$(cru l | grep -c "$SCRIPT_NAME")
-			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-				cru d "$SCRIPT_NAME"
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_images")
+			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
+				cru d "${SCRIPT_NAME}_images"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
+			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
+				cru d "${SCRIPT_NAME}_stats"
 			fi
 		;;
 	esac
