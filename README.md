@@ -1,6 +1,6 @@
 Install cmd
 ```sh
-/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/jackyaz/dn-vnstat/master/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
+/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
 ```
 
 # What is this repository for?
