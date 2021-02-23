@@ -129,6 +129,7 @@ Set_Version_Custom_Settings(){
 	esac
 }
 
+### Checks for changes to Github version of script and returns reason for change (version or md5/minor), local version and server version ###
 Update_Check(){
 	echo 'var updatestatus = "InProgress";' > "$SCRIPT_WEB_DIR/detect_update.js"
 	doupdate="false"
@@ -154,6 +155,10 @@ Update_Check(){
 	echo "$doupdate,$localver,$serverver"
 }
 
+### Updates the script from Github including any secondary files ###
+### Accepts arguments of:
+### force - download from server even if no change detected
+### unattended - don't return user to script CLI menu
 Update_Version(){
 	if [ -z "$1" ] || [ "$1" = "unattended" ]; then
 		updatecheckresult="$(Update_Check)"
@@ -208,8 +213,9 @@ Update_Version(){
 	fi
 }
 
+### Perform relevant actions for secondary files when being updated ###
 Update_File(){
-	if [ "$1" = "vnstat-ui.asp" ]; then
+	if [ "$1" = "vnstat-ui.asp" ]; then ### WebUI page
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
 		if ! diff -q "$tmpfile" "$SCRIPT_DIR/$1" >/dev/null 2>&1; then
@@ -223,7 +229,7 @@ Update_File(){
 			Mount_WebUI
 		fi
 		rm -f "$tmpfile"
-	elif [ "$1" = "shared-jy.tar.gz" ]; then
+	elif [ "$1" = "shared-jy.tar.gz" ]; then ### shared web resources
 		if [ ! -f "$SHARED_DIR/$1.md5" ]; then
 			Download_File "$SHARED_REPO/$1" "$SHARED_DIR/$1"
 			Download_File "$SHARED_REPO/$1.md5" "$SHARED_DIR/$1.md5"
@@ -241,7 +247,7 @@ Update_File(){
 				Print_Output true "New version of $1 downloaded" "$PASS"
 			fi
 		fi
-	elif [ "$1" = "S33vnstat" ]; then
+	elif [ "$1" = "S33vnstat" ]; then ### Entware S script to launch vnstat
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
 		if ! diff -q "$tmpfile" "/opt/etc/init.d/$1" >/dev/null 2>&1; then
@@ -255,7 +261,7 @@ Update_File(){
 			Print_Output true "New version of $1 downloaded" "$PASS"
 		fi
 		rm -f "$tmpfile"
-	elif [ "$1" = "vnstat.conf" ]; then
+	elif [ "$1" = "vnstat.conf" ]; then ### vnstat config file
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
 		if [ ! -f "$SCRIPT_DIR/$1" ]; then
@@ -277,6 +283,7 @@ Update_File(){
 	fi
 }
 
+### Create directories in filesystem if they do not exist ###
 Create_Dirs(){
 	if [ ! -d "$SCRIPT_DIR" ]; then
 		mkdir -p "$SCRIPT_DIR"
@@ -299,6 +306,7 @@ Create_Dirs(){
 	fi
 }
 
+### Create symbolic links to /www/user for WebUI files to avoid file duplication ###
 Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
@@ -311,6 +319,7 @@ Create_Symlinks(){
 	fi
 }
 
+### Add script hook to service-event and pass service_event argument and all other arguments passed to the service call ###
 Auto_ServiceEvent(){
 	case $1 in
 		create)
@@ -347,6 +356,7 @@ Auto_ServiceEvent(){
 	esac
 }
 
+### Add script hook to post-mount and pass startup argument and all other arguments passed with the partition mount ###
 Auto_Startup(){
 	case $1 in
 		create)
@@ -379,6 +389,7 @@ Auto_Startup(){
 		;;
 	esac
 }
+
 
 Auto_Cron(){
 	case $1 in
