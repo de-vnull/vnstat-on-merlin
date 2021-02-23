@@ -1,4 +1,4 @@
-Install cmd
+# Install cmd
 ```sh
 /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
 ```
@@ -8,8 +8,6 @@ This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. T
 
 # Acknowlegements
 -   This was created with support from @Jack Yaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting. Many thanks, Jack!
--   There is a "beta install" script created by @Martineau of snbforums. This is a work in progress. See additional notes below.
-    -   My gratitude (and those of the users) to @Martineau for collaborating on this.
 -   My thanks also to @thelonelycoder of snbforums, for the use of his emailing process, which is part of his Diversion ad-blocking application for Merlin.
 -   And this wouldn't be possible without the vnstat program, so my thanks to Teemu Toivola too.
 
@@ -21,7 +19,6 @@ This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. T
 
 # Version
 -   Version: 0.0.1
--   Install script version: 1.4 (see below)
 
 # How do I get set up?
 -   Note: there is a "TL;DR checklist" at the bottom for an ordered list of actions; being familiar with the design, rationale and constraints is encouraged.
@@ -33,8 +30,6 @@ This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. T
 -   Properly setup email (`Diversion` "communications" option) to use the encrypted username/password to email vnstat reports.
     -   Please run an Entware update to ensure the most current repository lists are available.
     -   You may be able to install Entware separately from Diversion but I have not tested this method.
--   For UI functionality: one or more @JackYaz scripts must be installed to establish the minimum file and folder structure.
-    -   `connmon` is recommended (the vnstat-ui is based on connmon), since it creates the `Add-On` tab in AsusWRT-Merlin.
 
 ## Configuration
 -   The Enware application vnstat can be run without any UI, 100% from the CLI via ssh.
@@ -49,49 +44,19 @@ This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. T
 ## Dependencies
 -   Applications described above. Scripts as described below.
 
-## Database configuration
--   Edit the following configurations:
-    -   Verify the interface your router uses for wan by issuing `nvram get wan0_ifname` from the cli
-        -   In most instances this will be **eth0**, but the AX58U has been reported to use eth4, for example. I do not have an AX58U so cannot verify that this is the only change required to ensure accurate monitoring.
--   You will need to modify `/opt/etc/vnstat.conf` file to update the interface (eth0 or other)
-    -   There are other settings in this file that you may wish to tweak, including unit options (MB vs MiB), sampling rate, etc.
-        -   Changing the setting BandwidthDetection to 0 in vnstat.conf may be required as the interface speed detection may lead to excess log entries.
-    -   You will need to modify `/opt/etc/init.d/S32vnstat` file to update the interface (eth0 or other)
-        -   When done editing, issue `/opt/etc/init.d/S32vnstat restart` command after editing these configurations
-            -   If there is an error stating that the eth0 file can't be found, reinitialize vnstat (e.g., force it to create a new db)
-            -   This can be accomplished by running the command `vnstat -u -i eth0` (where eth0 is the proper wan interface)
-
 ## Deployment instructions for the non-UI (CLI via SSH) version
 -   No additional steps are required. Usage should be recorded automatically circa every 30 seconds to the db file.
 -   To view current status, issue the `vnstat` command from the CLI. There are several additional CLI options (view days, top ten, hourly, monthly, etc) - see image below.
-    -   This type of deployment still supports daily or other frequency of email (`vnstat-stats` followed by `send-vnstat` - or `div-email.sh` - see below)
+    -   This type of deployment still supports daily or other frequency of email
 -   The CLI vnstat report and options view
 ![CLI](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-cli-red.PNG)
 
 ## Deployment instructions for the UI
 -   The UI is a work in progress - this was created principally for my own use and there is no guarantee it will work on other devices (or that you will like the look). Each section can be hidden (a @JackYaz feature) if you prefer not to see that view. Hidden sections should be 'sticky' and retain that setting.
--   The following steps should be followed. Using a program such as WinSCP (Windows) or platform equivalent is suggested.
--   Copy the scripts to the /jffs/scripts directory:
-    -   vnstat-ui
-    -   vnstat-ww.sh
-    -   div-email.sh
-    -   vnstat-stats
-    -   send-vnstat		
--   Create the following file and folder in /jffs/add-ons:
-    -   Folder: vnstat-ui.d
-    -   File: copy vnstat-ui.asp into this folder
--   Be sure all scripts have execute permission (octal 0755).
 -   The AddOns tab showing the vnstat/vnstati view and daily email report collapsed
 ![Collapsed](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Screenshot_2021-02-Vnstat-xp.png)
 
 Purpose of each component is described below - be sure to note where modifications are needed:
--   **vnstat-ui**: script that creates and loads the UI page. This script is mandatory.
--   **vnstat-ww.sh**: script that calls the vnstati (image view of usage details). If using the UI, this script is mandatory and a cronjob needs to be set to call it every X number of minutes (I update every 13 minutes, just to offset from when other scripts might be running. This frequency is set by cron entry - see below).
-    -   You should verify that the "LIB D" and "BIN" paths to reflect the location of your vnstat and vnstati install.
--   **vnstat-stats**: script that creates the "daily" report. The output from this script is used in the UI (Vnstat CLI section) and can be emailed either on daily or other periodic basis.
-    -   You should verify that the paths in this script to reflect the location of the vnstat application.
-    -   If this functionality is not desired, this script is not needed (the UI has the option of hiding this daily report). Note: if this is used in the UI, imagemagick is also required.
--   **vnstat-ui.asp**: this is the UI page. This is somewhat customizable (for example, the order of the display can be modified if you want to dabble in the code). This template is used to create the userX.asp dynamically when the "AddOns" tab is created.
 -   **div-email.sh** - script which sends vnstat reports by email to one or more users. Uses the email configuration from Diversion. See notes below.
 
 **OR**
@@ -107,36 +72,17 @@ This adds another dependency - leveraging @thelonelycoder's Diversion "communica
 Here are the steps to follow to use Diversion's email process:
 1.  Make sure that Diversion's email communication is set up (amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email)) with the account of your choice.
 2.  In /jffs/scripts, create the div-email.sh from the scripts folder. Make sure it's executable (octal 0755).
-3.  Update the cron job via SSH to point to this script rather than the send-vnstat script (all on a single line):
-```sh
-cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
-```
-4.  Test by running
+3.  Test by running
 ```sh
 /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt
 ```
-5.  If not using send-vnstat, you can delete it (to secure your email details).
+4.  If not using send-vnstat, you can delete it (to secure your email details).
 -   A sample of the email message output - sent as an attachment
 ![Email_sample](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-email-xp.png)
 
 ## How to run tests
 -   Test for core vnstat functionality: after a period of usage, issue `vnstat` from the CLI. You should see a report of data usage. If not, reinstall vnstat or check that the correct interface is being monitored.
--   UI functionality: reboot or re-run the `/jffs/services-start` script (or other location if you call the UI from a different location). Check that the cron job calling the vnstati update is working (or execute the `vnstat-ww.sh` script). You should see the usage as images in the vnstat UI tab under AddOns (see picture below).
--   Note: the daily total image will not appear until the following day - to manually test, run the script `vnstat-stats` then hard-refresh the UI page.
-
-## Final installation steps after validation complete
--   Modify startup scripts and add cronjobs
--   Edit services-start (or other appropriate script) to load the vnstat-ui page (add these lines at bottom of script - without the bullets)
-```sh
-sleep 60 # to give the other services time to start properly
-/jffs/scripts/vnstat-on-merlin # the vnstat ui script
-cru a vnstat_update "*/13 * * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-ww.sh" # this forces a data use update and creates the UI graphics for data usage
-cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
-```
--   Instead of the last line, use this if you're running the `send-vnstat` (non-Diversion based email) script:
-```sh
-cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/send-vnstat" # this forces a data use update refreshes the vnstat daily use report and emails it
-```
+-   UI functionality: reboot or re-run `dn-vnstat startup force`. Check that the cron job calling the vnstati update is working. You should see the usage as images in the vnstat UI tab under AddOns (see picture below).
 
 # Miscellaneous notes
 -   The vnstats UI page may require a hard refresh (CTRL+F5 or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse.
@@ -151,41 +97,9 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 2.  SSH into router and install vnstat and vnstati: `opkg install vnstat` and `opkg install vnstati`.
     -   Install imagemagick if full UI functionality is desired: `opkg install imagemagick`.
     -   Install image rendering libraries: `opkg install libjpeg-turbo`
-3.  Create a folder on your usb/thumb drive called "Traffic"
-4.  Verify wan interface with `nvram get wan0_ifname` - note if different from eth0.
-5.  Modify `/opt/etc/vnstat.conf` file to update the interface (eth0 or other)
-6.  Modify `/opt/etc/init.d/S32vnstat` file to update the interface (eth0 or other)
-7.  After updating conf files, restart vnstat with `/opt/etc/init.d/S32vnstat restart` command
-8.  See testing procedures above (vnstat core functionality)
-9.  For UI, copy/create the scripts in the /jffs/scripts directory:
-    -   vnstat-on-merlin
-    -   vnstat-ww.sh
-    -   div-email.sh
-    -   vnstat-stats
-    -   send-vnstat
-10. Create the following file and folder in /jffs/add-ons:
-    -   Folder: vnstat-ui.d
-    -   File: copy vnstat-ui.asp into this folder
-11. Ensure all scripts have execute permission (octal 0755).
-12. In the `vnstat-on-merlin` and `vnstat-stats` scripts, verify the paths to reflect the location of your vnstat and vnstati install (usually /opt/), eg "LIB D" and "BIN"
-13. In the `send-vnstat` (if used) script, modify attributes for email of usage stats (sample is for gmail)
-14. In `services-start` script (or other appropriate script), add the `cronjob` commands (without the bullets, but with the quotes):
-```sh
-sleep 60 # to give the other services time to start properly
-/jffs/scripts/vnstat-on-merlin # the vnstat ui script
-cru a vnstat_update "*/13 * * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-ww.sh" # this forces a data use update and creates the UI graphics for data usage
-cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
-```
-Instead of the last line, use this if you're running the send-vnstat script:
-```sh
-cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/send-vnstat" # this forces a data use update refreshes the vnstat daily use report and emails it
-```
-15. See testing procedures for the UI functionality above
-
-# Install script
--   A "beta install" script has been generously created by @Martineau from [snbforums](https://www.snbforums.com/threads/beta-vnstat-on-merlin-cli-ui-and-email-data-use-monitoring-with-install-script-too.70091/post-661207)
-    -   You may wish to verify that the install, particularly the conf files, match your set-up.
-    -   NOTE: The script does not alter the Database location and cannot modify the email send-vnstatscript with the user credentials. You will need to make these changes manually.
+3.  See testing procedures above (vnstat core functionality)
+4.  In the `send-vnstat` (if used) script, modify attributes for email of usage stats (sample is for gmail)
+5.  See testing procedures for the UI functionality above
 
 # Legal and licensing
 -   This process is unlicensed, but certain components, while all are publically available, may have different licensing requirements. To the best of my knowledge, the methods outlined above do not violate any existing licensing terms.
