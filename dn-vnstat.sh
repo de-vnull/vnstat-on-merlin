@@ -42,6 +42,7 @@ Print_Output(){
 	fi
 }
 
+### Check firmware version contains the "am_addons" feature flag ###
 Firmware_Version_Check(){
 	if nvram get rc_support | grep -qF "am_addons"; then
 		return 0
@@ -50,6 +51,7 @@ Firmware_Version_Check(){
 	fi
 }
 
+### Determine WAN interface using nvram ###
 Get_WAN_IFace(){
 	if [ "$(nvram get wan0_proto)" = "pppoe" ] || [ "$(nvram get wan0_proto)" = "pptp" ] || [ "$(nvram get wan0_proto)" = "l2tp" ]; then
 		IFACE_WAN="ppp0"
@@ -59,6 +61,7 @@ Get_WAN_IFace(){
 	echo "$IFACE_WAN"
 }
 
+### Create "lock" file to ensure script only allows 1 concurrent process for certain actions ###
 ### Code for these functions inspired by https://github.com/Adamm00 - credit to @Adamm ###
 Check_Lock(){
 	if [ -f "/tmp/$SCRIPT_NAME.lock" ]; then
@@ -91,9 +94,10 @@ Clear_Lock(){
 	rm -f "/tmp/$SCRIPT_NAME.lock" 2>/dev/null
 	return 0
 }
-
 ############################################################################
 
+### Create "settings" in the custom_settings file, used by the WebUI for version information and script updates ###
+### local is the version of the script installed, server is the version on Github ###
 Set_Version_Custom_Settings(){
 	SETTINGSFILE=/jffs/addons/custom_settings.txt
 	case "$1" in
