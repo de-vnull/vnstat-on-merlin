@@ -544,7 +544,7 @@ Check_Requirements(){
 
 Generate_Images(){
 	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
-	Print_Output true "vnstati updating stats for UI" "$PASS"
+	Print_Output false "vnstati updating stats for UI" "$PASS"
 	vnstat -u
 	
 	outputs="s h d t m hs"   # what images to generate
