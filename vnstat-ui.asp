@@ -133,10 +133,10 @@ function reload(){
 <tr bgcolor="#4D595D">
 <td valign="top">
 <div>&nbsp;</div>
-<div class="formfonttitle" id="scripttitle" style="text-align:center;">dn-vnstat</div>
+<div class="formfonttitle" id="scripttitle" style="text-align:center;">Vnstat on Merlin - v.0.9.1 JY beta</div>
 <div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
-<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5).</i></u> vnstat and vnstati are linux data usage reporting tools.</div>
+<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5).</i></u> Vnstat and vnstati are Linux data usage reporting tools.</div>
 
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
