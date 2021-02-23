@@ -718,6 +718,7 @@ Menu_Install(){
 	
 	Create_Dirs
 	Set_Version_Custom_Settings local
+	Set_Version_Custom_Settings server "$SCRIPT_VERSION"
 	Create_Symlinks
 	
 	Update_File vnstat.conf
