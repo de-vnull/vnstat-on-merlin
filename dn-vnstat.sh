@@ -820,16 +820,16 @@ Menu_Uninstall(){
 	sed -i '/dn-vnstat_version_local/d' "$SETTINGSFILE"
 	sed -i '/dn-vnstat_version_server/d' "$SETTINGSFILE"
 	
-	printf "\\n\\e[1mDo you want to delete %s configuration file and stats? (y/n)\\e[0m\\n" "$SCRIPT_NAME"
+	printf "\\n\\e[1mWould you like to keep the vnstat data files? (y/n)\\e[0m\\n"
 	read -r confirm
 	case "$confirm" in
 		y|Y)
+			:
+		;;
+		*)
 			rm -rf "$SCRIPT_DIR"
 			rm -rf /opt/var/lib/vnstat
 			rm -f /opt/etc/vnstat.conf
-		;;
-		*)
-			:
 		;;
 	esac
 	
