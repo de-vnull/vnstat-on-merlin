@@ -539,7 +539,6 @@ Check_Requirements(){
 		opkg update
 		opkg install vnstat
 		opkg install vnstati
-		opkg install libjpeg-turbo
 		opkg install imagemagick
 		return 0
 	else
@@ -811,8 +810,8 @@ Menu_Uninstall(){
 	Shortcut_Script delete
 	/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
 	
-	opkg remove --autoremove vnstat
 	opkg remove --autoremove vnstati
+	opkg remove --autoremove vnstat
 	opkg remove --autoremove imagemagick
 	
 	rm -f /opt/etc/init.d/S33vnstat
