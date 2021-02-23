@@ -37,6 +37,18 @@ thead.collapsible-jquery {
 <script language="JavaScript" type="text/javascript" src="/client_function.js"></script>
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
 <script>
+var custom_settings;
+function LoadCustomSettings(){
+	custom_settings = <% get_custom_settings(); %>;
+	for (var prop in custom_settings){
+		if(Object.prototype.hasOwnProperty.call(custom_settings, prop)){
+			if(prop.indexOf("dnvnstat") != -1 && prop.indexOf("dnvnstat_version") == -1){
+				eval("delete custom_settings."+prop)
+			}
+		}
+	}
+}
+
 var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
 
 function GetCookie(cookiename,returntype){
@@ -56,6 +68,83 @@ function GetCookie(cookiename,returntype){
 
 function SetCookie(cookiename,cookievalue){
 	cookie.set("cookie_"+cookiename, cookievalue, 31);
+}
+
+function ScriptUpdateLayout(){
+	var localver = GetVersionNumber("local");
+	var serverver = GetVersionNumber("server");
+	$j("#dnvnstat_version_local").text(localver);
+	
+	if(localver != serverver && serverver != "N/A"){
+		$j("#dnvnstat_version_server").text("Updated version available: "+serverver);
+		showhide("btnChkUpdate", false);
+		showhide("dnvnstat_version_server", true);
+		showhide("btnDoUpdate", true);
+	}
+}
+
+function update_status(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/detect_update.js',
+		dataType: 'script',
+		timeout: 3000,
+		error: function(xhr){
+			setTimeout(update_status, 1000);
+		},
+		success: function(){
+			if(updatestatus == "InProgress"){
+				setTimeout(update_status, 1000);
+			}
+			else{
+				document.getElementById("imgChkUpdate").style.display = "none";
+				showhide("dnvnstat_version_server", true);
+				if(updatestatus != "None"){
+					$j("#dnvnstat_version_server").text("Updated version available: "+updatestatus);
+					showhide("btnChkUpdate", false);
+					showhide("btnDoUpdate", true);
+				}
+				else{
+					$j("#dnvnstat_version_server").text("No update available");
+					showhide("btnChkUpdate", true);
+					showhide("btnDoUpdate", false);
+				}
+			}
+		}
+	});
+}
+
+function CheckUpdate(){
+	showhide("btnChkUpdate", false);
+	document.formScriptActions.action_script.value="start_dn-vnstatcheckupdate";
+	document.formScriptActions.submit();
+	document.getElementById("imgChkUpdate").style.display = "";
+	setTimeout(update_status, 2000);
+}
+
+function DoUpdate(){
+	var action_script_tmp = "start_dn-vnstatdoupdate";
+	document.config_form.action_script.value = action_script_tmp;
+	var restart_time = 10;
+	document.config_form.action_wait.value = restart_time;
+	showLoading();
+	document.config_form.submit();
+}
+
+function GetVersionNumber(versiontype){
+	var versionprop;
+	if(versiontype == "local"){
+		versionprop = custom_settings.dnvnstat_version_local;
+	}
+	else if(versiontype == "server"){
+		versionprop = custom_settings.dnvnstat_version_server;
+	}
+	
+	if(typeof versionprop == 'undefined' || versionprop == null){
+		return "N/A";
+	}
+	else{
+		return versionprop;
+	}
 }
 
 function AddEventHandlers(){
@@ -87,6 +176,8 @@ function SetCurrentPage(){
 
 function initial(){
 	SetCurrentPage();
+	LoadCustomSettings();
+	ScriptUpdateLayout();
 	show_menu();
 	AddEventHandlers();
 	var today = new Date();
@@ -137,7 +228,24 @@ function reload(){
 <div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
 <div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5).</i></u> vnstat and vnstati are Linux data usage reporting tools.</div>
-
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
+<thead class="collapsible-jquery-config" id="scripttools">
+<tr><td colspan="2">Utilities (click to expand/collapse)</td></tr>
+</thead>
+<tr>
+<th width="20%">Version information</th>
+<td>
+<span id="dnvnstat_version_local" style="color:#FFFFFF;"></span>
+&nbsp;&nbsp;&nbsp;
+<span id="dnvnstat_version_server" style="display:none;">Update version</span>
+&nbsp;&nbsp;&nbsp;
+<input type="button" class="button_gen" onclick="CheckUpdate();" value="Check" id="btnChkUpdate">
+<img id="imgChkUpdate" style="display:none;vertical-align:middle;" src="images/InternetScan.gif"/>
+<input type="button" class="button_gen" onclick="DoUpdate();" value="Update" id="btnDoUpdate" style="display:none;">
+&nbsp;&nbsp;&nbsp;
+</td>
+</tr>
+</table>
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_monthly">
@@ -198,7 +306,7 @@ function reload(){
 </td></tr>
 </table>
 
-<p align="right"><small><i>dev_null - snbforums - 02-21</i></small></td>
+<p align="right"><small><i>dev_null - snbforums - 02-23</i></small></td>
 </tr>
 </tbody>
 </table>
@@ -208,6 +316,14 @@ function reload(){
 </td>
 </tr>
 </table>
+</form>
+<form method="post" name="formScriptActions" action="/start_apply.htm" target="hidden_frame">
+<input type="hidden" name="productid" value="<% nvram_get("productid"); %>">
+<input type="hidden" name="current_page" value="">
+<input type="hidden" name="next_page" value="">
+<input type="hidden" name="action_mode" value="apply">
+<input type="hidden" name="action_script" value="">
+<input type="hidden" name="action_wait" value="">
 </form>
 <div id="footer"></div>
 </body>
