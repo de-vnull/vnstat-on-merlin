@@ -584,6 +584,54 @@ Generate_Email(){
 	#fi
 }
 
+vom_rio(){
+	ScriptHeader
+	printf "\\n\\n\\nPrevious alpha/beta1/self install version of Vnstat on Merlin has been detected on the router."
+	printf "\\n$SCRIPT_NAME needs to remove this version to continue. Note that $SCRIPT_NAME will NOT delete any existing vnstat database files.\\n"
+	printf "Are you sure you want to continue? (type YES to continue, any other key to quit):  "
+	read -r CONDITION
+	
+	if [ "$CONDITION" = "YES" ]; then
+		Print_Output false "Uninstalling 'VoM alpha/beta1/manual version'..."
+		# Kill vnstat - probably not necessary, but better safe
+		Print_Output false "Stopping vnstatd..."
+		/opt/etc/init.d/S32vnstat stop
+		killall vnstatd 2> /dev/nul
+		
+		# Delete cron jobs
+		Print_Output false "Removing cron jobs..."
+		cru d vnstat_daily
+		cru d vnstat_update
+		# Delete vnstat activities from the various startup scripts
+		Print_Output false "Removing vnstat hooks from user scripts..."
+		grep "vnstat_daily" /jffs/scripts/service-event && sed -i '/vnstat_daily/d' /jffs/scripts/service-event 2> /dev/nul
+		grep "vnstat_update" /jffs/scripts/service-event && sed -i '/vnstat_update/d' /jffs/scripts/service-event 2> /dev/null
+		grep "vnstat_daily" /jffs/scripts/services-start && sed -i '/vnstat_daily/d' /jffs/scripts/services-start 2> /dev/null
+		grep "vnstat_update" /jffs/scripts/services-start && sed -i '/vnstat_update/d' /jffs/scripts/services-start 2> /dev/null
+		grep "vnstat-ui" /jffs/scripts/post-mount && sed -i '/vnstat-ui/d' /jffs/scripts/post-mount 2> /dev/null
+		# Now remove the directories and files associated with the alpha/beta1/manual installations
+		Print_Output false "Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed."
+		rm -rf /jffs/addons/vnstat-ui.d
+		rm -rf /jffs/addons/vnstat.d
+		rm -f /jffs/scripts/send-vnstat.sh
+		rm -f /jffs/scripts/vnstat-stats
+		rm -f /jffs/scripts/vnstat-ui
+		rm -f /jffs/scripts/vnstat-ww.sh
+		rm -f /jffs/scripts/vnstat-install.sh
+		# Wrap up
+		Print_Output false "Removal of old script files completed. Installation of $SCRIPT_NAME will continue." "$PASS"
+		Print_Output false "Note, if you made any manual edits to /opt/etc/vnstat.conf you will need to re-apply them to $SCRIPT_DIR/vnstat.conf once installation is complete." "$WARN"
+		PressEnter
+		ScriptHeader
+	else
+		Print_Output false "Exiting, previous version of vnstat script must be removed to install $SCRIPT_NAME"
+		PressEnter
+		Clear_Lock
+		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
+		exit 1
+	fi
+}
+
 ScriptHeader(){
 	clear
 	printf "\\n"
@@ -594,7 +642,7 @@ ScriptHeader(){
 	printf "\\e[1m##                                             ##\\e[0m\\n"
 	printf "\\e[1m##              %s on %-9s            ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "\\e[1m##                                             ## \\e[0m\\n"
-	printf "\\e[1m##              Created by dev_null            ##\\e[0m\\n"
+	printf "\\e[1m##            Created by dev_null              ##\\e[0m\\n"
 	printf "\\e[1m##                                             ##\\e[0m\\n"
 	printf "\\e[1m#################################################\\e[0m\\n"
 	printf "\\n"
@@ -680,6 +728,10 @@ Menu_Install(){
 		Clear_Lock
 		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 		exit 1
+	fi
+	
+	if [ -d /jffs/addons/vnstat.d ] || [ -f /opt/etc/vnstat.conf ] || [ -f /jffs/scripts/vnstat-install.sh ]; then
+		vom_rio
 	fi
 	
 	IFACE=""
