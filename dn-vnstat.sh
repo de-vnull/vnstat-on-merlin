@@ -386,7 +386,7 @@ Auto_Cron(){
 		create)
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_images")
 			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
-				cru a "${SCRIPT_NAME}_images" "*/13 * * * * /jffs/scripts/$SCRIPT_NAME generateimages"
+				cru a "${SCRIPT_NAME}_images" "*/5 * * * * /jffs/scripts/$SCRIPT_NAME generateimages"
 			fi
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
