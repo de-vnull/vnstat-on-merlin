@@ -50,16 +50,6 @@ Firmware_Version_Check(){
 	fi
 }
 
-### Determine WAN interface using nvram ###
-Get_WAN_IFace(){
-	if [ "$(nvram get wan0_proto)" = "pppoe" ] || [ "$(nvram get wan0_proto)" = "pptp" ] || [ "$(nvram get wan0_proto)" = "l2tp" ]; then
-		IFACE_WAN="ppp0"
-	else
-		IFACE_WAN="$(nvram get wan0_ifname)"
-	fi
-	echo "$IFACE_WAN"
-}
-
 ### Create "lock" file to ensure script only allows 1 concurrent process for certain actions ###
 ### Code for these functions inspired by https://github.com/Adamm00 - credit to @Adamm ###
 Check_Lock(){
@@ -544,6 +534,17 @@ Check_Requirements(){
 	else
 		return 1
 	fi
+}
+
+
+### Determine WAN interface using nvram ###
+Get_WAN_IFace(){
+	if [ "$(nvram get wan0_proto)" = "pppoe" ] || [ "$(nvram get wan0_proto)" = "pptp" ] || [ "$(nvram get wan0_proto)" = "l2tp" ]; then
+		IFACE_WAN="ppp0"
+	else
+		IFACE_WAN="$(nvram get wan0_ifname)"
+	fi
+	echo "$IFACE_WAN"
 }
 
 Generate_Images(){
