@@ -11,7 +11,7 @@ __BETA 2__
 
 ### What is this repository for? ###
 
-* This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use in a local database, to supplement the internal monitoring tool, `Traffic Analyzer > Traffic Monitor`, which will episodically record false “17GB” usage bursts. This only occurs on some routers on some firmware (e.g., RT-AC68U and RT-AC66U_B1 on 386.1). 
+* This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use in a local database, to supplement the internal monitoring tool, `Traffic Analyzer > Traffic Monitor`, which will peridically record false “17GB” usage bursts. This only occurs on some routers on some firmware (e.g., RT-AC68U and RT-AC66U_B1 on 386.1). 
 
 * This became a particular concern when Xfinity began implementing 1.2GB caps nationwide in January 2021 (note: postponed in the Northeast until 2022).
 
@@ -19,7 +19,7 @@ __BETA 2__
 
 - This project was created with an incredible amount of support from @JackYaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting.
 
-    - Words cannot adequetly describe my gratefulness - Jack literally spent hours scripting, consolidating, testing, providing feedback, and patiently responding to feedback and answering my every question, no matter how mundane (or innane). The install, menu and functioning integrated removal of old installs and email is 100% credit to @JackYaz.
+    - Words cannot adequetly describe my gratefulness - Jack literally spent hours scripting, consolidating, testing, providing feedback, and patiently responding to feedback and answering my every question, no matter how mundane (or inane). The install, menu and functioning integrated removal of old installs and email is 100% credit to @JackYaz.
 
    - My thanks to @thelonelycoder, for allowing this script to leverage Diversion's email process.
  
