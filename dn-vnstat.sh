@@ -607,7 +607,7 @@ Generate_Email(){
 		
 		#Send Email
 		#First parameter is subject, second is file to send
-		/usr/sbin/curl --url "$PROTOCOL://$SMTP:$PORT" \
+		/usr/sbin/curl -s --url "$PROTOCOL://$SMTP:$PORT" \
 		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
 		--upload-file /tmp/mail.txt \
 		--ssl-reqd \
