@@ -19,7 +19,7 @@ __BETA 2__
 
 - This project was created with an incredible amount of support from @JackYaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting.
 
-    - Words cannot adequetly describe my gratefulness - Jack literally spent hours, scripting, consolidating, testing, providing feedback, and patiently responding to my every question. The install, menu and functioning integrated removal of old installs and email is 100% @JackYaz.
+    - Words cannot adequetly describe my gratefulness - Jack literally spent hours scripting, consolidating, testing, providing feedback, and patiently responding to feedback and answering my every question, no matter how mundane (or innane). The install, menu and functioning integrated removal of old installs and email is 100% credit to @JackYaz.
 
    - My thanks to @thelonelycoder, for allowing this script to leverage Diversion's email process.
  
