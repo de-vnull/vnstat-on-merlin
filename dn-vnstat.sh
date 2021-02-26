@@ -586,12 +586,13 @@ Generate_Email(){
 
 vom_rio(){
 	ScriptHeader
-	printf "\\n\\n\\nPrevious alpha/beta1/self install version of Vnstat on Merlin has been detected on the router."
-	printf "\\n$SCRIPT_NAME needs to remove this version to continue. Note that $SCRIPT_NAME will NOT delete any existing vnstat database files.\\n"
-	printf "Are you sure you want to continue? (type YES to continue, any other key to quit):  "
+	printf "\\n\\nPrevious alpha/beta1/self-install version of Vnstat on Merlin has been detected on your router.\\n"
+	printf "\\n\\e[1m$SCRIPT_NAME needs to remove this version to install a newer version.\\e[0m\\n"
+	printf "\\nNote that $SCRIPT_NAME will NOT delete any existing vnstat database files.\\n"
+	printf "\\n\\e[33mPress y to continue or any other key to quit this installation and keep the existing version:\\e[0m  "
 	read -r CONDITION
 	
-	if [ "$CONDITION" = "YES" ]; then
+	if [ "$CONDITION" = "y" ]; then
 		Print_Output false "Uninstalling 'VoM alpha/beta1/manual version'..."
 		# Kill vnstat - probably not necessary, but better safe
 		Print_Output false "Stopping vnstatd..."
@@ -620,7 +621,8 @@ vom_rio(){
 		rm -f /jffs/scripts/vnstat-install.sh
 		# Wrap up
 		Print_Output false "Removal of old script files completed. Installation of $SCRIPT_NAME will continue." "$PASS"
-		Print_Output false "Note, if you made any manual edits to /opt/etc/vnstat.conf you will need to re-apply them to $SCRIPT_DIR/vnstat.conf once installation is complete." "$WARN"
+		printf "\\n\\e[1m\\e[33mNote, if you made any manual edits to /opt/etc/vnstat.conf (such as customizing the location of the database files)\\n"
+		printf "you will need to re-apply them to $SCRIPT_DIR/vnstat.conf once installation is complete.\\e[0m\\n"
 		PressEnter
 		ScriptHeader
 	else
