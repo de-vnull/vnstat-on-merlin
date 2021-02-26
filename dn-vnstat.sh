@@ -597,7 +597,7 @@ vom_rio(){
 		# Kill vnstat - probably not necessary, but better safe
 		Print_Output false "Stopping vnstatd..."
 		/opt/etc/init.d/S32vnstat stop
-		killall vnstatd 2> /dev/nul
+		killall vnstatd 2>/dev/null
 		
 		# Delete cron jobs
 		Print_Output false "Removing cron jobs..."
@@ -605,11 +605,11 @@ vom_rio(){
 		cru d vnstat_update
 		# Delete vnstat activities from the various startup scripts
 		Print_Output false "Removing vnstat hooks from user scripts..."
-		grep "vnstat_daily" /jffs/scripts/service-event && sed -i '/vnstat_daily/d' /jffs/scripts/service-event 2> /dev/nul
-		grep "vnstat_update" /jffs/scripts/service-event && sed -i '/vnstat_update/d' /jffs/scripts/service-event 2> /dev/null
-		grep "vnstat_daily" /jffs/scripts/services-start && sed -i '/vnstat_daily/d' /jffs/scripts/services-start 2> /dev/null
-		grep "vnstat_update" /jffs/scripts/services-start && sed -i '/vnstat_update/d' /jffs/scripts/services-start 2> /dev/null
-		grep "vnstat-ui" /jffs/scripts/post-mount && sed -i '/vnstat-ui/d' /jffs/scripts/post-mount 2> /dev/null
+		grep "vnstat_daily" /jffs/scripts/service-event && sed -i '/vnstat_daily/d' /jffs/scripts/service-event 2>/dev/null
+		grep "vnstat_update" /jffs/scripts/service-event && sed -i '/vnstat_update/d' /jffs/scripts/service-event 2>/dev/null
+		grep "vnstat_daily" /jffs/scripts/services-start && sed -i '/vnstat_daily/d' /jffs/scripts/services-start 2>/dev/null
+		grep "vnstat_update" /jffs/scripts/services-start && sed -i '/vnstat_update/d' /jffs/scripts/services-start 2>/dev/null
+		grep "vnstat-ui" /jffs/scripts/post-mount && sed -i '/vnstat-ui/d' /jffs/scripts/post-mount 2>/dev/null
 		# Now remove the directories and files associated with the alpha/beta1/manual installations
 		Print_Output false "Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed."
 		rm -rf /jffs/addons/vnstat-ui.d
