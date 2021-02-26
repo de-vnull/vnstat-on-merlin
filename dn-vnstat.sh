@@ -574,14 +574,47 @@ Generate_Stats(){
 }
 
 Generate_Email(){
-	:
-	# TODO: sh $EMAIL_CMD
-	#if [ -z "$EMAIL_SCRIPT" ];then                  # v1.05 Use default or cloned Diversion script ONLY if installed
-	#	EMAIL_CMD="$INSTALL_DIR/send-vnstat"
-	#	[ -f /opt/share/diversion/.conf/emailpw.enc ] && EMAIL_CMD="$INSTALL_DIR/div-email.sh Vnstat-stats /home/root/vnstat.txt"   # v1.05
-	#else
-	#	EMAIL_CMD=$EMAIL_SCRIPT" /home/root/vnstat.txt" # v1.04
-	#fi
+	if [ ! -f /opt/bin/diversion ]; then
+		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
+		Print_Output true "Diversion can be installed using amtm" "$ERR"
+	elif [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; then
+		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
+		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
+	else
+		# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
+		# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
+		mailsubject=vnstat-stats
+		mailbody=/tmp/vnstat.txt
+		
+		# Email settings (mail envelope) #
+		. /opt/share/diversion/.conf/email.conf
+		PASSWORD=""
+		if ! openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null ; then
+			PASSWORD="$(openssl aes-256-cbc -d -md md5 -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
+		else
+			PASSWORD="$(openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
+		fi
+		
+		#Build email
+		{
+			echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
+			echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
+			echo "Subject: $mailsubject as of $(date +"%H.%M on %F")";
+			echo "Date: $(date -R)";
+			echo "";
+		} > /tmp/mail.txt
+		cat "$mailbody" >>/tmp/mail.txt
+		
+		#Send Email
+		#First parameter is subject, second is file to send
+		/usr/sbin/curl --url "$PROTOCOL://$SMTP:$PORT" \
+		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
+		--upload-file /tmp/mail.txt \
+		--ssl-reqd \
+		--user "$USERNAME:$PASSWORD" "$SSL_FLAG"
+		rm /tmp/mail.txt
+		logger -s -t div-email email event processed
+	fi
 }
 
 vom_rio(){
