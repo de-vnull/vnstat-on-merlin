@@ -31,7 +31,7 @@ __BETA 2__
 * This was created for personal use, but is being published for the potential benefit to the community of users. Improvement and enhancement suggestions are welcomed (I already have a few in mind).
 	
 	- The vnstat application and accompanying UI have been tested on Merlin 384.19, 386.1 beta 1-5 and 386.1 and 1_2 release, on RT-AC66U_B1 (on AC68U firmware) and RT-AX86U 386.1 beta 1-5 and 386.1 release. 
-	- Preliminary testing on John's fork on MIPs demostrates functionality, though the "CLI" image on the UI is not created (it appears to be an issue with Imagemagick). A potential fix is included in future enhancements).
+	- Preliminary testing on John's fork on MIPs demostrates functionality, though the "CLI" image on the UI is not created (it appears to be an issue with Imagemagick). A potential fix is included in future enhancements.
 	- The totals are consistent with the firmware "Traffic Monitor/Traffic Analyzer". The totals reported by vnstat are slightly higher than those currently being reported by Comcast (about 10-15%).
 
 	- Feedback and comments are welcomed. PM to @dev_null @ snbforums
@@ -52,30 +52,20 @@ __BETA 2__
     - Properly setup email (`Diversion` "communications" option) to use the encrypted username/password to email vnstat reports.
 		- Please run an Entware update to ensure the most current repository lists are available.
 		- Please test Diversion email (`amtm > 1 - Diversion > c - Communication > 5 - Edit email settings, send testmail` > follow steps to set up and test) before enabling the Vnstat on Merlin usage email.
-			
-* Configuration
-	- The Enware application `vnstat` can be run without any UI, 100% from the CLI via ssh.
-		- In this use case, requirements are simply to install (via Entware) the vnstat executable.
-		- __Note: if running vnstat solely from the CLI (SSH), there is no need to install via the script below. Install using the command `opkg install vnstat`.__
 
 * Dependencies for the UI version
 	- Hardware and firmware described above.
 
 * Database configuration
-	- Unlike in the alpha/beta1/manual installations, there is no separate database configuration required. This is now part of the automation.
-	- _If you have a custom location for your database files, you will need to either update `vnstat.conf` with those locations, re-initialize the database in the standard location, or terminate vnstatd (`killall vnstatd`) and copy your database files to the standard location._
-
-* Deployment instructions for the non-UI (CLI via SSH) version
-	- No additional steps are required. Usage should be recorded automatically circa every 30 seconds to the db file.
-	- To view current status, issue the `vnstat` command from the CLI. There are several additional CLI options (view days, top ten, hourly, monthly, etc) - see image below.
-	- This type of deployment can support daily summary email (but require additional downloads and manual steps).
+	- Unlike in the alpha/beta1/manual installations, there is no separate database configuration required for the UI-installed version. This is now part of the automation.
+	- _Note: if you have a custom location for your database files, you will need to either update `vnstat.conf` with those locations, re-initialize the database in the standard location (losing history), or terminate vnstatd (`killall vnstatd`) and copy your database files to the standard location._
 
 
-### Install script - beta 2 ###
+### Install script - UI version - beta 2 ###
 
 * From the CLI, issue the following command (triple click to select all):
 ```
-/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
+/usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
 ```
 	
 * The AddOns tab showing the vnstat/vnstati view and daily email report collapsed
@@ -87,7 +77,7 @@ __BETA 2__
 ![Email_sample](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-email-xp.png)
 
 
-### How do I upgrade from a manual install or alpha or beta1? ###
+### Upgrade from a manual install or alpha or beta 1 ###
 * This __beta2__ version is re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
 * The updated install script will detect any previously installed scripts and will inform you that these will be removed. __Database files will be intact on the device.__
 * If you don't want to migrate to the new version, you can abort the install.
@@ -95,13 +85,24 @@ __BETA 2__
 
 ### Miscellaneous notes ###
 * The vnstats UI page may require a hard refresh (`CTRL+F5` or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse.
-* Note: db files can in some instances be moved across devices, but only of the same architecture (e.g., ARM7 to ARM7). Different architecture will result in an error and call for a db reinitialization. I have not found a workaround to cross-architecture errors.
-* There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). I have not used this functionality.
+* Note: db files can in some instances be moved across devices, but only of the same architecture (e.g., ARM7 to ARM7). Different architecture will result in an error and requires a db reinitialization. 
+* There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). 
 * It has been reported that with _hardware acceleration_ implemented, the data counts provided by vnstat are no more accurate than the built-in tools (which is to say, not accurate).
 
 
 
-### Addition non-UI configuration steps ###
+### Non-UI configuration steps ###
+
+* Install instructions for the __non-UI__ (CLI via SSH) version
+	- No additional steps are required. Usage should be recorded automatically circa every 30 seconds to the db file.
+	- To view current status, issue the `vnstat` command from the CLI. There are several additional CLI options (view days, top ten, hourly, monthly, etc) - see image below.
+	- This type of deployment can support daily summary email (but require additional downloads and manual steps).
+
+* Configuration
+	- The Enware application `vnstat` can be run without any UI, 100% from the CLI via ssh.
+		- In this use case, requirements are simply to install (via Entware) the vnstat executable.
+		- __Note: if running vnstat solely from the CLI (SSH), there is no need to install via the UI install script.__ 
+		- Install from the CLI using the command `opkg install vnstat`.
 
 * If you want to run vnstat without the UI, __are running Diversion__, and still wish to have a daily email, follow these steps:
 
@@ -111,23 +112,22 @@ __BETA 2__
 If you're running the `div-email.sh` script with the non-UI version of vnstat, add this line to the `services-start` and the `service-event` scripts in the `/jffs/scripts` directory:
 
 ```
-cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
+cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats.sh && sh /jffs/scripts/div-email.sh Vnstat-stats /home/root/vnstat.txt"
 ```
 
 * If you want to run vnstat without the UI, __are not running Diversion__, and still wish to email daily usage:
-	- Copy __vnstat-stats.sh__ script from this location. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
-	- Copy __send-vnstat__ script from this location. 
+	- Copy __vnstat-stats.sh__ script from this location to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
+	- Copy __send-vnstat.sh__ script from this location to /jffs/scripts. 
 		- The `send-vnstat` script requires you to update the email address (from, password, and to), your router name and other information.
 		- This script stores email credentials in plain text. Use only when you have control over access to the router.
 			- __This script should be used only when Diversion's email communication is not enabled or available.__
 
-If you're running the `send-vnstat` script, add this line to the `services-start` and the `service-event` scripts in the `/jffs/scripts` directory:
+If you're running the `send-vnstat.sh` script, add this line to the `services-start` and the `service-event` scripts in the `/jffs/scripts` directory:
 
 ```
-cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats.sh && sh /jffs/scripts/send-vnstat"
+cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-stats.sh && sh /jffs/scripts/send-vnstat.sh"
 ```
 
-### Other views ###
 * The CLI vnstat report and options view
 
 
