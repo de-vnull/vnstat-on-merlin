@@ -720,6 +720,10 @@ Menu_Install(){
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null"
 	sleep 1
 	
+	if [ -d /jffs/addons/vnstat.d ] || [ -f /opt/etc/vnstat.conf ] || [ -f /jffs/scripts/vnstat-install.sh ]; then
+		vom_rio
+	fi
+	
 	Print_Output true "Checking your router meets the requirements for $SCRIPT_NAME"
 	
 	if ! Check_Requirements; then
@@ -728,10 +732,6 @@ Menu_Install(){
 		Clear_Lock
 		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 		exit 1
-	fi
-	
-	if [ -d /jffs/addons/vnstat.d ] || [ -f /opt/etc/vnstat.conf ] || [ -f /jffs/scripts/vnstat-install.sh ]; then
-		vom_rio
 	fi
 	
 	IFACE=""
