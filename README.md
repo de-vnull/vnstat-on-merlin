@@ -30,7 +30,7 @@ __BETA 2__
 ### Original intent ###
 * This was created for personal use, but is being published for the potential benefit to the community of users. Improvement and enhancement suggestions are welcomed (I already have a few in mind).
 	
-	- The vnstat application and accompanying UI have been tested on Merlin 384.19, 386.1 beta 1-5 and 386.1 release, on RT-AC66U_B1 (on AC68U firmware) and RT-AX86U 86.1 beta 1-5 and 386.1 release. 
+	- The vnstat application and accompanying UI have been tested on Merlin 384.19, 386.1 beta 1-5 and 386.1 and 1_2 release, on RT-AC66U_B1 (on AC68U firmware) and RT-AX86U 386.1 beta 1-5 and 386.1 release. 
 	- Preliminary testing on John's fork on MIPs demostrates functionality, though the "CLI" image on the UI is not created (it appears to be an issue with Imagemagick). A potential fix is included in future enhancements).
 	- The totals are consistent with the firmware "Traffic Monitor/Traffic Analyzer". The totals reported by vnstat are slightly higher than those currently being reported by Comcast (about 10-15%).
 
