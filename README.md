@@ -46,8 +46,10 @@ __BETA 2__
 * Prior versions (alpha, beta 1, and manual) required a series of steps to be taken for full install. This __beta 2__ implementation is nearly completely automated, with several additional options available through the `dn-vnstat` command menu, post install.
 
 * Minimum requirements:
-	- AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release version.
-		- Initial testing on John's fork appears to demonstrate expected functionality, except that the "CLI report" image isn't working. Report any further experiences (include router model and firmware version).
+	- AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release versions. 
+		- Earlier versions (384 only) may likewise function; kindly report any further experiences (include router model and firmware version).
+		- Initial testing on John's fork appears to demonstrate expected functionality, except that the "CLI report" image isn't working. Kindly report any further experiences (include router model and firmware version).
+	- Hardware tested RT-AC66U_B1, RT-AC68U, RT-AC86U, RT-AX86U and RT-N66U.
 	- Diversion and it's corresponding install of Entware. Diversion does not need to be running, as long as Entware is installed.
     - Properly setup email (`Diversion` "communications" option) to use the encrypted username/password to email vnstat reports.
 		- Please run an Entware update to ensure the most current repository lists are available.
