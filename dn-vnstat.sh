@@ -872,6 +872,8 @@ Menu_Install(){
 	fi
 	
 	Clear_Lock
+	ScriptHeader
+	MainMenu
 }
 
 Menu_Startup(){
