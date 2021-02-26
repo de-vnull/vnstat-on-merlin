@@ -581,6 +581,7 @@ Generate_Email(){
 		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
 		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
 	else
+		Print_Output true "Attempting to send summary statistic email"
 		# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
 		# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
 		mailsubject=vnstat-stats
@@ -612,8 +613,12 @@ Generate_Email(){
 		--upload-file /tmp/mail.txt \
 		--ssl-reqd \
 		--user "$USERNAME:$PASSWORD" "$SSL_FLAG"
-		rm /tmp/mail.txt
-		logger -s -t div-email email event processed
+		if [ $? -eq 0 ]; then
+			Print_Output true "Summary statistic email sent" "$PASS"
+		else
+			Print_Output true "Summary statistic email failed to send" "$ERR"
+		fi
+		rm -f /tmp/mail.txt
 	fi
 }
 
