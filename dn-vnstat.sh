@@ -21,6 +21,7 @@ readonly IMAGE_OUTPUT_DIR="$SCRIPT_DIR/images"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
+readonly ENABLE_EMAIL_FILE="$SCRIPT_DIR/.emailenabled"
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 ### End of script variables ###
 
@@ -574,52 +575,80 @@ Generate_Stats(){
 }
 
 Generate_Email(){
-	if [ ! -f /opt/bin/diversion ]; then
-		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
-		Print_Output true "Diversion can be installed using amtm" "$ERR"
-	elif [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; then
-		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
-		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
-	else
-		Print_Output true "Attempting to send summary statistic email"
-		# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
-		# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
-		mailsubject=vnstat-stats
-		mailbody=/tmp/vnstat.txt
-		
-		# Email settings (mail envelope) #
-		. /opt/share/diversion/.conf/email.conf
-		PASSWORD=""
-		if ! openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-			PASSWORD="$(openssl aes-256-cbc -d -md md5 -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
+	if [ -f "$ENABLE_EMAIL_FILE" ]; then
+		if [ ! -f /opt/bin/diversion ]; then
+			Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
+			Print_Output true "Diversion can be installed using amtm" "$ERR"
+			return 1
+		elif [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; then
+			Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
+			Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
+			return 1
 		else
-			PASSWORD="$(openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
+			Print_Output true "Attempting to send summary statistic email"
+			# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
+			# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
+			mailsubject=vnstat-stats
+			mailbody=/tmp/vnstat.txt
+			
+			# Email settings (mail envelope) #
+			. /opt/share/diversion/.conf/email.conf
+			PASSWORD=""
+			if ! openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+				PASSWORD="$(openssl aes-256-cbc -d -md md5 -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
+			else
+				PASSWORD="$(openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
+			fi
+			
+			#Build email
+			{
+				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
+				echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
+				echo "Subject: $mailsubject as of $(date +"%H.%M on %F")";
+				echo "Date: $(date -R)";
+				echo "";
+			} > /tmp/mail.txt
+			cat "$mailbody" >>/tmp/mail.txt
+			
+			#Send Email
+			#First parameter is subject, second is file to send
+			/usr/sbin/curl -s --url "$PROTOCOL://$SMTP:$PORT" \
+			--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
+			--upload-file /tmp/mail.txt \
+			--ssl-reqd \
+			--user "$USERNAME:$PASSWORD" "$SSL_FLAG"
+			rm -f /tmp/mail.txt
+			if [ $? -eq 0 ]; then
+				Print_Output true "Summary statistic email sent" "$PASS"
+				return 0
+			else
+				Print_Output true "Summary statistic email failed to send" "$ERR"
+				return 1
+			fi
 		fi
-		
-		#Build email
-		{
-			echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
-			echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-			echo "Subject: $mailsubject as of $(date +"%H.%M on %F")";
-			echo "Date: $(date -R)";
-			echo "";
-		} > /tmp/mail.txt
-		cat "$mailbody" >>/tmp/mail.txt
-		
-		#Send Email
-		#First parameter is subject, second is file to send
-		/usr/sbin/curl -s --url "$PROTOCOL://$SMTP:$PORT" \
-		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
-		--upload-file /tmp/mail.txt \
-		--ssl-reqd \
-		--user "$USERNAME:$PASSWORD" "$SSL_FLAG"
-		if [ $? -eq 0 ]; then
-			Print_Output true "Summary statistic email sent" "$PASS"
-		else
-			Print_Output true "Summary statistic email failed to send" "$ERR"
-		fi
-		rm -f /tmp/mail.txt
 	fi
+}
+
+ToggleEmail(){
+	case "$1" in
+		enable)
+		touch "$ENABLE_EMAIL_FILE"
+		Generate_Email
+		if [ "$?" -eq 1 ]; then
+			ToggleEmail disable
+		fi
+		;;
+		disable)
+			rm -f "$ENABLE_EMAIL_FILE"
+		;;
+		check)
+			if [ -f "$ENABLE_EMAIL_FILE" ]; then
+				echo "ENABLED"
+			else
+				echo "DISABLED"
+			fi
+		;;
+	esac
 }
 
 vom_rio(){
@@ -690,6 +719,7 @@ ScriptHeader(){
 
 MainMenu(){
 	printf "1.    Update stats now\\n\\n"
+	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(ToggleEmail check)"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
@@ -707,6 +737,12 @@ MainMenu(){
 				if Check_Lock menu; then
 					Menu_GenerateStats
 				fi
+				PressEnter
+				break
+			;;
+			2)
+				printf "\\n"
+				Menu_ToggleEmail
 				PressEnter
 				break
 			;;
@@ -875,6 +911,19 @@ Menu_GenerateStats(){
 	Clear_Lock
 }
 
+Menu_ToggleEmail(){
+	if [ -z "$1" ]; then
+		if [ "$(ToggleEmail check)" = "ENABLED" ]; then
+			ToggleEmail disable
+		elif [ "$(ToggleEmail check)" = "DISABLED" ]; then
+			ToggleEmail enable
+		fi
+	else
+		ToggleEmail "$1"
+	fi
+}
+
+
 Menu_Update(){
 	Update_Version
 	Clear_Lock
@@ -1019,6 +1068,7 @@ case "$1" in
 		NTP_Ready
 		Entware_Ready
 		Generate_Stats
+		Generate_Email
 		exit 0
 	;;
 	service_event)
