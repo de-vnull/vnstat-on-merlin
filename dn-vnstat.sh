@@ -589,7 +589,7 @@ Generate_Email(){
 		# Email settings (mail envelope) #
 		. /opt/share/diversion/.conf/email.conf
 		PASSWORD=""
-		if ! openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null ; then
+		if ! openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			PASSWORD="$(openssl aes-256-cbc -d -md md5 -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
 		else
 			PASSWORD="$(openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
