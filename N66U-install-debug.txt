@@ -1,0 +1,464 @@
+murphymj@RT-N66U-F310:/tmp/home/root# /usr/sbin/curl --retry 3 "https://raw.gith
+ubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/dn-vnstat.sh" -o "/jffs/
+scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && sh -x /jffs/scripts/
+dn-vnstat install
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 31478  100 31478    0     0  49184      0 --:--:-- --:--:-- --:--:-- 49184
++ readonly SCRIPT_NAME=dn-vnstat
++ readonly SCRIPT_VERSION=v0.0.1
++ SCRIPT_BRANCH=jackyaz-dev
++ SCRIPT_REPO=https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev
++ readonly SCRIPT_DIR=/jffs/addons/dn-vnstat.d
++ readlink /www/user
++ readonly SCRIPT_WEBPAGE_DIR=/tmp/var/wwwext
++ readonly SCRIPT_WEB_DIR=/tmp/var/wwwext/dn-vnstat
++ readonly IMAGE_OUTPUT_DIR=/jffs/addons/dn-vnstat.d/images
++ readonly SHARED_DIR=/jffs/addons/shared-jy
++ readonly SHARED_REPO=https://raw.githubusercontent.com/jackyaz/shared-jy/master
++ readonly SHARED_WEB_DIR=/tmp/var/wwwext/shared-jy
++ nvram get odmpid
++ [ -z  ]
++ nvram get productid
++ ROUTER_MODEL=RT-N66U
++ readonly CRIT=\e[41m
++ readonly ERR=\e[31m
++ readonly WARN=\e[33m
++ readonly PASS=\e[32m
++ [ -z install ]
++ Check_Lock
++ [ -f /tmp/dn-vnstat.lock ]
++ echo 9394
++ return 0
++ Menu_Install
++ Print_Output true Welcome to dn-vnstat v0.0.1, a script by dev_null
++ [ true = true ]
++ logger -t dn-vnstat Welcome to dn-vnstat v0.0.1, a script by dev_null
++ printf \e[1m%s: Welcome to dn-vnstat v0.0.1, a script by dev_null\e[0m\n\n dn-vnstat
+dn-vnstat: Welcome to dn-vnstat v0.0.1, a script by dev_null
+
++ sleep 1
++ Print_Output true Checking your router meets the requirements for dn-vnstat
++ [ true = true ]
++ logger -t dn-vnstat Checking your router meets the requirements for dn-vnstat
++ printf \e[1m%s: Checking your router meets the requirements for dn-vnstat\e[0m\n\n dn-vnstat
+dn-vnstat: Checking your router meets the requirements for dn-vnstat
+
++ Check_Requirements
++ CHECKSFAILED=false
++ nvram get jffs2_scripts
++ [ 1 -ne 1 ]
++ [ ! -f /opt/bin/opkg ]
++ Firmware_Version_Check
++ nvram get rc_support
++ grep -qF am_addons
++ return 0
++ [ false = false ]
++ Print_Output true Installing required packages from Entware \e[32m
++ [ true = true ]
++ logger -t dn-vnstat Installing required packages from Entware
++ printf \e[1m\e[32m%s: Installing required packages from Entware\e[0m\n\n dn-vnstat
+dn-vnstat: Installing required packages from Entware
+
++ opkg update
+Downloading http://pkg.entware.net/binaries/mipsel/Packages.gz
+Updated list of available packages in /opt/var/opkg-lists/entware-ng
++ opkg install vnstat
+Installing vnstat (1.17-1) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/vnstat_1.17-1_mipselsf.ipk
+Configuring vnstat.
++ opkg install vnstati
+Installing vnstati (1.17-1) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/vnstati_1.17-1_mipselsf.ipk
+Installing libgd (2.2.5-1) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/libgd_2.2.5-1_mipselsf.ipk
+Installing libjpeg (9a-1) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/libjpeg_9a-1_mipselsf.ipk
+Installing libpng (1.6.34-1) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/libpng_1.6.34-1_mipselsf.ipk
+Installing libfreetype (2.8.1-2) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/libfreetype_2.8.1-2_mipselsf.ipk
+Configuring libjpeg.
+Configuring libpng.
+Configuring libfreetype.
+Configuring libgd.
+Configuring vnstati.
++ opkg install imagemagick
+Installing imagemagick (7.0.7-2) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/imagemagick_7.0.7-2_mipselsf.ipk
+Installing libltdl (2.4-2) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/libltdl_2.4-2_mipselsf.ipk
+Installing libtiff (4.0.8-1) to root...
+Downloading http://pkg.entware.net/binaries/mipsel/libtiff_4.0.8-1_mipselsf.ipk
+Configuring libltdl.
+Configuring libtiff.
+Configuring imagemagick.
++ return 0
++ [ -d /jffs/addons/vnstat.d ]
++ [ -f /opt/etc/vnstat.conf ]
++ vom_rio
++ ScriptHeader
++ clear
++ printf \n
+
++ printf \e[1m#################################################\e[0m\n
+#################################################
++ printf \e[1m##                                             ##\e[0m\n
+##                                             ##
++ printf \e[1m##  vnstat and vnstati data usage statistics   ##\e[0m\n
+##  vnstat and vnstati data usage statistics   ##
++ printf \e[1m##              for AsusWRT-Merlin             ##\e[0m\n
+##              for AsusWRT-Merlin             ##
++ printf \e[1m##                                             ##\e[0m\n
+##                                             ##
++ printf \e[1m##              %s on %-9s            ##\e[0m\n v0.0.1 RT-N66U
+##              v0.0.1 on RT-N66U              ##
++ printf \e[1m##                                             ## \e[0m\n
+##                                             ##
++ printf \e[1m##            Created by dev_null              ##\e[0m\n
+##            Created by dev_null              ##
++ printf \e[1m##                                             ##\e[0m\n
+##                                             ##
++ printf \e[1m#################################################\e[0m\n
+#################################################
++ printf \n
+
++ printf \n\n\nPrevious alpha/beta1/self install version of Vnstat on Merlin has been detected on the router.
+
+
+
+Previous alpha/beta1/self install version of Vnstat on Merlin has been detected on the router.+ printf \ndn-vnstat needs to remove this version to continue. Note that dn-vnstat will NOT delete any existing vnstat database files.\n
+
+dn-vnstat needs to remove this version to continue. Note that dn-vnstat will NOT delete any existing vnstat database files.
++ printf Are you sure you want to continue? (type YES to continue, any other key to quit):
+Are you sure you want to continue? (type YES to continue, any other key to quit):  + read -r CONDITION
+YES
++ [ YES = YES ]
++ Print_Output false Uninstalling 'VoM alpha/beta1/manual version'...
++ [ false = true ]
++ printf \e[1m%s: Uninstalling 'VoM alpha/beta1/manual version'...\e[0m\n\n dn-vnstat
+dn-vnstat: Uninstalling 'VoM alpha/beta1/manual version'...
+
++ Print_Output false Stopping vnstatd...
++ [ false = true ]
++ printf \e[1m%s: Stopping vnstatd...\e[0m\n\n dn-vnstat
+dn-vnstat: Stopping vnstatd...
+
++ /opt/etc/init.d/S32vnstat stop
+Error: Unable to read database "/opt/var/lib/vnstat/ppp0": No such file or directory
+Error: Unable to get interface "ppp0" statistics.
+Only available interfaces can be added for monitoring.
+
+The following interfaces are currently available:
+    lo eth0 eth1 eth2 vlan1 br0 wl1.2 tun21
+ Checking vnstatd...              dead.
++ killall vnstatd
++ Print_Output false Removing cron jobs...
++ [ false = true ]
++ printf \e[1m%s: Removing cron jobs...\e[0m\n\n dn-vnstat
+dn-vnstat: Removing cron jobs...
+
++ cru d vnstat_daily
++ cru d vnstat_update
++ Print_Output false Removing vnstat hooks from user scripts...
++ [ false = true ]
++ printf \e[1m%s: Removing vnstat hooks from user scripts...\e[0m\n\n dn-vnstat
+dn-vnstat: Removing vnstat hooks from user scripts...
+
++ grep vnstat_daily /jffs/scripts/service-event
++ grep vnstat_update /jffs/scripts/service-event
++ grep vnstat_daily /jffs/scripts/services-start
++ grep vnstat_update /jffs/scripts/services-start
++ grep vnstat-ui /jffs/scripts/post-mount
++ Print_Output false Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed.
++ [ false = true ]
++ printf \e[1m%s: Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed.\e[0m\n\n dn-vnstat
+dn-vnstat: Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed.
+
++ rm -rf /jffs/addons/vnstat-ui.d
++ rm -rf /jffs/addons/vnstat.d
++ rm -f /jffs/scripts/send-vnstat.sh
++ rm -f /jffs/scripts/vnstat-stats
++ rm -f /jffs/scripts/vnstat-ui
++ rm -f /jffs/scripts/vnstat-ww.sh
++ rm -f /jffs/scripts/vnstat-install.sh
++ Print_Output false Removal of old script files completed. Installation of dn-vnstat will continue. \e[32m
++ [ false = true ]
++ printf \e[1m\e[32m%s: Removal of old script files completed. Installation of dn-vnstat will continue.\e[0m\n\n dn-vnstat
+dn-vnstat: Removal of old script files completed. Installation of dn-vnstat will continue.
+
++ Print_Output false Note, if you made any manual edits to /opt/etc/vnstat.conf you will need to re-apply them to /jffs/addons/dn-vnstat.d/vnstat.conf once installation is complete. \e[33m
++ [ false = true ]
++ printf \e[1m\e[33m%s: Note, if you made any manual edits to /opt/etc/vnstat.conf you will need to re-apply them to /jffs/addons/dn-vnstat.d/vnstat.conf once installation is complete.\e[0m\n\n dn-vnstat
+dn-vnstat: Note, if you made any manual edits to /opt/etc/vnstat.conf you will need to re-apply them to /jffs/addons/dn-vnstat.d/vnstat.conf once installation is complete.
+
++ PressEnter
++ true
++ printf Press enter to continue...
+Press enter to continue...+ read -r key
+
++ break
++ return 0
++ ScriptHeader
++ clear
++ printf \n
+
++ printf \e[1m#################################################\e[0m\n
+#################################################
++ printf \e[1m##                                             ##\e[0m\n
+##                                             ##
++ printf \e[1m##  vnstat and vnstati data usage statistics   ##\e[0m\n
+##  vnstat and vnstati data usage statistics   ##
++ printf \e[1m##              for AsusWRT-Merlin             ##\e[0m\n
+##              for AsusWRT-Merlin             ##
++ printf \e[1m##                                             ##\e[0m\n
+##                                             ##
++ printf \e[1m##              %s on %-9s            ##\e[0m\n v0.0.1 RT-N66U
+##              v0.0.1 on RT-N66U              ##
++ printf \e[1m##                                             ## \e[0m\n
+##                                             ##
++ printf \e[1m##            Created by dev_null              ##\e[0m\n
+##            Created by dev_null              ##
++ printf \e[1m##                                             ##\e[0m\n
+##                                             ##
++ printf \e[1m#################################################\e[0m\n
+#################################################
++ printf \n
+
++ IFACE=
++ Get_WAN_IFace
++ nvram get wan0_proto
++ [ dhcp = pppoe ]
++ nvram get wan0_proto
++ [ dhcp = pptp ]
++ nvram get wan0_proto
++ [ dhcp = l2tp ]
++ nvram get wan0_ifname
++ IFACE_WAN=eth0
++ echo eth0
++ printf \n\e[1mWAN Interface detected as %s\e[0m\n eth0
+
+WAN Interface detected as eth0
++ true
++ printf \n\e[1mIs this correct? (y/n)\e[0m
+
+Is this correct? (y/n)    + read -r confirm
+y
++ Get_WAN_IFace
++ nvram get wan0_proto
++ [ dhcp = pppoe ]
++ nvram get wan0_proto
++ [ dhcp = pptp ]
++ nvram get wan0_proto
++ [ dhcp = l2tp ]
++ nvram get wan0_ifname
++ IFACE_WAN=eth0
++ echo eth0
++ IFACE=eth0
++ break
++ printf \n
+
++ Create_Dirs
++ [ ! -d /jffs/addons/dn-vnstat.d ]
++ [ ! -d /jffs/addons/dn-vnstat.d/images ]
++ [ ! -d /jffs/addons/shared-jy ]
++ [ ! -d /tmp/var/wwwext ]
++ [ ! -d /tmp/var/wwwext/dn-vnstat ]
++ mkdir -p /tmp/var/wwwext/dn-vnstat
++ Set_Version_Custom_Settings local
++ SETTINGSFILE=/jffs/addons/custom_settings.txt
++ [ -f /jffs/addons/custom_settings.txt ]
++ grep -c dnvnstat_version_local /jffs/addons/custom_settings.txt
++ [ 0 -gt 0 ]
++ echo dnvnstat_version_local v0.0.1
++ Set_Version_Custom_Settings server v0.0.1
++ SETTINGSFILE=/jffs/addons/custom_settings.txt
++ [ -f /jffs/addons/custom_settings.txt ]
++ grep -c dnvnstat_version_server /jffs/addons/custom_settings.txt
++ [ 0 -gt 0 ]
++ echo dnvnstat_version_server v0.0.1
++ Create_Symlinks
++ rm -rf /tmp/var/wwwext/dn-vnstat/*
++ ln -s /tmp/detect_vnstat.js /tmp/var/wwwext/dn-vnstat/detect_vnstat.js
++ ln -s /jffs/addons/dn-vnstat.d/images /tmp/var/wwwext/dn-vnstat/images
++ [ ! -d /tmp/var/wwwext/shared-jy ]
++ Update_File vnstat.conf
++ [ vnstat.conf = vnstat-ui.asp ]
++ [ vnstat.conf = shared-jy.tar.gz ]
++ [ vnstat.conf = S33vnstat ]
++ [ vnstat.conf = vnstat.conf ]
++ tmpfile=/tmp/vnstat.conf
++ Download_File https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/vnstat.conf /tmp/vnstat.conf
++ /usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/vnstat.conf -o /tmp/vnstat.conf
++ [ ! -f /jffs/addons/dn-vnstat.d/vnstat.conf ]
++ [ -f /jffs/addons/dn-vnstat.d/vnstat.conf.default ]
++ diff -q /tmp/vnstat.conf /jffs/addons/dn-vnstat.d/vnstat.conf.default
++ rm -f /tmp/vnstat.conf
++ sed -i s/^Interface .*$/Interface "eth0"/ /jffs/addons/dn-vnstat.d/vnstat.conf
++ Update_File vnstat-ui.asp
++ [ vnstat-ui.asp = vnstat-ui.asp ]
++ tmpfile=/tmp/vnstat-ui.asp
++ Download_File https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/vnstat-ui.asp /tmp/vnstat-ui.asp
++ /usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/vnstat-ui.asp -o /tmp/vnstat-ui.asp
++ diff -q /tmp/vnstat-ui.asp /jffs/addons/dn-vnstat.d/vnstat-ui.asp
++ [ -f /jffs/addons/dn-vnstat.d/vnstat-ui.asp ]
++ Download_File https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/vnstat-ui.asp /jffs/addons/dn-vnstat.d/vnstat-ui.asp
++ /usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/vnstat-ui.asp -o /jffs/addons/dn-vnstat.d/vnstat-ui.asp
++ Print_Output true New version of vnstat-ui.asp downloaded \e[32m
++ [ true = true ]
++ logger -t dn-vnstat New version of vnstat-ui.asp downloaded
++ printf \e[1m\e[32m%s: New version of vnstat-ui.asp downloaded\e[0m\n\n dn-vnstat
+dn-vnstat: New version of vnstat-ui.asp downloaded
+
++ Mount_WebUI
++ LOCKFILE=/tmp/addonwebui.lock
++ FD=386
++ eval exec 386>/tmp/addonwebui.lock
++ exec
++ flock -x 386
++ Get_WebUI_Page /jffs/addons/dn-vnstat.d/vnstat-ui.asp
++ MyPage=none
++ page=/www/user/user1.asp
++ [ -f /www/user/user1.asp ]
++ md5sum
++ md5sum
++ [ 26b1b3579e695f9f7bca88b86163702c  - = f518cd5c5e0eb83b39262559e8d6abc8  - ]
++ [ none = none ]
++ [ ! -f /www/user/user1.asp ]
++ page=/www/user/user2.asp
++ [ -f /www/user/user2.asp ]
++ md5sum
++ md5sum
++ [ 26b1b3579e695f9f7bca88b86163702c  - = 26b1b3579e695f9f7bca88b86163702c  - ]
++ MyPage=user2.asp
++ return
++ [ user2.asp = none ]
++ cp -f /jffs/addons/dn-vnstat.d/vnstat-ui.asp /tmp/var/wwwext/user2.asp
++ echo user2.asp
++ cut -f1 -d.
++ echo dn-vnstat
++ uname -o
++ [ ASUSWRT-Merlin-LTS = ASUSWRT-Merlin ]
++ flock -u 386
++ Print_Output true Mounted dn-vnstat WebUI page as user2.asp \e[32m
++ [ true = true ]
++ logger -t dn-vnstat Mounted dn-vnstat WebUI page as user2.asp
++ printf \e[1m\e[32m%s: Mounted dn-vnstat WebUI page as user2.asp\e[0m\n\n dn-vnstat
+dn-vnstat: Mounted dn-vnstat WebUI page as user2.asp
+
++ rm -f /tmp/vnstat-ui.asp
++ Update_File S33vnstat
++ [ S33vnstat = vnstat-ui.asp ]
++ [ S33vnstat = shared-jy.tar.gz ]
++ [ S33vnstat = S33vnstat ]
++ tmpfile=/tmp/S33vnstat
++ Download_File https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/S33vnstat /tmp/S33vnstat
++ /usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/S33vnstat -o /tmp/S33vnstat
++ diff -q /tmp/S33vnstat /opt/etc/init.d/S33vnstat
++ [ -f /opt/etc/init.d/S33vnstat ]
++ Download_File https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/S33vnstat /opt/etc/init.d/S33vnstat
++ /usr/sbin/curl -fsL --retry 3 https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/S33vnstat -o /opt/etc/init.d/S33vnstat
++ chmod 0755 /opt/etc/init.d/S33vnstat
++ /opt/etc/init.d/S33vnstat start
++ Print_Output true New version of S33vnstat downloaded \e[32m
++ [ true = true ]
++ logger -t dn-vnstat New version of S33vnstat downloaded
++ printf \e[1m\e[32m%s: New version of S33vnstat downloaded\e[0m\n\n dn-vnstat
+dn-vnstat: New version of S33vnstat downloaded
+
++ rm -f /tmp/S33vnstat
++ Update_File shared-jy.tar.gz
++ [ shared-jy.tar.gz = vnstat-ui.asp ]
++ [ shared-jy.tar.gz = shared-jy.tar.gz ]
++ [ ! -f /jffs/addons/shared-jy/shared-jy.tar.gz.md5 ]
++ cat /jffs/addons/shared-jy/shared-jy.tar.gz.md5
++ localmd5=f7c572adbe2d161e60d1ad4c1b6ba7f5
++ curl -fsL --retry 3 https://raw.githubusercontent.com/jackyaz/shared-jy/master/shared-jy.tar.gz.md5
++ remotemd5=f7c572adbe2d161e60d1ad4c1b6ba7f5
++ [ f7c572adbe2d161e60d1ad4c1b6ba7f5 != f7c572adbe2d161e60d1ad4c1b6ba7f5 ]
++ Auto_Startup create
++ Auto_Cron create
++ Auto_ServiceEvent create
++ Shortcut_Script create
++ [ -d /opt/bin ]
++ [ ! -f /opt/bin/dn-vnstat ]
++ [ -f /jffs/scripts/dn-vnstat ]
++ ln -s /jffs/scripts/dn-vnstat /opt/bin
++ chmod 0755 /opt/bin/dn-vnstat
++ pidof vnstatd
++ [ -n 9930 ]
++ Print_Output true Sleeping for 5s before generating initial stats \e[33m
++ [ true = true ]
++ logger -t dn-vnstat Sleeping for 5s before generating initial stats
++ printf \e[1m\e[33m%s: Sleeping for 5s before generating initial stats\e[0m\n\n dn-vnstat
+dn-vnstat: Sleeping for 5s before generating initial stats
+
++ sleep 5
++ Generate_Stats
++ date
++ printf vnstats as of:\n%s Thu Feb 25 19:21:43 GMT 2021
++ vnstat -u
++ vnstat -m
++ vnstat -w
++ vnstat -d
++ cat /tmp/vnstat.txt
+vnstats as of:
+Thu Feb 25 19:21:43 GMT 2021
+ eth0  /  monthly
+
+       month        rx      |     tx      |    total    |   avg. rate
+    ------------------------+-------------+-------------+---------------
+      Feb '21      9.40 MiB |    1.35 MiB |   10.74 MiB |    0.04 kbit/s
+    ------------------------+-------------+-------------+---------------
+    estimated        10 MiB |       1 MiB |      11 MiB |
+
+ eth0  /  weekly
+
+                      rx      |     tx      |    total    |   avg. rate
+   ---------------------------+-------------+-------------+---------------
+    last 7 days      9.40 MiB |    1.35 MiB |   10.74 MiB |    0.15 kbit/s
+   current week      9.40 MiB |    1.35 MiB |   10.74 MiB |    0.27 kbit/s
+   ---------------------------+-------------+-------------+---------------
+      estimated        16 MiB |       1 MiB |      17 MiB |
+
+ eth0  /  daily
+
+         day         rx      |     tx      |    total    |   avg. rate
+     ------------------------+-------------+-------------+---------------
+     02/25/2021     9.40 MiB |    1.35 MiB |   10.74 MiB |    1.29 kbit/s
+     ------------------------+-------------+-------------+---------------
+     estimated        11 MiB |       1 MiB |      12 MiB |
++ cat /tmp/vnstat.txt
++ convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- /jffs/addons/dn-vnstat.d/images/vnstat.png
+/jffs/scripts/dn-vnstat: line 1: convert: not found
++ printf \n
+
++ Print_Output true vnstat_totals summary generated \e[32m
++ [ true = true ]
++ logger -t dn-vnstat vnstat_totals summary generated
++ printf \e[1m\e[32m%s: vnstat_totals summary generated\e[0m\n\n dn-vnstat
+dn-vnstat: vnstat_totals summary generated
+
++ Generate_Images
++ Print_Output false vnstati updating stats for UI \e[32m
++ [ false = true ]
++ printf \e[1m\e[32m%s: vnstati updating stats for UI\e[0m\n\n dn-vnstat
+dn-vnstat: vnstati updating stats for UI
+
++ vnstat -u
++ outputs=s h d t m hs
++ grep Interface  /jffs/addons/dn-vnstat.d/vnstat.conf
++ awk {print $2}
++ sed s/"//g
++ interface=eth0
++ vnstati -s -i eth0 -o /jffs/addons/dn-vnstat.d/images/vnstat_s.png
++ vnstati -h -i eth0 -o /jffs/addons/dn-vnstat.d/images/vnstat_h.png
++ vnstati -d -i eth0 -o /jffs/addons/dn-vnstat.d/images/vnstat_d.png
++ vnstati -t -i eth0 -o /jffs/addons/dn-vnstat.d/images/vnstat_t.png
++ vnstati -m -i eth0 -o /jffs/addons/dn-vnstat.d/images/vnstat_m.png
++ vnstati -hs -i eth0 -o /jffs/addons/dn-vnstat.d/images/vnstat_hs.png
++ Clear_Lock
++ rm -f /tmp/dn-vnstat.lock
++ return 0
++ exit 0
+murphymj@RT-N66U-F310:/tmp/home/root#
