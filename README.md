@@ -43,7 +43,7 @@ __BETA 2__
 
 ### How do I get set up? ###
 
-* Prior versions (alpha, beta 1, and manual) required a series of steps to be taken for full install. This __beta 2__ implementation is nearly completely automated, with several additional options available through the `dn-vnstat` command menu, post install.
+* Prior versions (alpha, beta 1, and manual) required a series of steps to be taken for full install. This __beta 2__ implementation is nearly completely automated, with several additional options available through the `dn-vnstat` command menu, post install. __A manual reboot may be required to purge duplicate vnstat-UI pages.__
 
 * Minimum requirements:
 	- AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release versions. 
