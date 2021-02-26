@@ -70,9 +70,13 @@ __BETA 2__
 /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
 ```
 	
-* The AddOns tab showing the vnstat/vnstati view and daily email report collapsed
+* The AddOns tab showing the UI
 
-![Collapsed](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Screenshot_2021-02-Vnstat-xp.png)			
+![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-UI-beta2.png)		
+
+* The dn-vnstat menu
+
+![Menu](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/dn-vnstat-menu.png)
 
 * A sample of the email message output - sent as plain text.
 
