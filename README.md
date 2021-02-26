@@ -51,7 +51,7 @@ __BETA 2__
 	- Diversion and it's corresponding install of Entware. Diversion does not need to be running, as long as Entware is installed.
     - Properly setup email (`Diversion` "communications" option) to use the encrypted username/password to email vnstat reports.
 		- Please run an Entware update to ensure the most current repository lists are available.
-		- Please test Diversion email (`amtm > 1 - Diversion > c - Communication > 5 - Edit email settings, send testmail > follow steps to set up and test`) before enabling the Vnstat on Merlin usage email.
+		- Please test Diversion email (`amtm > 1 - Diversion > c - Communication > 5 - Edit email settings, send testmail` > follow steps to set up and test) before enabling the Vnstat on Merlin usage email.
 			
 * Configuration
 	- The Enware application `vnstat` can be run without any UI, 100% from the CLI via ssh.
@@ -88,27 +88,20 @@ __BETA 2__
 
 
 ### How do I upgrade from a manual install or alpha or beta1? ###
-* This beta2 version is re-written from the ground up, and therefore any scripts from previous installations need to be removed.
-* The vnstat application and, most critically, the interface database files, are to be left intact.
-* A script has been created which removes the previous installed scripts. However, a reboot is required in order to remove anything still in use (e.g., the old UI page)
-* To clean out the old files, run this command from the CLI
-```
-curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/development/scripts/vom-rio.sh" -o "/jffs/scripts/vom-rio.sh" && chmod 755 "/jffs/scripts/vom-rio.sh" && /jffs/scripts/vom-rio.sh
-```
-* Follow the prompts, typing YES when prompted
-* Reboot when finished
-* Run the beta2 install script above.
+* This __beta2__ version is re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
+* The updated install script will detect any previously installed scripts and will inform you that these will be removed. __Database files will be intact on the device.__
+* If you don't want to migrate to the new version, you can abort the install.
 
 
 ### Miscellaneous notes ###
-* The vnstats UI page may require a hard refresh (CTRL+F5 or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse.
+* The vnstats UI page may require a hard refresh (`CTRL+F5` or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse.
 * Note: db files can in some instances be moved across devices, but only of the same architecture (e.g., ARM7 to ARM7). Different architecture will result in an error and call for a db reinitialization. I have not found a workaround to cross-architecture errors.
 * There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). I have not used this functionality.
 * It has been reported that with _hardware acceleration_ implemented, the data counts provided by vnstat are no more accurate than the built-in tools (which is to say, not accurate).
 
 
 
-### Miscellaneous configuration ###
+### Addition non-UI configuration steps ###
 
 * If you want to run vnstat without the UI, __are running Diversion__, and still wish to have a daily email, follow these steps:
 
