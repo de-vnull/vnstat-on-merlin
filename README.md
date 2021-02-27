@@ -8,7 +8,7 @@
 
 * This became a particular concern when Xfinity began implementing 1.2GB caps nationwide in January 2021 (note: postponed in the Northeast until 2022).
 
-### Acknowlegements ###
+### Acknowledgements ###
 
 - This project was created with an incredible amount of support from @JackYaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting.
 
