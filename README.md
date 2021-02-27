@@ -3,9 +3,7 @@
 /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
 ```
 
-# vnstat-on-merlin
-
-__BETA 2__
+# vnstat-on-merlin - _BETA 2_
 
 # README #
 
