@@ -3,9 +3,7 @@
 /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/jackyaz-dev/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
 ```
 
-# vnstat-on-merlin
-
-__BETA 2__
+# vnstat-on-merlin - _BETA 2_
 
 # README #
 
@@ -72,7 +70,7 @@ __BETA 2__
 	
 * The AddOns tab showing the UI
 
-![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-UI-beta2.png)		
+![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-UI-beta2-xp.png)		
 
 * The dn-vnstat menu
 
@@ -112,8 +110,8 @@ __BETA 2__
 
 * If you want to run vnstat without the UI, __are running Diversion__, and still wish to have a daily email, follow these steps:
 
-	- Copy __div-email.sh__ script from this location to /jffs/scripts. This script sends vnstat reports by email to one or more users. Uses the email configuration from Diversion.
-	- Copy __vnstat-stats.sh__ script from this location to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
+	- Copy __div-email.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/main/scripts) to /jffs/scripts. This script sends vnstat reports by email to one or more users. Uses the email configuration from Diversion.
+	- Copy __vnstat-stats.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/main/scripts) to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
 
 If you're running the `div-email.sh` script with the non-UI version of vnstat, add this line to the `services-start` and the `service-event` scripts in the `/jffs/scripts` directory:
 
@@ -122,8 +120,8 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 ```
 
 * If you want to run vnstat without the UI, __are not running Diversion__, and still wish to email daily usage:
-	- Copy __vnstat-stats.sh__ script from this location to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
-	- Copy __send-vnstat.sh__ script from this location to /jffs/scripts. 
+	- Copy __vnstat-stats.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/main/scripts) to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
+	- Copy __send-vnstat.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/main/scripts) to /jffs/scripts. 
 		- The `send-vnstat` script requires you to update the email address (from, password, and to), your router name and other information.
 		- This script stores email credentials in plain text. Use only when you have control over access to the router.
 			- __This script should be used only when Diversion's email communication is not enabled or available.__
@@ -144,7 +142,7 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 
 ### Legal and licensing ###
 	
-* This process is unlicensed, but certain components, while all are publically available, may have different licensing requirements. To the best of my knowledge, the methods outlined above do not violate any existing licensing terms.
+* This process is unlicensed, but certain components, while all are publically available, may have different licensing requirements. To the best of my knowledge, the methods contained in the script and described above do not violate any existing licensing terms.
 * If you port, improve, extend or otherwise modify the concepts included in this process, I only ask for a courtesy attribution, a reference back to this work.
 * Please publish any modifications or improvements back for the general community to benefit.
 
