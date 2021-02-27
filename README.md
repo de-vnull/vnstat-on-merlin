@@ -105,8 +105,9 @@
 
 * If you want to run vnstat without the UI, __are running Diversion__, and still wish to have a daily email, follow these steps:
 
-	- Copy __div-email.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/main/scripts) to /jffs/scripts. This script sends vnstat reports by email to one or more users. Uses the email configuration from Diversion.
-	- Copy __vnstat-stats.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/main/scripts) to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
+	- Copy __div-email.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/VoM_CLI/scripts) to /jffs/scripts. This script sends vnstat reports by email to one or more users. Uses the email configuration from Diversion.
+	- Copy __vnstat-stats.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/VoM_CLI/scripts) to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
+	- Note: you man need to add the _Equifax_Secure_Certificate_Authority.pem_ file to /jffs/scripts if you get an error message (gmail particularly).
 
 If you're running the `div-email.sh` script with the non-UI version of vnstat, add this line to the `services-start` and the `service-event` scripts in the `/jffs/scripts` directory:
 
@@ -115,11 +116,12 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 ```
 
 * If you want to run vnstat without the UI, __are not running Diversion__, and still wish to email daily usage:
-	- Copy __vnstat-stats.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/main/scripts) to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
-	- Copy __send-vnstat.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/main/scripts) to /jffs/scripts. 
+	- Copy __vnstat-stats.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/VoM_CLI/scripts) to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
+	- Copy __send-vnstat.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/VoM_CLI/scripts) to /jffs/scripts. 
 		- The `send-vnstat` script requires you to update the email address (from, password, and to), your router name and other information.
 		- This script stores email credentials in plain text. Use only when you have control over access to the router.
 			- __This script should be used only when Diversion's email communication is not enabled or available.__
+	- Note: you man need to add the _Equifax_Secure_Certificate_Authority.pem_ file to /jffs/scripts if you get an error message (gmail particularly).
 
 If you're running the `send-vnstat.sh` script, add this line to the `services-start` and the `service-event` scripts in the `/jffs/scripts` directory:
 
