@@ -531,6 +531,7 @@ Check_Requirements(){
 		opkg install vnstat
 		opkg install vnstati
 		opkg install imagemagick
+		rm -f /opt/etc/vnstat.conf
 		return 0
 	else
 		return 1
@@ -765,6 +766,8 @@ vom_rio(){
 		rm -f /jffs/scripts/vnstat-ui
 		rm -f /jffs/scripts/vnstat-ww.sh
 		rm -f /jffs/scripts/vnstat-install.sh
+		Print_Output false "Renaming /opt/etc/vnstat.conf to /opt/etc/vnstat.conf.old"
+		mv /opt/etc/vnstat.conf /opt/etc/vnstat.conf.old
 		# Wrap up
 		Print_Output false "Removal of old script files completed. Installation of $SCRIPT_NAME will continue." "$PASS"
 		printf "\\n\\e[1m\\e[33mNote, if you made any manual edits to /opt/etc/vnstat.conf (such as customizing the location of the database files)\\n"
