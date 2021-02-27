@@ -632,8 +632,7 @@ Generate_Email(){
 				echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
 			done
 			echo "</body></html>" >> /tmp/message.html
-			message_base64=$(base64 /tmp/message.html)
-				
+			message_base64="$(cat /tmp/message.html | openssl base64 -A)"
 			{
 				echo "";
 				echo "--MULTIPART-ALTERNATIVE-BOUNDARY";
@@ -647,7 +646,7 @@ Generate_Email(){
 			} >> /tmp/mail.txt
 			
 			for output in $outputs; do
-				image_base64=$(base64 "$IMAGE_OUTPUT_DIR/vnstat_$output.png")
+				image_base64="$(cat "$IMAGE_OUTPUT_DIR/vnstat_$output.png" | openssl base64 -A)"
 				Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
 			done
 			
