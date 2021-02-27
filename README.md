@@ -6,7 +6,7 @@
 
 * This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use in a local database, to supplement the internal monitoring tool, `Traffic Analyzer > Traffic Monitor`, which will peridically record false “17GB” usage bursts. This only occurs on some routers on some firmware (e.g., RT-AC68U and RT-AC66U_B1 on 386.1). 
 
-* This became a particular concern when Xfinity began implementing 1.2GB caps nationwide in January 2021 (note: postponed in the Northeast until 2022).
+* This became a particular concern when Xfinity began implementing 1.2TB caps nationwide in January 2021 (note: postponed in the Northeast until 2022).
 
 ### Acknowledgements ###
 
