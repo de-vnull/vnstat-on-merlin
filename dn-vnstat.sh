@@ -1088,12 +1088,13 @@ Menu_Uninstall(){
 	
 	Shortcut_Script delete
 	/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
-	
+	touch /opt/etc/vnstat.conf
 	opkg remove --autoremove vnstati
 	opkg remove --autoremove vnstat
 	opkg remove --autoremove imagemagick
 	
 	rm -f /opt/etc/init.d/S33vnstat
+	rm -f /opt/etc/vnstat.conf
 	
 	SETTINGSFILE=/jffs/addons/custom_settings.txt
 	sed -i '/dnvnstat_version_local/d' "$SETTINGSFILE"
