@@ -1212,6 +1212,11 @@ case "$1" in
 			Generate_Images
 			Generate_Stats
 			exit 0
+		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
+			settingstate="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f1 -d'_')";
+			settingtype="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f2 -d'_')";
+			Menu_ToggleEmail "$settingstate" "$settingtype"
+			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
 			Update_Check
 			exit 0
