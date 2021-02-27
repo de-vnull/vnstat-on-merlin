@@ -9,6 +9,12 @@
 ##                                             ##
 #################################################
 
+########         Shellcheck directives     ########
+# shellcheck disable=SC1091
+# shellcheck disable=SC2018
+# shellcheck disable=SC2019
+###################################################
+
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
 readonly SCRIPT_VERSION="v0.0.1"
@@ -566,11 +572,13 @@ Generate_Images(){
 Generate_Stats(){
 	printf "vnstats as of:\\n%s" "$(date)" > /tmp/vnstat.txt
 	vnstat -u
-	vnstat -m >> /tmp/vnstat.txt
-	vnstat -w >> /tmp/vnstat.txt
-	vnstat -d >> /tmp/vnstat.txt
+	{
+		vnstat -m;
+		vnstat -w;
+		vnstat -d;
+	} >> /tmp/vnstat.txt
 	cat /tmp/vnstat.txt
-	cat /tmp/vnstat.txt | convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png"
+	convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png" < /tmp/vnstat.txt
 	printf "\\n"
 	Print_Output true "vnstat_totals summary generated" "$PASS"
 }
@@ -633,7 +641,7 @@ Generate_Email(){
 					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
 				done
 				echo "</body></html>" >> /tmp/message.html
-				message_base64="$(cat /tmp/message.html | openssl base64 -A)"
+				message_base64="$(openssl base64 -A < /tmp/message.html)"
 				rm -f /tmp/message.html
 				{
 					echo "";
@@ -648,15 +656,17 @@ Generate_Email(){
 				} >> /tmp/mail.txt
 				
 				for output in $outputs; do
-					image_base64="$(cat "$IMAGE_OUTPUT_DIR/vnstat_$output.png" | openssl base64 -A)"
+					image_base64="$(openssl base64 -A < "$IMAGE_OUTPUT_DIR/vnstat_$output.png")"
 					Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
 				done
 				
 				Encode_Text vnstat.txt "$(cat /tmp/vnstat.txt)" /tmp/mail.txt
 				
-				echo "--MULTIPART-RELATED-BOUNDARY--" >> /tmp/mail.txt
-				echo "" >> /tmp/mail.txt
-				echo "--MULTIPART-MIXED-BOUNDARY--" >> /tmp/mail.txt
+				{
+					echo "--MULTIPART-RELATED-BOUNDARY--";
+					echo "";
+					echo "--MULTIPART-MIXED-BOUNDARY--";
+				} >> /tmp/mail.txt
 			fi
 			
 			#Send Email
@@ -665,12 +675,14 @@ Generate_Email(){
 			--upload-file /tmp/mail.txt \
 			--ssl-reqd \
 			--user "$USERNAME:$PASSWORD" "$SSL_FLAG"
-			rm -f /tmp/mail.txt
+			# shellcheck disable=SC2181
 			if [ $? -eq 0 ]; then
 				Print_Output true "Summary statistic email sent" "$PASS"
+				rm -f /tmp/mail.txt
 				return 0
 			else
 				Print_Output true "Summary statistic email failed to send" "$ERR"
+				rm -f /tmp/mail.txt
 				return 1
 			fi
 		fi
@@ -774,8 +786,8 @@ ToggleEmail(){
 vom_rio(){
 	ScriptHeader
 	printf "\\n\\nPrevious alpha/beta1/self-install version of Vnstat on Merlin has been detected on your router.\\n"
-	printf "\\n\\e[1m$SCRIPT_NAME needs to remove this version to install a newer version.\\e[0m\\n"
-	printf "\\nNote that $SCRIPT_NAME will NOT delete any existing vnstat database files.\\n"
+	printf "\\n\\e[1m%s needs to remove this version to install a newer version.\\e[0m\\n" "$SCRIPT_NAME"
+	printf "\\nNote that %s will NOT delete any existing vnstat database files.\\n" "$SCRIPT_NAME"
 	printf "\\n\\e[33mPress y to continue or any other key to quit this installation and keep the existing version:\\e[0m  "
 	read -r CONDITION
 	
@@ -811,7 +823,7 @@ vom_rio(){
 		# Wrap up
 		Print_Output false "Removal of old script files completed. Installation of $SCRIPT_NAME will continue." "$PASS"
 		printf "\\n\\e[1m\\e[33mNote, if you made any manual edits to /opt/etc/vnstat.conf (such as customizing the location of the database files)\\n"
-		printf "you will need to re-apply them to $SCRIPT_DIR/vnstat.conf once installation is complete.\\e[0m\\n"
+		printf "you will need to re-apply them to %s/vnstat.conf once installation is complete.\\e[0m\\n" "$SCRIPT_DIR"
 		PressEnter
 		ScriptHeader
 	else
