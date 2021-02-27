@@ -72,7 +72,7 @@ __BETA 2__
 	
 * The AddOns tab showing the UI
 
-![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-UI-beta2.png)		
+![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-UI-beta2-xp.png)		
 
 * The dn-vnstat menu
 
