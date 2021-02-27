@@ -590,9 +590,7 @@ Generate_Email(){
 			# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
 			# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
 			
-			outputs="s h d t m hs"   # what images to generate
-			
-			# Email settings (mail envelope) #
+			# Email settings #
 			. /opt/share/diversion/.conf/email.conf
 			PASSWORD=""
 			if ! openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
@@ -601,71 +599,73 @@ Generate_Email(){
 				PASSWORD="$(openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
 			fi
 			
-			#Build email
-			#{
-			#	echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
-			#	echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-			#	echo "Subject: $mailsubject as of $(date +"%H.%M on %F")";
-			#	echo "Date: $(date -R)";
-			#	echo "";
-			#} > /tmp/mail.txt
-			#cat "$mailbody" >>/tmp/mail.txt
-			
-			{
-				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
-				echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-				echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
-				echo "Date: $(date -R)";
-				echo "MIME-Version: 1.0";
-				echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\"";
-				echo "hello there";
-				echo "";
-				echo "--MULTIPART-MIXED-BOUNDARY";
-				echo "Content-Type: multipart/related; boundary=\"MULTIPART-RELATED-BOUNDARY\"";
-				echo "";
-				echo "--MULTIPART-RELATED-BOUNDARY";
-				echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\"";
-			} > /tmp/mail.txt
-			
-			# html message to send
-			echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
-			for output in $outputs; do
-				echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
-			done
-			echo "</body></html>" >> /tmp/message.html
-			message_base64="$(cat /tmp/message.html | openssl base64 -A)"
-			{
-				echo "";
-				echo "--MULTIPART-ALTERNATIVE-BOUNDARY";
-				echo "Content-Type: text/html; charset=utf-8";
-				echo "Content-Transfer-Encoding: base64";
-				echo "";
-				echo "$message_base64";
-				echo "";
-				echo "--MULTIPART-ALTERNATIVE-BOUNDARY--";
-				echo "";
-			} >> /tmp/mail.txt
-			
-			for output in $outputs; do
-				image_base64="$(cat "$IMAGE_OUTPUT_DIR/vnstat_$output.png" | openssl base64 -A)"
-				Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
-			done
-			
-			Encode_Text vnstat.txt "$(cat /tmp/vnstat.txt)" /tmp/mail.txt
-			
-			echo "--MULTIPART-RELATED-BOUNDARY--" >> /tmp/mail.txt
-			echo "" >> /tmp/mail.txt
-			echo "--MULTIPART-MIXED-BOUNDARY--" >> /tmp/mail.txt
+			if grep -q TEXT "$ENABLE_EMAIL_FILE";  then
+				# plain text email to send #
+				{
+					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
+					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
+					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
+					echo "Date: $(date -R)";
+					echo "";
+				} > /tmp/mail.txt
+				cat /tmp/vnstat.txt >>/tmp/mail.txt
+			elif grep -q HTML "$ENABLE_EMAIL_FILE"; then
+				# html message to send #
+				{
+					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
+					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
+					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
+					echo "Date: $(date -R)";
+					echo "MIME-Version: 1.0";
+					echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\"";
+					echo "hello there";
+					echo "";
+					echo "--MULTIPART-MIXED-BOUNDARY";
+					echo "Content-Type: multipart/related; boundary=\"MULTIPART-RELATED-BOUNDARY\"";
+					echo "";
+					echo "--MULTIPART-RELATED-BOUNDARY";
+					echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\"";
+				} > /tmp/mail.txt
+				
+				outputs="s h d t m hs"
+				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
+				for output in $outputs; do
+					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
+				done
+				echo "</body></html>" >> /tmp/message.html
+				message_base64="$(cat /tmp/message.html | openssl base64 -A)"
+				rm -f /tmp/message.html
+				{
+					echo "";
+					echo "--MULTIPART-ALTERNATIVE-BOUNDARY";
+					echo "Content-Type: text/html; charset=utf-8";
+					echo "Content-Transfer-Encoding: base64";
+					echo "";
+					echo "$message_base64";
+					echo "";
+					echo "--MULTIPART-ALTERNATIVE-BOUNDARY--";
+					echo "";
+				} >> /tmp/mail.txt
+				
+				for output in $outputs; do
+					image_base64="$(cat "$IMAGE_OUTPUT_DIR/vnstat_$output.png" | openssl base64 -A)"
+					Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
+				done
+				
+				Encode_Text vnstat.txt "$(cat /tmp/vnstat.txt)" /tmp/mail.txt
+				
+				echo "--MULTIPART-RELATED-BOUNDARY--" >> /tmp/mail.txt
+				echo "" >> /tmp/mail.txt
+				echo "--MULTIPART-MIXED-BOUNDARY--" >> /tmp/mail.txt
+			fi
 			
 			#Send Email
-			#First parameter is subject, second is file to send
 			/usr/sbin/curl -s --url "$PROTOCOL://$SMTP:$PORT" \
 			--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
 			--upload-file /tmp/mail.txt \
 			--ssl-reqd \
 			--user "$USERNAME:$PASSWORD" "$SSL_FLAG"
 			rm -f /tmp/mail.txt
-			rm -f /tmp/message.html
 			if [ $? -eq 0 ]; then
 				Print_Output true "Summary statistic email sent" "$PASS"
 				return 0
@@ -712,18 +712,58 @@ Encode_Text(){
 ToggleEmail(){
 	case "$1" in
 		enable)
-		touch "$ENABLE_EMAIL_FILE"
-		Generate_Email
-		if [ "$?" -eq 1 ]; then
-			ToggleEmail disable
-		fi
+			if [ -z "$2" ]; then
+				ScriptHeader
+				exitmenu="false"
+				printf "\\n\\e[1mA choice of emails is available:\\e[0m\\n"
+				printf "1.    Plain text (summary stats only)\\n"
+				printf "2.    HTML (beta - includes images from WebUI + summary stats as attachment)\\n"
+				printf "\\ne.    Exit to main menu\\n"
+				
+				while true; do
+					printf "\\n\\e[1mChoose an option:\\e[0m    "
+					read -r emailtype
+					case "$emailtype" in
+						1)
+							echo "TEXT" > "$ENABLE_EMAIL_FILE"
+							break
+						;;
+						2)
+							echo "HTML" > "$ENABLE_EMAIL_FILE"
+							break
+						;;
+						e)
+							exitmenu="true"
+							break
+						;;
+						*)
+							printf "\\nPlease choose a valid option\\n\\n"
+						;;
+					esac
+				done
+				
+				printf "\\n"
+				
+				if [ "$exitmenu" = "true" ]; then
+					return
+				fi
+			fi
+			
+			Generate_Email
+			if [ "$?" -eq 1 ]; then
+				ToggleEmail disable
+			fi
 		;;
 		disable)
 			rm -f "$ENABLE_EMAIL_FILE"
 		;;
 		check)
 			if [ -f "$ENABLE_EMAIL_FILE" ]; then
-				echo "ENABLED"
+				if grep -q HTML "$ENABLE_EMAIL_FILE"; then
+					echo "ENABLED - HTML"
+				elif grep -q TEXT "$ENABLE_EMAIL_FILE";  then
+					echo "ENABLED - TEXT"
+				fi
 			else
 				echo "DISABLED"
 			fi
@@ -997,13 +1037,13 @@ Menu_GenerateStats(){
 
 Menu_ToggleEmail(){
 	if [ -z "$1" ]; then
-		if [ "$(ToggleEmail check)" = "ENABLED" ]; then
+		if [ -f "$ENABLE_EMAIL_FILE" ]; then
 			ToggleEmail disable
-		elif [ "$(ToggleEmail check)" = "DISABLED" ]; then
+		elif [ ! -f "$ENABLE_EMAIL_FILE" ]; then
 			ToggleEmail enable
 		fi
 	else
-		ToggleEmail "$1"
+		ToggleEmail "$@"
 	fi
 }
 
