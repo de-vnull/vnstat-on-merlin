@@ -6,7 +6,7 @@
 
 * This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use in a local database, to supplement the internal monitoring tool, `Traffic Analyzer > Traffic Monitor`, which will peridically record false “17GB” usage bursts. This only occurs on some routers on some firmware (e.g., RT-AC68U and RT-AC66U_B1 on 386.1). 
 
-* This became a particular concern when Xfinity began implementing 1.2GB caps nationwide in January 2021 (note: postponed in the Northeast until 2022).
+* This became a particular concern when Xfinity began implementing 1.2TB caps nationwide in January 2021 (note: postponed in the Northeast until 2022).
 
 ### Acknowledgements ###
 
@@ -55,6 +55,7 @@
 	- Unlike in the alpha/beta1/manual installations, there is no separate database configuration required for the UI-installed version. This is now part of the automation.
 	- _Note: if you have a custom location for your database files, you will need to either update `vnstat.conf` with those locations, re-initialize the database in the standard location (losing history), or terminate vnstatd (`killall vnstatd`) and copy your database files to the standard location._
 
+* If you'd like to take a "belt and suspenders" (or "belt and braces" for those on the Continent), you can run `vnstat --exportdb > /path/to/vnstat-export-db.txt` which will export your current database. That way if there are any issues, you can re-import the data.
 
 ### Install script - UI version - beta 2 ###
 
