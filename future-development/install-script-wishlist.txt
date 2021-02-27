@@ -1,9 +1,0 @@
-Items to ask @Martineau about
-
-Can the install script be updated to look to see if Diversion email has been set up (detect the presence of `/opt/share/diversion/.conf/emailpw.enc` and then install the cru a commands pointing to the div-email.sh script?
-- If that file is not present, cru a should use the send-vnstat script
-
-Will @Martineau agree to continue to make edits to the script as things improve?
-- Or provide some eduction on how to self-edit?
-
-Paths have been restored to default /opt/... so hopefully no customization required!

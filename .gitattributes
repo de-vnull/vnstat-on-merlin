@@ -1,0 +1,5 @@
+*.png binary
+*.sh text eol=lf
+*.md text eol=lf
+*.asp text eol=lf
+*.conf text eol=lf
