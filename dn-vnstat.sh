@@ -557,7 +557,7 @@ Generate_Images(){
 	
 	interface="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
-	for output in $outputs ; do
+	for output in $outputs; do
 		vnstati -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
 	done
 }
@@ -588,8 +588,8 @@ Generate_Email(){
 			Print_Output true "Attempting to send summary statistic email"
 			# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
 			# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
-			mailsubject=vnstat-stats
-			mailbody=/tmp/vnstat.txt
+			
+			outputs="s h d t m hs"   # what images to generate
 			
 			# Email settings (mail envelope) #
 			. /opt/share/diversion/.conf/email.conf
@@ -601,14 +601,61 @@ Generate_Email(){
 			fi
 			
 			#Build email
+			#{
+			#	echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
+			#	echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
+			#	echo "Subject: $mailsubject as of $(date +"%H.%M on %F")";
+			#	echo "Date: $(date -R)";
+			#	echo "";
+			#} > /tmp/mail.txt
+			#cat "$mailbody" >>/tmp/mail.txt
+			
 			{
 				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 				echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-				echo "Subject: $mailsubject as of $(date +"%H.%M on %F")";
+				echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
 				echo "Date: $(date -R)";
+				echo "MIME-Version: 1.0";
+				echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\"";
+				echo "hello there";
 				echo "";
+				echo "--MULTIPART-MIXED-BOUNDARY";
+				echo "Content-Type: multipart/related; boundary=\"MULTIPART-RELATED-BOUNDARY\"";
+				echo "";
+				echo "--MULTIPART-RELATED-BOUNDARY";
+				echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\"";
 			} > /tmp/mail.txt
-			cat "$mailbody" >>/tmp/mail.txt
+			
+			# html message to send
+			echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
+			for output in $outputs; do
+				echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
+			done
+			echo "</body></html>" >> /tmp/message.html
+			message_base64=$(base64 /tmp/message.html)
+				
+			{
+				echo "";
+				echo "--MULTIPART-ALTERNATIVE-BOUNDARY";
+				echo "Content-Type: text/html; charset=utf-8";
+				echo "Content-Transfer-Encoding: base64";
+				echo "";
+				echo "$message_base64";
+				echo "";
+				echo "--MULTIPART-ALTERNATIVE-BOUNDARY--";
+				echo "";
+			} >> /tmp/mail.txt
+			
+			for output in $outputs; do
+				image_base64=$(base64 "$IMAGE_OUTPUT_DIR/vnstat_$output.png")
+				Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
+			done
+			
+			Encode_Text vnstat.txt "$(cat /tmp/vnstat.txt)" /tmp/mail.txt
+			
+			echo "--MULTIPART-RELATED-BOUNDARY--" >> /tmp/mail.txt
+			echo "" >> /tmp/mail.txt
+			echo "--MULTIPART-MIXED-BOUNDARY--" >> /tmp/mail.txt
 			
 			#Send Email
 			#First parameter is subject, second is file to send
@@ -618,6 +665,7 @@ Generate_Email(){
 			--ssl-reqd \
 			--user "$USERNAME:$PASSWORD" "$SSL_FLAG"
 			rm -f /tmp/mail.txt
+			rm -f /tmp/message.html
 			if [ $? -eq 0 ]; then
 				Print_Output true "Summary statistic email sent" "$PASS"
 				return 0
@@ -627,6 +675,38 @@ Generate_Email(){
 			fi
 		fi
 	fi
+}
+
+# encode image for email inline
+# $1 : image content id filename (match the cid:filename.png in html document)
+# $2 : image content base64 encoded
+# $3 : output file
+Encode_Image(){
+	{
+		echo "";
+		echo "--MULTIPART-RELATED-BOUNDARY";
+		echo "Content-Type: image/png;name=\"$1\"";
+		echo "Content-Transfer-Encoding: base64";
+		echo "Content-Disposition: inline;filename=\"$1\"";
+		echo "Content-Id: <$1>";
+		echo "";
+		echo "$2";
+	} >> "$3"
+}
+
+# encode text for email inline
+# $1 : text content base64 encoded
+# $2 : output file
+Encode_Text(){
+	{
+		echo "";
+		echo "--MULTIPART-RELATED-BOUNDARY";
+		echo "Content-Type: text/plain;name=\"$1\"";
+		echo "Content-Transfer-Encoding: quoted-printable";
+		echo "Content-Disposition: attachment;filename=\"$1\"";
+		echo "";
+		echo "$2";
+	} >> "$3"
 }
 
 ToggleEmail(){
