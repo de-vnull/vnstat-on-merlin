@@ -811,6 +811,12 @@ vom_rio(){
 		grep "vnstat-ui" /jffs/scripts/post-mount && sed -i '/vnstat-ui/d' /jffs/scripts/post-mount 2>/dev/null
 		# Now remove the directories and files associated with the alpha/beta1/manual installations
 		Print_Output false "Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed."
+		Get_WebUI_Page "/jffs/addons/vnstat-ui.d/vnstat-ui.asp"
+		if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
+			sed -i "\\~$MyPage~d" /tmp/menuTree.js
+			umount /www/require/modules/menuTree.js
+			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+		fi
 		rm -rf /jffs/addons/vnstat-ui.d
 		rm -rf /jffs/addons/vnstat.d
 		rm -f /jffs/scripts/send-vnstat.sh
