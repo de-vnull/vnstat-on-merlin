@@ -22,7 +22,7 @@ if [ "$1" = "start" ] || [ "$1" = "restart" ]; then
 		exit 1
 	fi
 	
-	[ -f "/opt/var/lib/vnstat/*" ] || vnstat --config "$SCRIPT_DIR/vnstat.conf" -u -i "$IFACE"
+	[ "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ] || vnstat --config "$SCRIPT_DIR/vnstat.conf" -u -i "$IFACE"
 fi
 
 ENABLED=yes
