@@ -671,6 +671,10 @@ Generate_Email(){
 				} >> /tmp/mail.txt
 			fi
 			
+			if [ -z "$SSL_FLAG" ]; then
+				SSL_FLAG="--insecure"
+			fi
+			
 			#Send Email
 			/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
 			--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
