@@ -27,6 +27,8 @@ readonly IMAGE_OUTPUT_DIR="$SCRIPT_DIR/images"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
+readonly VNSTAT_COMMAND="vnstat --config $SCRIPT_DIR/vnstat.conf"
+readonly VNSTATI_COMMAND="vnstati --config $SCRIPT_DIR/vnstat.conf"
 readonly ENABLE_EMAIL_FILE="$SCRIPT_DIR/.emailenabled"
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 ### End of script variables ###
@@ -558,24 +560,24 @@ Get_WAN_IFace(){
 Generate_Images(){
 	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 	Print_Output false "vnstati updating stats for UI" "$PASS"
-	vnstat -u
+	$VNSTAT_COMMAND -u
 	
 	outputs="s h d t m hs"   # what images to generate
 	
 	interface="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
 	for output in $outputs; do
-		vnstati -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
+		$VNSTATI_COMMAND -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
 	done
 }
 
 Generate_Stats(){
 	printf "vnstats as of:\\n%s" "$(date)" > /tmp/vnstat.txt
-	vnstat -u
+	$VNSTAT_COMMAND -u
 	{
-		vnstat -m;
-		vnstat -w;
-		vnstat -d;
+		$VNSTAT_COMMAND -m;
+		$VNSTAT_COMMAND -w;
+		$VNSTAT_COMMAND -d;
 	} >> /tmp/vnstat.txt
 	cat /tmp/vnstat.txt
 	convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png" < /tmp/vnstat.txt
