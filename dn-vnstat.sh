@@ -672,7 +672,7 @@ Generate_Email(){
 			fi
 			
 			#Send Email
-			/usr/sbin/curl -s --url "$PROTOCOL://$SMTP:$PORT" \
+			/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
 			--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
 			--upload-file /tmp/mail.txt \
 			--ssl-reqd \
@@ -683,6 +683,7 @@ Generate_Email(){
 				rm -f /tmp/mail.txt
 				return 0
 			else
+				echo ""
 				Print_Output true "Summary statistic email failed to send" "$ERR"
 				rm -f /tmp/mail.txt
 				return 1
