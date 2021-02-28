@@ -17,8 +17,8 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v0.9.3"
-SCRIPT_BRANCH="main"
+readonly SCRIPT_VERSION="v0.9.4"
+SCRIPT_BRANCH="jackyaz-dev"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
@@ -27,6 +27,8 @@ readonly IMAGE_OUTPUT_DIR="$SCRIPT_DIR/images"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
+readonly VNSTAT_COMMAND="vnstat --config $SCRIPT_DIR/vnstat.conf"
+readonly VNSTATI_COMMAND="vnstati --config $SCRIPT_DIR/vnstat.conf"
 readonly ENABLE_EMAIL_FILE="$SCRIPT_DIR/.emailenabled"
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 ### End of script variables ###
@@ -169,12 +171,12 @@ Update_Version(){
 			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - downloading updated $serverver" "$PASS"
 		fi
 		
-		Update_File vnstat-ui.asp
-		Update_File vnstat.conf
-		Update_File S33vnstat
 		Update_File shared-jy.tar.gz
 		
 		if [ "$isupdate" != "false" ]; then
+			Update_File vnstat-ui.asp
+			Update_File vnstat.conf
+			Update_File S33vnstat
 			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
 			chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
 			Clear_Lock
@@ -558,24 +560,24 @@ Get_WAN_IFace(){
 Generate_Images(){
 	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 	Print_Output false "vnstati updating stats for UI" "$PASS"
-	vnstat -u
+	$VNSTAT_COMMAND -u
 	
 	outputs="s h d t m hs"   # what images to generate
 	
 	interface="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
 	for output in $outputs; do
-		vnstati -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
+		$VNSTATI_COMMAND -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
 	done
 }
 
 Generate_Stats(){
 	printf "vnstats as of:\\n%s" "$(date)" > /tmp/vnstat.txt
-	vnstat -u
+	$VNSTAT_COMMAND -u
 	{
-		vnstat -m;
-		vnstat -w;
-		vnstat -d;
+		$VNSTAT_COMMAND -m;
+		$VNSTAT_COMMAND -w;
+		$VNSTAT_COMMAND -d;
 	} >> /tmp/vnstat.txt
 	cat /tmp/vnstat.txt
 	convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png" < /tmp/vnstat.txt
@@ -811,6 +813,12 @@ vom_rio(){
 		grep "vnstat-ui" /jffs/scripts/post-mount && sed -i '/vnstat-ui/d' /jffs/scripts/post-mount 2>/dev/null
 		# Now remove the directories and files associated with the alpha/beta1/manual installations
 		Print_Output false "Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed."
+		Get_WebUI_Page "/jffs/addons/vnstat-ui.d/vnstat-ui.asp"
+		if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
+			sed -i "\\~$MyPage~d" /tmp/menuTree.js
+			umount /www/require/modules/menuTree.js
+			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
+		fi
 		rm -rf /jffs/addons/vnstat-ui.d
 		rm -rf /jffs/addons/vnstat.d
 		rm -f /jffs/scripts/send-vnstat.sh
@@ -854,6 +862,7 @@ ScriptHeader(){
 MainMenu(){
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(ToggleEmail check)"
+	printf "3.    Edit %s config\\n\\n" "$SCRIPT_NAME"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
@@ -878,6 +887,13 @@ MainMenu(){
 				printf "\\n"
 				Menu_ToggleEmail
 				PressEnter
+				break
+			;;
+			3)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_Edit
+				fi
 				break
 			;;
 			u)
@@ -1059,6 +1075,48 @@ Menu_ToggleEmail(){
 	fi
 }
 
+Menu_Edit(){
+	texteditor=""
+	exitmenu="false"
+	
+	printf "\\n\\e[1mA choice of text editors is available:\\e[0m\\n"
+	printf "1.    nano (recommended for beginners)\\n"
+	printf "2.    vi\\n"
+	printf "\\ne.    Exit to main menu\\n"
+	
+	while true; do
+		printf "\\n\\e[1mChoose an option:\\e[0m    "
+		read -r editor
+		case "$editor" in
+			1)
+				texteditor="nano -K"
+				break
+			;;
+			2)
+				texteditor="vi"
+				break
+			;;
+			e)
+				exitmenu="true"
+				break
+			;;
+			*)
+				printf "\\nPlease choose a valid option\\n\\n"
+			;;
+		esac
+	done
+	
+	if [ "$exitmenu" != "true" ]; then
+		CONFFILE="$SCRIPT_DIR/vnstat.conf"
+		oldmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
+		$texteditor "$CONFFILE"
+		newmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
+		if [ "$oldmd5" != "$newmd5" ]; then
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+		fi
+	fi
+	Clear_Lock
+}
 
 Menu_Update(){
 	Update_Version
@@ -1245,6 +1303,18 @@ case "$1" in
 	;;
 	checkupdate)
 		Update_Check
+		exit 0
+	;;
+	develop)
+		SCRIPT_BRANCH="jackyaz-dev"
+		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+		Update_Version force
+		exit 0
+	;;
+	stable)
+		SCRIPT_BRANCH="master"
+		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+		Update_Version force
 		exit 0
 	;;
 	uninstall)
