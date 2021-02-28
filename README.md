@@ -55,7 +55,7 @@
 	- Unlike in the alpha/beta1/manual installations, there is no separate database configuration required for the UI-installed version. This is now part of the automation.
 	- _Note: if you have a custom location for your database files, you will need to either update `vnstat.conf` with those locations, re-initialize the database in the standard location (losing history), or terminate vnstatd (`killall vnstatd`) and copy your database files to the standard location._
 
-* If you'd like to take a "belt and suspenders" (or "belt and braces" for those on the Continent), you can run `vnstat --exportdb > /path/to/vnstat-export-db.txt` which will export your current database. That way if there are any issues, you can re-import the data.
+* If you'd like to take a "belt and suspenders" (or "belt and braces" for those on the Continent), you can run `vnstat --exportdb > /path/to/vnstat-export-db.txt` which will export your current database. That way if there are any issues, you can re-import the data by running `/opt/etc/init.d/S33vnstat kill', then `vnstat --importdb /path/to/vnstat-export-db.txt -i eth0 --force` (enter the correct interface for your setup), followed by `/opt/etc/init.d/S33vnstat start`.
 
 ### Install script - UI version - beta 2 ###
 
@@ -79,7 +79,7 @@
 
 ### Upgrade from a manual install or alpha or beta 1 ###
 * This __beta2__ version is re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
-* The updated install script will detect any previously installed scripts and will inform you that these will be removed. __Database files will be intact on the device.__
+* The updated install script will detect any previously installed scripts and will inform you that these will be removed. __Database files will be left intact on the device.__
 * If you don't want to migrate to the new version, you can abort the install.
 
 
