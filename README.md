@@ -175,7 +175,7 @@ HourlyRate 1
 # show rate in summary (1 = enabled, 0 = disabled)
 SummaryRate 1
 ```
-
+See here for default view: https://imgur.com/a/ufMQgeA
 
 ### Legal and licensing ###
 	
