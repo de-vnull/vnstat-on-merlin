@@ -31,7 +31,7 @@
 	- Any errors or omissions will be corrected upon notice, but the user assumes all risk.
 
 ### Version ###
-* Version: 0.9.3a
+* Version: 0.9.4
 * This is "beta 2"
 
 ### How do I get set up? ###
@@ -71,7 +71,7 @@
 	
 * The AddOns tab showing the UI
 
-![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Screenshot_2021-02-28 dn-vnstat-gr-xp.png)		
+![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Screenshot_2021-02-28_dn-vnstat-gr-xp.png)		
 
 * The dn-vnstat menu
 
