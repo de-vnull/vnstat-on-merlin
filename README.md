@@ -167,13 +167,13 @@ To add the 'rate' columns back:
 # 0 = minimal & narrow, 1 = bar column visible
 # 2 = same as 1 except rate in summary and weekly
 # 3 = rate column visible
-OutputStyle 0
+OutputStyle 1
 
 # show hours with rate (1 = enabled, 0 = disabled)
-HourlyRate 0
+HourlyRate 1
 
 # show rate in summary (1 = enabled, 0 = disabled)
-SummaryRate 0
+SummaryRate 1
 ```
 
 
