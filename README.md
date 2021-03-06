@@ -31,7 +31,7 @@
 	- Any errors or omissions will be corrected upon notice, but the user assumes all risk.
 
 ### Version ###
-* Version: 0.9.3a
+* Version: 0.9.4
 * This is "beta 2"
 
 ### How do I get set up? ###
@@ -71,7 +71,7 @@
 	
 * The AddOns tab showing the UI
 
-![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-UI-beta2-xp.png)		
+![UI-full](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Screenshot_2021-02-28_dn-vnstat-gr-xp.png)		
 
 * The dn-vnstat menu
 
@@ -140,8 +140,42 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 
 ![CLI](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-cli-red.PNG)
 
+### Returning the default theme and rate columns ###
 
+To restore the default vnstat colors and rate columns, edit `vnstat.conf` (via the `dn-vnstat` script), make the following changes. 
 
+To restore the colors, make these changes:
+```
+# image colors
+CBackground     "FFFFFF"
+CEdge           "AEAEAE"
+CHeader         "606060"
+CHeaderTitle    "FFFFFF"
+CHeaderDate     "FFFFFF"
+CText           "000000"
+CLine           "B0B0B0"
+CLineL          "-"
+CRx             "92CF00"
+CTx             "606060"
+CRxD            "-"
+CTxD            "-"
+```
+
+To add the 'rate' columns back:
+```
+# output style
+# 0 = minimal & narrow, 1 = bar column visible
+# 2 = same as 1 except rate in summary and weekly
+# 3 = rate column visible
+OutputStyle 1
+
+# show hours with rate (1 = enabled, 0 = disabled)
+HourlyRate 1
+
+# show rate in summary (1 = enabled, 0 = disabled)
+SummaryRate 1
+```
+See here for default view: https://imgur.com/a/ufMQgeA
 
 ### Legal and licensing ###
 	
