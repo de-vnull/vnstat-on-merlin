@@ -602,11 +602,18 @@ Generate_Email(){
 			
 			# Email settings #
 			. /opt/share/diversion/.conf/email.conf
+			PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
 			PASSWORD=""
-			if ! openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-				PASSWORD="$(openssl aes-256-cbc -d -md md5 -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
-			else
-				PASSWORD="$(openssl aes-256-cbc -d -in /opt/share/diversion/.conf/emailpw.enc -pass pass:ditbabot,isoi 2>/dev/null)"
+			# shellcheck disable=SC2154
+			if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+				# old OpenSSL 1.0.x
+				PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi)"
+			elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+				# new OpenSSL 1.1.x non-converted password
+				PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi)"
+			elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+				# new OpenSSL 1.1.x converted password with -pbkdf2 flag
+				PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi)"
 			fi
 			
 			if grep -q TEXT "$ENABLE_EMAIL_FILE";  then
@@ -671,16 +678,12 @@ Generate_Email(){
 				} >> /tmp/mail.txt
 			fi
 			
-			if [ -z "$SSL_FLAG" ]; then
-				SSL_FLAG="--insecure"
-			fi
-			
 			#Send Email
 			/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
 			--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
 			--upload-file /tmp/mail.txt \
 			--ssl-reqd \
-			--user "$USERNAME:$PASSWORD" "$SSL_FLAG"
+			--user "$USERNAME:$PASSWORD" $SSL_FLAG
 			# shellcheck disable=SC2181
 			if [ $? -eq 0 ]; then
 				Print_Output true "Summary statistic email sent" "$PASS"
