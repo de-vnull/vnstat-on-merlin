@@ -227,7 +227,7 @@ function reload(){
 <div class="formfonttitle" id="scripttitle" style="text-align:center;">Vnstat on Merlin</div>
 <div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
-<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5).</i></u> vnstat and vnstati are Linux data usage reporting tools.</div>
+<div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5; CMD+R or equiv).</i></u> vnstat and vnstati are Linux data usage reporting tools.</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
 <thead class="collapsible-jquery-config" id="scripttools">
 <tr><td colspan="2">Utilities (click to expand/collapse)</td></tr>
