@@ -3,9 +3,10 @@
 #################################################
 ##                                             ##
 ##  vnstat and vnstati data usage statistics   ##
-##              for AsusWRT-Merlin             ##
+##            for AsusWRT-Merlin               ##
 ##                                             ##
-##              Created by dev_null            ##
+##            Created by dev_null              ##
+##    github.com/de-vnull/vnstat-on-merlin     ##
 ##                                             ##
 #################################################
 
