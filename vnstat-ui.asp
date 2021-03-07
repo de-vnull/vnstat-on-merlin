@@ -147,6 +147,29 @@ function GetVersionNumber(versiontype){
 	}
 }
 
+function SaveConfig(){
+	var action_script_tmp = "start_dn-vnstatconfig" + document.form.dnvnstat_emailenabled.value;
+	document.form.action_script.value = action_script_tmp;
+	var restart_time = 10;
+	document.form.action_wait.value = restart_time;
+	showLoading();
+	document.form.submit();
+}
+
+function get_emailenabled_file(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/emailenabled.htm',
+		dataType: 'text',
+		timeout: 10000,
+		error: function(xhr){
+			document.form.dnvnstat_emailenabled.value = "disable";
+		},
+		success: function(data){
+			document.form.dnvnstat_emailenabled.value = "enable_" + data;
+		}
+	});
+}
+
 function AddEventHandlers(){
 	$j(".collapsible-jquery").click(function(){
 		$j(this).siblings().toggle("fast",function(){
@@ -158,7 +181,7 @@ function AddEventHandlers(){
 			}
 		})
 	});
-
+	
 	$j(".collapsible-jquery").each(function(index,element){
 		if(GetCookie($j(this)[0].id,"string") == "collapsed"){
 			$j(this).siblings().toggle(false);
@@ -179,6 +202,7 @@ function initial(){
 	LoadCustomSettings();
 	ScriptUpdateLayout();
 	show_menu();
+	get_emailenabled_file();
 	AddEventHandlers();
 	var today = new Date();
 	var date = today.getFullYear()+'-'+("0" + (today.getMonth()+1)).slice(-2) +'-'+("0" + today.getDate()).slice(-2);
@@ -246,6 +270,30 @@ function reload(){
 </td>
 </tr>
 </table>
+
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_config">
+<thead class="collapsible-jquery" id="scriptconfig">
+<tr><td colspan="2">Configuration (click to expand/collapse)</td></tr>
+</thead>
+<tr class="even" id="rowenableemail">
+<th width="40%">Enable daily summary emails</th>
+<td class="settingvalue">
+<input type="radio" name="dnvnstat_emailenabled" id="dnvnstat_emailenabled_enabled_html" class="input" value="enable_HTML" checked>
+<label for="dnvnstat_emailenabled_enabled_html" class="settingvalue">HTML</label>
+<input type="radio" name="dnvnstat_emailenabled" id="dnvnstat_emailenabled_enabled_text" class="input" value="enable_TEXT">
+<label for="dnvnstat_emailenabled_text" class="settingvalue">Text</label>
+<input type="radio" name="dnvnstat_emailenabled" id="dnvnstat_emailenabled_disabled" class="input" value="disable">
+<label for="dnvnstat_emailenabled_disabled" class="settingvalue">Disabled</label>
+</td>
+</tr>
+<tr class="apply_gen" valign="top" height="35px">
+<td colspan="2" style="background-color:rgb(77, 89, 93);">
+<input type="button" onclick="SaveConfig();" value="Save" class="button_gen" name="button">
+</td>
+</tr>
+</table>
+
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_monthly">
