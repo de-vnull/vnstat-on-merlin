@@ -306,7 +306,7 @@ function reload(){
 </td></tr>
 </table>
 
-<p align="right"><small><i>dev_null - snbforums - 02-23</i></small></td>
+<p align="right"><small><i>dev_null - https://github.com/de-vnull/vnstat-on-merlin</i></small></td>
 </tr>
 </tbody>
 </table>
