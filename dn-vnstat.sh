@@ -29,6 +29,7 @@ readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
 readonly VNSTAT_COMMAND="vnstat --config $SCRIPT_DIR/vnstat.conf"
 readonly VNSTATI_COMMAND="vnstati --config $SCRIPT_DIR/vnstat.conf"
+readonly VNSTAT_OUTPUT_FILE=/tmp/vnstat.txt
 readonly ENABLE_EMAIL_FILE="$SCRIPT_DIR/.emailenabled"
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 ### End of script variables ###
@@ -310,6 +311,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
+	ln -s "$VNSTAT_OUTPUT_FILE" "$SCRIPT_WEB_DIR/vnstatoutput.htm" 2>/dev/null
 	ln -s "$ENABLE_EMAIL_FILE" "$SCRIPT_WEB_DIR/emailenabled.htm" 2>/dev/null
 	ln -s "$IMAGE_OUTPUT_DIR" "$SCRIPT_WEB_DIR/images" 2>/dev/null
 	
@@ -538,7 +540,6 @@ Check_Requirements(){
 		opkg update
 		opkg install vnstat
 		opkg install vnstati
-		opkg install imagemagick
 		rm -f /opt/etc/vnstat.conf
 		return 0
 	else
@@ -572,15 +573,14 @@ Generate_Images(){
 }
 
 Generate_Stats(){
-	printf "vnstats as of:\\n%s" "$(date)" > /tmp/vnstat.txt
+	printf "vnstats as of:\\n%s" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	$VNSTAT_COMMAND -u
 	{
 		$VNSTAT_COMMAND -m;
 		$VNSTAT_COMMAND -w;
 		$VNSTAT_COMMAND -d;
-	} >> /tmp/vnstat.txt
-	cat /tmp/vnstat.txt
-	convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png" < /tmp/vnstat.txt
+	} >> "$VNSTAT_OUTPUT_FILE"
+	cat "$VNSTAT_OUTPUT_FILE"
 	printf "\\n"
 	Print_Output true "vnstat_totals summary generated" "$PASS"
 }
@@ -625,7 +625,7 @@ Generate_Email(){
 					echo "Date: $(date -R)";
 					echo "";
 				} > /tmp/mail.txt
-				cat /tmp/vnstat.txt >>/tmp/mail.txt
+				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
 			elif grep -q HTML "$ENABLE_EMAIL_FILE"; then
 				# html message to send #
 				{
@@ -669,7 +669,7 @@ Generate_Email(){
 					Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
 				done
 				
-				Encode_Text vnstat.txt "$(cat /tmp/vnstat.txt)" /tmp/mail.txt
+				Encode_Text vnstat.txt "$(cat "$VNSTAT_OUTPUT_FILE")" /tmp/mail.txt
 				
 				{
 					echo "--MULTIPART-RELATED-BOUNDARY--";

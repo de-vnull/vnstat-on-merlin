@@ -170,6 +170,19 @@ function get_emailenabled_file(){
 	});
 }
 
+function loadVnStatOutput(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/vnstatoutput.htm',
+		dataType: 'text',
+		error: function(xhr){
+			setTimeout(loadVnStatOutput, 5000);
+		},
+		success: function(data){
+			document.getElementById("VnStatOuput").innerHTML=data;
+		}
+	});
+}
+
 function AddEventHandlers(){
 	$j(".collapsible-jquery").click(function(){
 		$j(this).siblings().toggle("fast",function(){
@@ -349,12 +362,15 @@ function reload(){
 <thead class="collapsible-jquery" id="thead_cli">
 <tr><td colspan="2">vnstat CLI (click to expand/collapse)</td></tr>
 </thead>
-<tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/dn-vnstat/images/vnstat.png" id="img_cli" alt="CLI" /></div>
-</td></tr>
+<tr>
+<td colspan="2" style="padding: 0px;">
+<textarea cols="75" rows="35" wrap="off" readonly="readonly" id="VnStatOuput" class="textarea_log_table" style="font-family:'Courier New', Courier, mono; font-size:11px;border: none;padding: 0px;">If you are seeing this message, it means you don't have a vntstat stats file from present on your router.
+Please use option 1 at the CLI to create it</textarea>
+</td>
+</tr>
 </table>
 
-<p align="right"><small><i>dev_null - snbforums - 02-23</i></small></td>
+<p align="right"><small><i>dev_null - snbforums - 2021-03-07</i></small></td>
 </tr>
 </tbody>
 </table>
