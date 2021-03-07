@@ -215,6 +215,7 @@ function initial(){
 	LoadCustomSettings();
 	ScriptUpdateLayout();
 	show_menu();
+	loadVnStatOutput();
 	get_emailenabled_file();
 	AddEventHandlers();
 	var today = new Date();
