@@ -310,7 +310,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
-	
+	ln -s "$ENABLE_EMAIL_FILE" "$SCRIPT_WEB_DIR/emailenabled.htm" 2>/dev/null
 	ln -s "$IMAGE_OUTPUT_DIR" "$SCRIPT_WEB_DIR/images" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
@@ -738,8 +738,8 @@ ToggleEmail(){
 				ScriptHeader
 				exitmenu="false"
 				printf "\\n\\e[1mA choice of emails is available:\\e[0m\\n"
-				printf "1.    Plain text (summary stats only)\\n"
-				printf "2.    HTML (beta - includes images from WebUI + summary stats as attachment)\\n"
+				printf "1.    HTML (includes images from WebUI + summary stats as attachment)\\n"
+				printf "2.    Plain text (summary stats only)\\n"
 				printf "\\ne.    Exit to main menu\\n"
 				
 				while true; do
@@ -747,11 +747,11 @@ ToggleEmail(){
 					read -r emailtype
 					case "$emailtype" in
 						1)
-							echo "TEXT" > "$ENABLE_EMAIL_FILE"
+							echo "HTML" > "$ENABLE_EMAIL_FILE"
 							break
 						;;
 						2)
-							echo "HTML" > "$ENABLE_EMAIL_FILE"
+							echo "TEXT" > "$ENABLE_EMAIL_FILE"
 							break
 						;;
 						e)
@@ -769,10 +769,12 @@ ToggleEmail(){
 				if [ "$exitmenu" = "true" ]; then
 					return
 				fi
+			else
+				echo "$2" > "$ENABLE_EMAIL_FILE"
 			fi
 			
 			Generate_Email
-			if [ "$?" -eq 1 ]; then
+			if [ $? -eq 1 ]; then
 				ToggleEmail disable
 			fi
 		;;
@@ -1072,14 +1074,10 @@ Menu_GenerateStats(){
 }
 
 Menu_ToggleEmail(){
-	if [ -z "$1" ]; then
-		if [ -f "$ENABLE_EMAIL_FILE" ]; then
-			ToggleEmail disable
-		elif [ ! -f "$ENABLE_EMAIL_FILE" ]; then
-			ToggleEmail enable
-		fi
-	else
-		ToggleEmail "$@"
+	if [ -f "$ENABLE_EMAIL_FILE" ]; then
+		ToggleEmail disable
+	elif [ ! -f "$ENABLE_EMAIL_FILE" ]; then
+		ToggleEmail enable
 	fi
 }
 
@@ -1282,7 +1280,7 @@ case "$1" in
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
 			settingstate="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f1 -d'_')";
 			settingtype="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f2 -d'_')";
-			Menu_ToggleEmail "$settingstate" "$settingtype"
+			ToggleEmail "$settingstate" "$settingtype"
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
 			Update_Check
