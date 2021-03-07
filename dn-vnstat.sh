@@ -1306,6 +1306,13 @@ case "$1" in
 		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
 		if [ -z "$2" ]; then
 			exec "$0"
+		else
+			Create_Dirs
+			Create_Symlinks
+			Auto_Startup create 2>/dev/null
+			Auto_Cron create 2>/dev/null
+			Auto_ServiceEvent create 2>/dev/null
+			Shortcut_Script create
 		fi
 		exit 0
 	;;
