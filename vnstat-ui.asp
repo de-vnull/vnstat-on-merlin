@@ -165,7 +165,7 @@ function get_emailenabled_file(){
 			document.form.dnvnstat_emailenabled.value = "disable";
 		},
 		success: function(data){
-			document.form.dnvnstat_emailenabled.value = "enable_" + data;
+			document.form.dnvnstat_emailenabled.value = "enable_" + data.trim();
 		}
 	});
 }
