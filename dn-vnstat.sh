@@ -1121,6 +1121,7 @@ Menu_Edit(){
 		newmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
 		if [ "$oldmd5" != "$newmd5" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			$VNSTAT_COMMAND -u
 		fi
 	fi
 	Clear_Lock
