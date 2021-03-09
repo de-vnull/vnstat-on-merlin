@@ -191,7 +191,7 @@ See here for default view: https://imgur.com/a/ufMQgeA
 
 # Donations
 
-* If you like this software and wish to make a donation, the author requests that you make a contribution to your favorite local charity, or to one of his:
+* If you like this software and wish to make a donation, the author requests that you make a contribution to __your favorite local charity__, or to one of his:
 
     http://www.careandshareofel.org/monetary-donations.html
     
@@ -199,6 +199,6 @@ See here for default view: https://imgur.com/a/ufMQgeA
     
     https://www.uwsect.org/give
     
-* Thanks for your consideration!
+* Let's pay it forward and thanks for your consideration!
 
 
