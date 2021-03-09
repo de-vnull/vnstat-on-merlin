@@ -191,10 +191,12 @@ See here for default view: https://imgur.com/a/ufMQgeA
 
 # Donations
 
-* If you like this software and wish to make a donation, the author requests that you make a donation to your favorite local charity, or to one of his:
+* If you like this software and wish to make a donation, the author requests that you make a contribution to your favorite local charity, or to one of his:
 
     http://www.careandshareofel.org/monetary-donations.html
+    
     https://www.uri.edu/giving/
+    
     https://www.uwsect.org/give
     
 * Thanks for your consideration!
