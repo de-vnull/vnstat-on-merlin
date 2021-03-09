@@ -123,11 +123,11 @@ function CheckUpdate(){
 
 function DoUpdate(){
 	var action_script_tmp = "start_dn-vnstatdoupdate";
-	document.config_form.action_script.value = action_script_tmp;
+	document.form.action_script.value = action_script_tmp;
 	var restart_time = 10;
-	document.config_form.action_wait.value = restart_time;
+	document.form.action_wait.value = restart_time;
 	showLoading();
-	document.config_form.submit();
+	document.form.submit();
 }
 
 function GetVersionNumber(versiontype){
