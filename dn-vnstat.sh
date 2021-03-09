@@ -962,6 +962,13 @@ Menu_Install(){
 		vom_rio
 	fi
 	
+	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
+		if [ ! -d "$SCRIPT_DIR" ]; then
+			mkdir -p "$SCRIPT_DIR"
+		fi
+		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
+	fi
+	
 	Print_Output true "Checking your router meets the requirements for $SCRIPT_NAME"
 	
 	if ! Check_Requirements; then
