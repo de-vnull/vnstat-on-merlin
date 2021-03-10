@@ -267,7 +267,7 @@ function reload(){
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
 <div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5; CMD+R or equiv).</i></u> vnstat and vnstati are Linux data usage reporting tools.</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
-<thead class="collapsible-jquery-config" id="scripttools">
+<thead class="collapsible-jquery" id="scripttools">
 <tr><td colspan="2">Utilities (click to expand/collapse)</td></tr>
 </thead>
 <tr>
