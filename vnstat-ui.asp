@@ -148,7 +148,7 @@ function GetVersionNumber(versiontype){
 }
 
 function SaveConfig(){
-	var action_script_tmp = "start_dn-vnstatconfig" + document.form.dnvnstat_emailenabled.value;
+	var action_script_tmp = "start_dn-vnstatconfig" + document.form.dnvnstat_dailyemail.value;
 	document.form.action_script.value = action_script_tmp;
 	var restart_time = 10;
 	document.form.action_wait.value = restart_time;
@@ -156,16 +156,30 @@ function SaveConfig(){
 	document.form.submit();
 }
 
-function get_emailenabled_file(){
+function get_conf_file(){
 	$j.ajax({
-		url: '/ext/dn-vnstat/emailenabled.htm',
+		url: '/ext/dn-vnstat/config.htm',
 		dataType: 'text',
-		timeout: 10000,
+		timeout: 1000,
 		error: function(xhr){
-			document.form.dnvnstat_emailenabled.value = "disable";
+			setTimeout(get_conf_file, 1000);
 		},
 		success: function(data){
-			document.form.dnvnstat_emailenabled.value = "enable_" + data.trim();
+			var configdata=data.split("\n");
+			configdata = configdata.filter(Boolean);
+			
+			for (var i = 0; i < configdata.length; i++){
+				if(configdata[i].indexOf("DAILYEMAIL") != -1){
+					var confvalue = configdata[i].split("=")[1].replace(/(\r\n|\n|\r)/gm,"");
+					if(confvalue == "none"){
+						eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value = confvalue;
+					}
+					else
+					{
+						eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value = "enable_" + confvalue;
+					}
+				}
+			}
 		}
 	});
 }
@@ -216,7 +230,7 @@ function initial(){
 	ScriptUpdateLayout();
 	show_menu();
 	loadVnStatOutput();
-	get_emailenabled_file();
+	get_conf_file();
 	AddEventHandlers();
 	var today = new Date();
 	var date = today.getFullYear()+'-'+("0" + (today.getMonth()+1)).slice(-2) +'-'+("0" + today.getDate()).slice(-2);
@@ -293,12 +307,12 @@ function reload(){
 <tr class="even" id="rowenableemail">
 <th width="40%">Enable daily summary emails</th>
 <td class="settingvalue">
-<input type="radio" name="dnvnstat_emailenabled" id="dnvnstat_emailenabled_enabled_html" class="input" value="enable_HTML" checked>
-<label for="dnvnstat_emailenabled_enabled_html" class="settingvalue">HTML</label>
-<input type="radio" name="dnvnstat_emailenabled" id="dnvnstat_emailenabled_enabled_text" class="input" value="enable_TEXT">
-<label for="dnvnstat_emailenabled_text" class="settingvalue">Text</label>
-<input type="radio" name="dnvnstat_emailenabled" id="dnvnstat_emailenabled_disabled" class="input" value="disable">
-<label for="dnvnstat_emailenabled_disabled" class="settingvalue">Disabled</label>
+<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_enabled_html" class="input" value="enable_html" checked>
+<label for="dnvnstat_dailyemail_enabled_html" class="settingvalue">HTML</label>
+<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_enabled_text" class="input" value="enable_text">
+<label for="dnvnstat_dailyemail_text" class="settingvalue">Text</label>
+<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_none" class="input" value="none">
+<label for="dnvnstat_dailyemail_none" class="settingvalue">None</label>
 </td>
 </tr>
 <tr class="apply_gen" valign="top" height="35px">

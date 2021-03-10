@@ -22,6 +22,7 @@ readonly SCRIPT_VERSION="v0.9.5"
 SCRIPT_BRANCH="jackyaz-dev"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
+readonly SCRIPT_CONF="$SCRIPT_DIR/config"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
 readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
 readonly IMAGE_OUTPUT_DIR="$SCRIPT_DIR/images"
@@ -31,7 +32,6 @@ readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
 readonly VNSTAT_COMMAND="vnstat --config $SCRIPT_DIR/vnstat.conf"
 readonly VNSTATI_COMMAND="vnstati --config $SCRIPT_DIR/vnstat.conf"
 readonly VNSTAT_OUTPUT_FILE=/tmp/vnstat.txt
-readonly ENABLE_EMAIL_FILE="$SCRIPT_DIR/.emailenabled"
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 ### End of script variables ###
 
@@ -325,11 +325,23 @@ Create_Symlinks(){
 	
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
 	ln -s "$VNSTAT_OUTPUT_FILE" "$SCRIPT_WEB_DIR/vnstatoutput.htm" 2>/dev/null
-	ln -s "$ENABLE_EMAIL_FILE" "$SCRIPT_WEB_DIR/emailenabled.htm" 2>/dev/null
+	ln -s "$SCRIPT_CONF" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
 	ln -s "$IMAGE_OUTPUT_DIR" "$SCRIPT_WEB_DIR/images" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
+	fi
+}
+
+Conf_Exists(){
+	if [ -f "$SCRIPT_CONF" ]; then
+		dos2unix "$SCRIPT_CONF"
+		chmod 0644 "$SCRIPT_CONF"
+		sed -i -e 's/"//g' "$SCRIPT_CONF"
+		return 0
+	else
+		{ echo "DAILYEMAIL=html";  echo "DATAALLOWANCE=1200"; echo "WARNINGEMAIL=false"; } > "$SCRIPT_CONF"
+		return 1
 	fi
 }
 
@@ -598,7 +610,7 @@ Generate_Stats(){
 }
 
 Generate_Email(){
-	if [ -f "$ENABLE_EMAIL_FILE" ]; then
+	if [ "$(ToggleEmail check)" != "none" ]; then
 		if [ ! -f /opt/bin/diversion ]; then
 			Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
 			Print_Output true "Diversion can be installed using amtm" "$ERR"
@@ -628,7 +640,7 @@ Generate_Email(){
 				PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
 			fi
 			
-			if grep -q TEXT "$ENABLE_EMAIL_FILE";  then
+			if [ "$(ToggleEmail check)" = "text" ];  then
 				# plain text email to send #
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -638,7 +650,7 @@ Generate_Email(){
 					echo "";
 				} > /tmp/mail.txt
 				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
-			elif grep -q HTML "$ENABLE_EMAIL_FILE"; then
+			elif [ "$(ToggleEmail check)" = "html" ]; then
 				# html message to send #
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -759,11 +771,11 @@ ToggleEmail(){
 					read -r emailtype
 					case "$emailtype" in
 						1)
-							echo "HTML" > "$ENABLE_EMAIL_FILE"
+							sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=html/' "$SCRIPT_CONF"
 							break
 						;;
 						2)
-							echo "TEXT" > "$ENABLE_EMAIL_FILE"
+							sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=text/' "$SCRIPT_CONF"
 							break
 						;;
 						e)
@@ -782,7 +794,7 @@ ToggleEmail(){
 					return
 				fi
 			else
-				echo "$2" > "$ENABLE_EMAIL_FILE"
+				sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL='"$2"'/' "$SCRIPT_CONF"
 			fi
 			
 			Generate_Email
@@ -790,19 +802,12 @@ ToggleEmail(){
 				ToggleEmail disable
 			fi
 		;;
-		disable)
-			rm -f "$ENABLE_EMAIL_FILE"
+		disable|none)
+			sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=none/' "$SCRIPT_CONF"
 		;;
 		check)
-			if [ -f "$ENABLE_EMAIL_FILE" ]; then
-				if grep -q HTML "$ENABLE_EMAIL_FILE"; then
-					echo "ENABLED - HTML"
-				elif grep -q TEXT "$ENABLE_EMAIL_FILE";  then
-					echo "ENABLED - TEXT"
-				fi
-			else
-				echo "DISABLED"
-			fi
+			DAILYEMAIL=$(grep "DAILYEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
+			echo "$DAILYEMAIL"
 		;;
 	esac
 }
@@ -883,8 +888,16 @@ ScriptHeader(){
 }
 
 MainMenu(){
+	MENU_DAILYEMAIL="$(ToggleEmail check)"
+	if [ "$MENU_DAILYEMAIL" = "html" ]; then
+		MENU_DAILYEMAIL="ENABLED - HTML"
+	elif [ "$MENU_DAILYEMAIL" = "text" ]; then
+		MENU_DAILYEMAIL="ENABLED - TEXT"
+	elif [ "$MENU_DAILYEMAIL" = "none" ]; then
+		MENU_DAILYEMAIL="NONE"
+	fi
 	printf "1.    Update stats now\\n\\n"
-	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(ToggleEmail check)"
+	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
 	printf "3.    Edit %s config\\n\\n" "$SCRIPT_NAME"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
@@ -910,9 +923,9 @@ MainMenu(){
 			;;
 			2)
 				printf "\\n"
-				if [ -f "$ENABLE_EMAIL_FILE" ]; then
+				if [ "$(ToggleEmail check)" != "none" ]; then
 					ToggleEmail disable
-				elif [ ! -f "$ENABLE_EMAIL_FILE" ]; then
+				elif [ "$(ToggleEmail check)" = "none" ]; then
 					ToggleEmail enable
 				fi
 				PressEnter
@@ -1034,6 +1047,7 @@ Menu_Install(){
 	printf "\\n"
 	
 	Create_Dirs
+	Conf_Exists
 	Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 	Set_Version_Custom_Settings server "$SCRIPT_VERSION"
 	Create_Symlinks
@@ -1085,6 +1099,7 @@ Menu_Startup(){
 		sleep 5
 	fi
 	Create_Dirs
+	Conf_Exists
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -1233,6 +1248,7 @@ if [ -z "$1" ]; then
 	NTP_Ready
 	Entware_Ready
 	Create_Dirs
+	Conf_Exists
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
