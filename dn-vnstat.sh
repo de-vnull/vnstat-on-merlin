@@ -901,7 +901,7 @@ MainMenu(){
 	printf "3.    Edit %s config\\n\\n" "$SCRIPT_NAME"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
-	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
+	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
 	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
 	printf "\\n"
 	printf "\\e[1m#################################################\\e[0m\\n"
