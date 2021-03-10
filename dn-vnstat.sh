@@ -226,6 +226,18 @@ Update_Version(){
 	fi
 }
 
+Validate_Number(){
+	if [ "$2" -eq "$2" ] 2>/dev/null; then
+		return 0
+	else
+		formatted="$(echo "$1" | sed -e 's/|/ /g')"
+		if [ -z "$3" ]; then
+			Print_Output false "$formatted - $2 is not a number" "$ERR"
+		fi
+		return 1
+	fi
+}
+
 ### Perform relevant actions for secondary files when being updated ###
 Update_File(){
 	if [ "$1" = "vnstat-ui.asp" ]; then ### WebUI page
@@ -610,7 +622,7 @@ Generate_Stats(){
 }
 
 Generate_Email(){
-	if [ "$(ToggleEmail check)" != "none" ]; then
+	if [ "$(ToggleDailyEmail check)" != "none" ]; then
 		if [ ! -f /opt/bin/diversion ]; then
 			Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
 			Print_Output true "Diversion can be installed using amtm" "$ERR"
@@ -640,7 +652,7 @@ Generate_Email(){
 				PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
 			fi
 			
-			if [ "$(ToggleEmail check)" = "text" ];  then
+			if [ "$(ToggleDailyEmail check)" = "text" ];  then
 				# plain text email to send #
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -650,7 +662,7 @@ Generate_Email(){
 					echo "";
 				} > /tmp/mail.txt
 				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
-			elif [ "$(ToggleEmail check)" = "html" ]; then
+			elif [ "$(ToggleDailyEmail check)" = "html" ]; then
 				# html message to send #
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -755,7 +767,7 @@ Encode_Text(){
 	} >> "$3"
 }
 
-ToggleEmail(){
+ToggleDailyEmail(){
 	case "$1" in
 		enable)
 			if [ -z "$2" ]; then
@@ -799,7 +811,7 @@ ToggleEmail(){
 			
 			Generate_Email
 			if [ $? -eq 1 ]; then
-				ToggleEmail disable
+				ToggleDailyEmail disable
 			fi
 		;;
 		disable|none)
@@ -810,6 +822,39 @@ ToggleEmail(){
 			echo "$DAILYEMAIL"
 		;;
 	esac
+}
+
+BandwidthAllowance(){
+	case "$1" in
+		update)
+			sed -i 's/^'"DATAALLOWANCE"'.*$/DATAALLOWANCE='"$2"'/' "$SCRIPT_CONF"
+		;;
+		check)
+			DATAALLOWANCE=$(grep "DATAALLOWANCE" "$SCRIPT_CONF" | cut -f2 -d"=")
+			echo "$DATAALLOWANCE"
+		;;
+	esac
+}
+
+Check_Bandwidth_Usage(){
+	$VNSTAT_COMMAND -u
+	bandwidthused="$(vnstat -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
+	bandwidthunit="$(vnstat -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
+	userLimit="$(BandwidthAllowance check)"
+	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ]; then
+		return 1
+	fi
+	bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{print $1*100/$2}')
+		if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
+			echo "Data use is at or above 75%"
+			#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 75%'
+		elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
+			echo "Data use is at or above 90%"
+			#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 90%'
+		elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
+			echo "Data use is at or above 100%"
+			#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 100%'
+		fi
 }
 
 vom_rio(){
@@ -888,7 +933,7 @@ ScriptHeader(){
 }
 
 MainMenu(){
-	MENU_DAILYEMAIL="$(ToggleEmail check)"
+	MENU_DAILYEMAIL="$(ToggleDailyEmail check)"
 	if [ "$MENU_DAILYEMAIL" = "html" ]; then
 		MENU_DAILYEMAIL="ENABLED - HTML"
 	elif [ "$MENU_DAILYEMAIL" = "text" ]; then
@@ -898,7 +943,8 @@ MainMenu(){
 	fi
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
-	printf "3.    Edit %s config\\n\\n" "$SCRIPT_NAME"
+	printf "4.    Set bandwidth allowance for data usage warning emails\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(BandwidthAllowance check) GiB/GB"
+	printf "5.    Edit %s config\\n\\n" "$SCRIPT_NAME"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
@@ -923,15 +969,22 @@ MainMenu(){
 			;;
 			2)
 				printf "\\n"
-				if [ "$(ToggleEmail check)" != "none" ]; then
-					ToggleEmail disable
-				elif [ "$(ToggleEmail check)" = "none" ]; then
-					ToggleEmail enable
+				if [ "$(ToggleDailyEmail check)" != "none" ]; then
+					ToggleDailyEmail disable
+				elif [ "$(ToggleDailyEmail check)" = "none" ]; then
+					ToggleDailyEmail enable
 				fi
 				PressEnter
 				break
 			;;
-			3)
+			4)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_BandwidthAllowance
+				fi
+				break
+			;;
+			5)
 				printf "\\n"
 				if Check_Lock menu; then
 					Menu_Edit
@@ -1107,6 +1160,36 @@ Menu_Startup(){
 	Shortcut_Script create
 	Mount_WebUI
 	Clear_Lock
+}
+
+Menu_BandwidthAllowance(){
+	exitmenu="false"
+	bandwidthallowance=""
+	ScriptHeader
+	
+	while true; do
+		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance (GiB/GB, integer):\\e[0m\\n"
+		read -r allowance
+		
+		if [ "$allowance" = "e" ]; then
+			exitmenu="exit"
+			break
+		elif ! Validate_Number "" "$allowance" silent; then
+			printf "\\n\\e[31mPlease enter a valid number (GiB/GB, integer)\\e[0m\\n"
+		else
+			if [ "$allowance" -le 0 ]; then
+				printf "\\n\\e[31mPlease enter a number greater than 0\\e[0m\\n"
+			else
+				bandwidthallowance="$allowance"
+				printf "\\n"
+				break
+			fi
+		fi
+	done
+	
+	if [ "$exitmenu" != "exit" ]; then
+		BandwidthAllowance update "$bandwidthallowance"
+	fi
 }
 
 Menu_Edit(){
@@ -1297,7 +1380,7 @@ case "$1" in
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
 			settingstate="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f1 -d'_')";
 			settingtype="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f2 -d'_')";
-			ToggleEmail "$settingstate" "$settingtype"
+			ToggleDailyEmail "$settingstate" "$settingtype"
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
 			Update_Check
