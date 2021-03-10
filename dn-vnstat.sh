@@ -10,11 +10,11 @@
 ##                                             ##
 #################################################
 
-########         Shellcheck directives     ########
+########         Shellcheck directives     ######
 # shellcheck disable=SC1091
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
-###################################################
+#################################################
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
@@ -43,12 +43,13 @@ readonly PASS="\\e[32m"
 ### End of output format variables ###
 
 # $1 = print to syslog, $2 = message to print, $3 = log level
+# shellcheck disable=SC2059
 Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME" "$2"
-		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME"
+		printf "\\e[1m${3}${SCRIPT_NAME}: ${2}\\e[0m\\n\\n"
 	else
-		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME"
+		printf "\\e[1m${3}${2}\\e[0m\\n\\n"
 	fi
 }
 
@@ -99,19 +100,19 @@ Clear_Lock(){
 ### Create "settings" in the custom_settings file, used by the WebUI for version information and script updates ###
 ### local is the version of the script installed, server is the version on Github ###
 Set_Version_Custom_Settings(){
-	SETTINGSFILE=/jffs/addons/custom_settings.txt
+	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	case "$1" in
 		local)
 			if [ -f "$SETTINGSFILE" ]; then
 				if [ "$(grep -c "dnvnstat_version_local" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$SCRIPT_VERSION" != "$(grep "dnvnstat_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/dnvnstat_version_local.*/dnvnstat_version_local $SCRIPT_VERSION/" "$SETTINGSFILE"
+					if [ "$2" != "$(grep "dnvnstat_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/dnvnstat_version_local.*/dnvnstat_version_local $2/" "$SETTINGSFILE"
 					fi
 				else
-					echo "dnvnstat_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+					echo "dnvnstat_version_local $2" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "dnvnstat_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+				echo "dnvnstat_version_local $2" >> "$SETTINGSFILE"
 			fi
 		;;
 		server)
@@ -161,35 +162,44 @@ Update_Check(){
 ### force - download from server even if no change detected
 ### unattended - don't return user to script CLI menu
 Update_Version(){
-	if [ -z "$1" ] || [ "$1" = "unattended" ]; then
+	if [ -z "$1" ]; then
 		updatecheckresult="$(Update_Check)"
 		isupdate="$(echo "$updatecheckresult" | cut -f1 -d',')"
 		localver="$(echo "$updatecheckresult" | cut -f2 -d',')"
 		serverver="$(echo "$updatecheckresult" | cut -f3 -d',')"
 		
 		if [ "$isupdate" = "version" ]; then
-			Print_Output true "New version of $SCRIPT_NAME available - updating to $serverver" "$PASS"
+			Print_Output true "New version of $SCRIPT_NAME available - $serverver" "$PASS"
 		elif [ "$isupdate" = "md5" ]; then
-			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - downloading updated $serverver" "$PASS"
+			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available - $serverver" "$PASS"
 		fi
 		
-		Update_File shared-jy.tar.gz
-		
 		if [ "$isupdate" != "false" ]; then
-			Update_File vnstat-ui.asp
-			Update_File vnstat.conf
-			Update_File S33vnstat
-			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
-			chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
-			Clear_Lock
-			if [ -z "$1" ]; then
-				exec "$0" setversion
-			elif [ "$1" = "unattended" ]; then
-				exec "$0" setversion unattended
-			fi
-			exit 0
+			printf "\\e[1mDo you want to continue with the update? (y/n)\\e[0m\\n"
+			read -r confirm
+			case "$confirm" in
+				y|Y)
+					Update_File shared-jy.tar.gz
+					Update_File vnstat-ui.asp
+					Update_File vnstat.conf
+					Update_File S33vnstat
+					/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+					chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
+					Set_Version_Custom_Settings local "$serverver"
+					Set_Version_Custom_Settings server "$serverver"
+					Clear_Lock
+					PressEnter
+					exec "$0"
+					exit 0
+				;;
+				*)
+					printf "\\n"
+					Clear_Lock
+					return 1
+				;;
+			esac
 		else
-			Print_Output true "No new version - latest is $localver" "$WARN"
+			Print_Output true "No updates available - latest is $localver" "$WARN"
 			Clear_Lock
 		fi
 	fi
@@ -197,18 +207,20 @@ Update_Version(){
 	if [ "$1" = "force" ]; then
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
+		Update_File shared-jy.tar.gz
 		Update_File vnstat-ui.asp
 		Update_File vnstat.conf
 		Update_File S33vnstat
-		Update_File shared-jy.tar.gz
-		
 		/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
-		chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
+		chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
+		Set_Version_Custom_Settings local "$serverver"
+		Set_Version_Custom_Settings server "$serverver"
 		Clear_Lock
 		if [ -z "$2" ]; then
-			exec "$0" setversion
+			PressEnter
+			exec "$0"
 		elif [ "$2" = "unattended" ]; then
-			exec "$0" setversion unattended
+			exec "$0" postupdate
 		fi
 		exit 0
 	fi
@@ -392,7 +404,6 @@ Auto_Startup(){
 	esac
 }
 
-
 Auto_Cron(){
 	case $1 in
 		create)
@@ -439,6 +450,7 @@ Get_WebUI_Page(){
 
 ### locking mechanism code credit to Martineau (@MartineauUK) ###
 Mount_WebUI(){
+	Print_Output true "Mounting WebUI tab for $SCRIPT_NAME" "$PASS"
 	LOCKFILE=/tmp/addonwebui.lock
 	FD=386
 	eval exec "$FD>$LOCKFILE"
@@ -450,7 +462,7 @@ Mount_WebUI(){
 		return 1
 	fi
 	cp -f "$SCRIPT_DIR/vnstat-ui.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
-	echo "dn-vnstat" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
+	echo "$SCRIPT_NAME" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
 	
 	if [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
 		if [ ! -f /tmp/index_style.css ]; then
@@ -478,7 +490,7 @@ Mount_WebUI(){
 		if ! grep -q "javascript:window.open('/ext/shared-jy/redirect.htm'" /tmp/menuTree.js ; then
 			sed -i "s~ext/shared-jy/redirect.htm~javascript:window.open('/ext/shared-jy/redirect.htm','_blank')~" /tmp/menuTree.js
 		fi
-		sed -i "/url: \"javascript:window.open('\/ext\/shared-jy\/redirect.htm'/i {url: \"$MyPage\", tabName: \"dn-vnstat\"}," /tmp/menuTree.js
+		sed -i "/url: \"javascript:window.open('\/ext\/shared-jy\/redirect.htm'/i {url: \"$MyPage\", tabName: \"$SCRIPT_NAME\"}," /tmp/menuTree.js
 		
 		umount /www/require/modules/menuTree.js 2>/dev/null
 		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
@@ -491,13 +503,13 @@ Shortcut_Script(){
 	case $1 in
 		create)
 			if [ -d /opt/bin ] && [ ! -f "/opt/bin/$SCRIPT_NAME" ] && [ -f "/jffs/scripts/$SCRIPT_NAME" ]; then
-				ln -s /jffs/scripts/"$SCRIPT_NAME" /opt/bin
-				chmod 0755 /opt/bin/"$SCRIPT_NAME"
+				ln -s "/jffs/scripts/$SCRIPT_NAME" /opt/bin
+				chmod 0755 "/opt/bin/$SCRIPT_NAME"
 			fi
 		;;
 		delete)
 			if [ -f "/opt/bin/$SCRIPT_NAME" ]; then
-				rm -f /opt/bin/"$SCRIPT_NAME"
+				rm -f "/opt/bin/$SCRIPT_NAME"
 			fi
 		;;
 	esac
@@ -547,7 +559,6 @@ Check_Requirements(){
 		return 1
 	fi
 }
-
 
 ### Determine WAN interface using nvram ###
 Get_WAN_IFace(){
@@ -865,7 +876,7 @@ ScriptHeader(){
 	printf "\\e[1m##            %s on %-9s              ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "\\e[1m##                                             ## \\e[0m\\n"
 	printf "\\e[1m##            Created by dev_null              ##\\e[0m\\n"
-        printf "\\e[1m##    github.com/de-vnull/vnstat-on-merlin     ##\\e[0m\\n"
+	printf "\\e[1m##    github.com/de-vnull/vnstat-on-merlin     ##\\e[0m\\n"
 	printf "\\e[1m##                                             ##\\e[0m\\n"
 	printf "\\e[1m#################################################\\e[0m\\n"
 	printf "\\n"
@@ -890,14 +901,20 @@ MainMenu(){
 			1)
 				printf "\\n"
 				if Check_Lock menu; then
-					Menu_GenerateStats
+					Generate_Images
+					Generate_Stats
+					Clear_Lock
 				fi
 				PressEnter
 				break
 			;;
 			2)
 				printf "\\n"
-				Menu_ToggleEmail
+				if [ -f "$ENABLE_EMAIL_FILE" ]; then
+					ToggleEmail disable
+				elif [ ! -f "$ENABLE_EMAIL_FILE" ]; then
+					ToggleEmail enable
+				fi
 				PressEnter
 				break
 			;;
@@ -911,7 +928,8 @@ MainMenu(){
 			u)
 				printf "\\n"
 				if Check_Lock menu; then
-					Menu_Update
+					Update_Version
+					Clear_Lock
 				fi
 				PressEnter
 				break
@@ -919,7 +937,8 @@ MainMenu(){
 			uf)
 				printf "\\n"
 				if Check_Lock menu; then
-					Menu_ForceUpdate
+					Update_Version force
+					Clear_Lock
 				fi
 				PressEnter
 				break
@@ -1015,7 +1034,7 @@ Menu_Install(){
 	printf "\\n"
 	
 	Create_Dirs
-	Set_Version_Custom_Settings local
+	Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 	Set_Version_Custom_Settings server "$SCRIPT_VERSION"
 	Create_Symlinks
 	
@@ -1066,7 +1085,6 @@ Menu_Startup(){
 		sleep 5
 	fi
 	Create_Dirs
-	Set_Version_Custom_Settings local
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -1074,20 +1092,6 @@ Menu_Startup(){
 	Shortcut_Script create
 	Mount_WebUI
 	Clear_Lock
-}
-
-Menu_GenerateStats(){
-	Generate_Images
-	Generate_Stats
-	Clear_Lock
-}
-
-Menu_ToggleEmail(){
-	if [ -f "$ENABLE_EMAIL_FILE" ]; then
-		ToggleEmail disable
-	elif [ ! -f "$ENABLE_EMAIL_FILE" ]; then
-		ToggleEmail enable
-	fi
 }
 
 Menu_Edit(){
@@ -1131,16 +1135,6 @@ Menu_Edit(){
 			$VNSTAT_COMMAND -u
 		fi
 	fi
-	Clear_Lock
-}
-
-Menu_Update(){
-	Update_Version
-	Clear_Lock
-}
-
-Menu_ForceUpdate(){
-	Update_Version force
 	Clear_Lock
 }
 
@@ -1239,7 +1233,6 @@ if [ -z "$1" ]; then
 	NTP_Ready
 	Entware_Ready
 	Create_Dirs
-	Set_Version_Custom_Settings local
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -1300,30 +1293,21 @@ case "$1" in
 		exit 0
 	;;
 	update)
-		Update_Version unattended
+		Update_Version
 		exit 0
 	;;
 	forceupdate)
-		Update_Version force unattended
+		Update_Version force
 		exit 0
 	;;
-	setversion)
-		Set_Version_Custom_Settings local
-		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
-		if [ -z "$2" ]; then
-			exec "$0"
-		else
-			Create_Dirs
-			Create_Symlinks
-			Auto_Startup create 2>/dev/null
-			Auto_Cron create 2>/dev/null
-			Auto_ServiceEvent create 2>/dev/null
-			Shortcut_Script create
-		fi
-		exit 0
-	;;
-	checkupdate)
-		Update_Check
+	postupdate)
+		Create_Dirs
+		Conf_Exists
+		Create_Symlinks
+		Auto_Startup create 2>/dev/null
+		Auto_Cron create 2>/dev/null
+		Auto_ServiceEvent create 2>/dev/null
+		Shortcut_Script create
 		exit 0
 	;;
 	develop)
