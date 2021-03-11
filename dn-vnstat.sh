@@ -336,6 +336,7 @@ Create_Symlinks(){
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
 	ln -s "$VNSTAT_OUTPUT_FILE" "$SCRIPT_WEB_DIR/vnstatoutput.htm" 2>/dev/null
 	ln -s "$SCRIPT_CONF" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
 	ln -s "$IMAGE_OUTPUT_DIR" "$SCRIPT_WEB_DIR/images" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
