@@ -351,7 +351,7 @@ Conf_Exists(){
 		sed -i -e 's/WARNINGEMAIL/USAGEEMAIL/;s/"//g' "$SCRIPT_CONF"
 		return 0
 	else
-		{ echo "DAILYEMAIL=html";  echo "DATAALLOWANCE=1200"; echo "USAGEEMAIL=false"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=html";  echo "DATAALLOWANCE=12"; echo "USAGEEMAIL=false"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }
