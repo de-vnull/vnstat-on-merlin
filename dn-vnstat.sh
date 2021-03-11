@@ -1020,10 +1020,10 @@ MainMenu(){
 	elif [ "$MENU_DAILYEMAIL" = "text" ]; then
 		MENU_DAILYEMAIL="ENABLED - TEXT"
 	elif [ "$MENU_DAILYEMAIL" = "none" ]; then
-		MENU_DAILYEMAIL="NONE"
+		MENU_DAILYEMAIL="DISABLED"
 	fi
 	MENU_USAGE_ENABLED=""
-	if UsageEmail check; then MENU_USAGE_ENABLED="ENABLED"; else MENU_USAGE_ENABLED="NONE"; fi
+	if UsageEmail check; then MENU_USAGE_ENABLED="ENABLED"; else MENU_USAGE_ENABLED="DISABLED"; fi
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_USAGE_ENABLED"
