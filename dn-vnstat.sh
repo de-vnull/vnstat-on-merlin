@@ -855,16 +855,17 @@ Check_Bandwidth_Usage(){
 		return 1
 	fi
 	bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{print $1*100/$2}')
-	Print_Output true "You have used ${bandwidthpercentage}%% (${bandwidthused}${bandwidthunit}) of your ${userLimit}${bandwidthunit} allowance"
+	usagestring="You have used ${bandwidthpercentage}%% (${bandwidthused}${bandwidthunit}) of your ${userLimit}${bandwidthunit} allowance"
+	Print_Output true "$usagestring"
 	if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 75%%" "$WARN"
-		#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 75%'
+		Generate_Email usage "100%" "$usagestring"
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 90%%" "$ERR"
-		#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 90%'
+		Generate_Email usage "100%" "$usagestring"
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 100%%" "$CRIT"
-		#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 100%'
+		Generate_Email usage "100%" "$usagestring"
 	fi
 }
 
