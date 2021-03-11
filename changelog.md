@@ -1,6 +1,7 @@
 # Changelog #
 
 ### v 0.9.5 - TBD ###
+* Beta 3/RC1
 * Updated menu options
 * Updated UI for several menu options
 * Data use monitoring (data limit monitoring) with email notification (of particular interest to those with data caps)
