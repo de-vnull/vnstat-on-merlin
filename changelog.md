@@ -4,6 +4,7 @@
 * Beta 3/RC1
 * Updated menu options
 * Updated UI for several menu options
+* Deprecate the "CLI daily total" graphic in favor of textual view
 * Data use monitoring (data limit monitoring) with email notification (of particular interest to those with data caps)
 
 ### v 0.9.4 - 02-Mar-2021 ###
@@ -14,7 +15,7 @@
 ### v 0.9.3 - 27-Feb-2021 ###
 * Beta 2 version, public deployment
 * With full @JackYaz install script
-* With limited menu of configuration options
+* Introduces menu of configuration options
 
 ### v 0.9.1 - 15-Feb-2021 ###
 * Install script removed due to conflicts
