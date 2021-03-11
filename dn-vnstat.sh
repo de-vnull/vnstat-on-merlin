@@ -834,6 +834,22 @@ DailyEmail(){
 	esac
 }
 
+UsageEmail(){
+	case "$1" in
+		enable)
+			sed -i 's/^USAGEEMAIL.*$/USAGEEMAIL=true/' "$SCRIPT_CONF"
+			Check_Bandwidth_Usage
+		;;
+		disable)
+			sed -i 's/^USAGEEMAIL.*$/USAGEEMAIL=false/' "$SCRIPT_CONF"
+		;;
+		check)
+			USAGEEMAIL=$(grep "USAGEEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
+			echo "$USAGEEMAIL"
+		;;
+	esac
+}
+
 BandwidthAllowance(){
 	case "$1" in
 		update)
@@ -986,6 +1002,16 @@ MainMenu(){
 					DailyEmail disable
 				elif [ "$(DailyEmail check)" = "none" ]; then
 					DailyEmail enable
+				fi
+				PressEnter
+				break
+			;;
+			3)
+				printf "\\n"
+				if [ "$(UsageEmail check)" = "true" ]; then
+					UsageEmail disable
+				elif [ "$(UsageEmail check)" = "false" ]; then
+					UsageEmail enable
 				fi
 				PressEnter
 				break
