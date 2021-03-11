@@ -862,6 +862,20 @@ BandwidthAllowance(){
 	esac
 }
 
+AllowanceStartDay(){
+	case "$1" in
+		update)
+			sed -i 's/^'"MonthRotate"'.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			$VNSTAT_COMMAND -u
+		;;
+		check)
+			MonthRotate=$(grep "MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			echo "$MonthRotate"
+		;;
+	esac
+}
+
 Check_Bandwidth_Usage(){
 	$VNSTAT_COMMAND -u
 	bandwidthused="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
@@ -981,8 +995,9 @@ MainMenu(){
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_USAGE_ENABLED"
 	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(BandwidthAllowance check) GiB/GB"
-	printf "5.    Check bandwidth usage now\\n\\n"
-	printf "6.    Edit vnstat config\\n\\n"
+	printf "5.    Set start day of month for bandwidth allowance\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
+	printf "6.    Check bandwidth usage now\\n\\n"
+	printf "v.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
@@ -1035,13 +1050,20 @@ MainMenu(){
 			5)
 				printf "\\n"
 				if Check_Lock menu; then
+					Menu_AllowanceStartDay
+				fi
+				break
+			;;
+			6)
+				printf "\\n"
+				if Check_Lock menu; then
 					Check_Bandwidth_Usage
 					Clear_Lock
 				fi
 				PressEnter
 				break
 			;;
-			6)
+			v)
 				printf "\\n"
 				if Check_Lock menu; then
 					Menu_Edit
@@ -1246,6 +1268,38 @@ Menu_BandwidthAllowance(){
 	
 	if [ "$exitmenu" != "exit" ]; then
 		BandwidthAllowance update "$bandwidthallowance"
+	fi
+	
+	Clear_Lock
+}
+
+Menu_AllowanceStartDay(){
+	exitmenu="false"
+	allowancestartday=""
+	ScriptHeader
+	
+	while true; do
+		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance resets (1-31):\\e[0m\\n"
+		read -r startday
+		
+		if [ "$startday" = "e" ]; then
+			exitmenu="exit"
+			break
+		elif ! Validate_Number "" "$startday" silent; then
+			printf "\\n\\e[31mPlease enter a valid number (1-31)\\e[0m\\n"
+		else
+			if [ "$startday" -lt 1 ] || [ "$startday" -gt 31 ]; then
+				printf "\\n\\e[31mPlease enter a number between 1 and 31\\e[0m\\n"
+			else
+				allowancestartday="$startday"
+				printf "\\n"
+				break
+			fi
+		fi
+	done
+	
+	if [ "$exitmenu" != "exit" ]; then
+		AllowanceStartDay update "$allowancestartday"
 	fi
 	
 	Clear_Lock
