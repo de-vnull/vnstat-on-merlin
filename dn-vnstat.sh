@@ -431,13 +431,23 @@ Auto_Cron(){
 	case $1 in
 		create)
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_images")
-			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
-				cru a "${SCRIPT_NAME}_images" "*/5 * * * * /jffs/scripts/$SCRIPT_NAME generateimages"
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "${SCRIPT_NAME}_images"
 			fi
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "${SCRIPT_NAME}_stats"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_generate")
 			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
-				cru a "${SCRIPT_NAME}_stats" "59 23 * * * /jffs/scripts/$SCRIPT_NAME generatestats"
+				cru a "${SCRIPT_NAME}_generate" "*/5 * * * * /jffs/scripts/$SCRIPT_NAME generate"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_summary")
+			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
+				cru a "${SCRIPT_NAME}_summary" "59 23 * * * /jffs/scripts/$SCRIPT_NAME summary"
 			fi
 		;;
 		delete)
@@ -447,6 +457,16 @@ Auto_Cron(){
 			fi
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "${SCRIPT_NAME}_stats"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_generate")
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "${SCRIPT_NAME}_images"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_summary")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 				cru d "${SCRIPT_NAME}_stats"
 			fi
@@ -877,6 +897,14 @@ AllowanceStartDay(){
 	esac
 }
 
+Reset_Allowance_Warnings(){
+	if [ "$(($(date +%d) + 1))" -eq "$(AllowanceStartDay check)" ]; then
+		rm -f "$SCRIPT_DIR/.warning75"
+		rm -f "$SCRIPT_DIR/.warning90"
+		rm -f "$SCRIPT_DIR/.warning100"
+	fi
+}
+
 Check_Bandwidth_Usage(){
 	$VNSTAT_COMMAND -u
 	bandwidthused="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
@@ -890,18 +918,21 @@ Check_Bandwidth_Usage(){
 	Print_Output true "$usagestring"
 	if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 75%%" "$WARN"
-		if UsageEmail check; then
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
 			Generate_Email usage "75%" "$usagestring"
+			touch "$SCRIPT_DIR/.warning75"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 90%%" "$ERR"
-		if UsageEmail check; then
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
 			Generate_Email usage "90%" "$usagestring"
+			touch "$SCRIPT_DIR/.warning90"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 100%%" "$CRIT"
-		if UsageEmail check; then
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
 			Generate_Email usage "100%" "$usagestring"
+			touch "$SCRIPT_DIR/.warning100"
 		fi
 	fi
 }
@@ -1471,17 +1502,14 @@ case "$1" in
 		Entware_Ready
 		Generate_Images
 		Generate_Stats
+		Check_Bandwidth_Usage
 		exit 0
 	;;
-	generateimages)
+	summary)
 		NTP_Ready
 		Entware_Ready
+		Reset_Allowance_Warnings
 		Generate_Images
-		exit 0
-	;;
-	generatestats)
-		NTP_Ready
-		Entware_Ready
 		Generate_Stats
 		Generate_Email daily
 		exit 0
