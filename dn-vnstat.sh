@@ -991,7 +991,7 @@ MainMenu(){
 		MENU_DAILYEMAIL="NONE"
 	fi
 	MENU_USAGE_ENABLED=""
-	if UsageEmail check; then MENU_USAGE_ENABLED="Enabled"; else MENU_USAGE_ENABLED="Disabled"; fi
+	if UsageEmail check; then MENU_USAGE_ENABLED="ENABLED"; else MENU_USAGE_ENABLED="NONE"; fi
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_USAGE_ENABLED"
@@ -1248,14 +1248,14 @@ Menu_BandwidthAllowance(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance (GiB/GB, integer):\\e[0m\\n"
+		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance (GiB/GB, whole number):\\e[0m\\n"
 		read -r allowance
 		
 		if [ "$allowance" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Number "" "$allowance" silent; then
-			printf "\\n\\e[31mPlease enter a valid number (GiB/GB, integer)\\e[0m\\n"
+			printf "\\n\\e[31mPlease enter a valid number (GiB/GB, whole number)\\e[0m\\n"
 		else
 			if [ "$allowance" -le 0 ]; then
 				printf "\\n\\e[31mPlease enter a number greater than 0\\e[0m\\n"
