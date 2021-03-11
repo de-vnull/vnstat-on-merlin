@@ -650,7 +650,7 @@ Generate_Email(){
 		if [ "$emailtype" = "daily" ]; then
 			Print_Output true "Attempting to send summary statistic email"
 			
-			if [ "$(ToggleDailyEmail check)" = "text" ];  then
+			if [ "$(DailyEmail check)" = "text" ];  then
 				# plain text email to send #
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -660,7 +660,7 @@ Generate_Email(){
 					echo "";
 				} > /tmp/mail.txt
 				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
-			elif [ "$(ToggleDailyEmail check)" = "html" ]; then
+			elif [ "$(DailyEmail check)" = "html" ]; then
 				# html message to send #
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -777,7 +777,7 @@ Encode_Text(){
 	} >> "$3"
 }
 
-ToggleDailyEmail(){
+DailyEmail(){
 	case "$1" in
 		enable)
 			if [ -z "$2" ]; then
@@ -821,7 +821,7 @@ ToggleDailyEmail(){
 			
 			Generate_Email daily
 			if [ $? -eq 1 ]; then
-				ToggleDailyEmail disable
+				DailyEmail disable
 			fi
 		;;
 		disable|none)
@@ -945,7 +945,7 @@ ScriptHeader(){
 }
 
 MainMenu(){
-	MENU_DAILYEMAIL="$(ToggleDailyEmail check)"
+	MENU_DAILYEMAIL="$(DailyEmail check)"
 	if [ "$MENU_DAILYEMAIL" = "html" ]; then
 		MENU_DAILYEMAIL="ENABLED - HTML"
 	elif [ "$MENU_DAILYEMAIL" = "text" ]; then
@@ -982,10 +982,10 @@ MainMenu(){
 			;;
 			2)
 				printf "\\n"
-				if [ "$(ToggleDailyEmail check)" != "none" ]; then
-					ToggleDailyEmail disable
-				elif [ "$(ToggleDailyEmail check)" = "none" ]; then
-					ToggleDailyEmail enable
+				if [ "$(DailyEmail check)" != "none" ]; then
+					DailyEmail disable
+				elif [ "$(DailyEmail check)" = "none" ]; then
+					DailyEmail enable
 				fi
 				PressEnter
 				break
@@ -1404,7 +1404,7 @@ case "$1" in
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
 			settingstate="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f1 -d'_')";
 			settingtype="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f2 -d'_')";
-			ToggleDailyEmail "$settingstate" "$settingtype"
+			DailyEmail "$settingstate" "$settingtype"
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
 			Update_Check
