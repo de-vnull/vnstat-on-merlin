@@ -889,6 +889,7 @@ AllowanceStartDay(){
 			sed -i 's/^'"MonthRotate"'.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			$VNSTAT_COMMAND -u
+			Reset_Allowance_Warnings force
 		;;
 		check)
 			MonthRotate=$(grep "MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
@@ -898,7 +899,7 @@ AllowanceStartDay(){
 }
 
 Reset_Allowance_Warnings(){
-	if [ "$(($(date +%d) + 1))" -eq "$(AllowanceStartDay check)" ]; then
+	if [ "$(($(date +%d) + 1))" -eq "$(AllowanceStartDay check)" ] || [ "$1" = "force" ]; then
 		rm -f "$SCRIPT_DIR/.warning75"
 		rm -f "$SCRIPT_DIR/.warning90"
 		rm -f "$SCRIPT_DIR/.warning100"
