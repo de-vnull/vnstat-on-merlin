@@ -843,16 +843,17 @@ Check_Bandwidth_Usage(){
 		return 1
 	fi
 	bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{print $1*100/$2}')
-		if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-			echo "Data use is at or above 75%"
-			#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 75%'
-		elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-			echo "Data use is at or above 90%"
-			#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 90%'
-		elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
-			echo "Data use is at or above 100%"
-			#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 100%'
-		fi
+	Print_Output true "You have used ${bandwidthpercentage}%% (${bandwidthused}${bandwidthunit}) of your ${userLimit}${bandwidthunit} allowance"
+	if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
+		Print_Output true "Data use is at or above 75%%" "$WARN"
+		#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 75%'
+	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
+		Print_Output true "Data use is at or above 90%%" "$ERR"
+		#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 90%'
+	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
+		Print_Output true "Data use is at or above 100%%" "$CRIT"
+		#sendEmail 'Network Traffic Monitor Warning' 'Data use is at 100%'
+	fi
 }
 
 vom_rio(){
@@ -942,7 +943,8 @@ MainMenu(){
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
 	printf "4.    Set bandwidth allowance for data usage warning emails\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(BandwidthAllowance check) GiB/GB"
-	printf "5.    Edit %s config\\n\\n" "$SCRIPT_NAME"
+	printf "5.    Check bandwidth usage now\\n\\n"
+	printf "6.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
@@ -983,6 +985,15 @@ MainMenu(){
 				break
 			;;
 			5)
+				printf "\\n"
+				if Check_Lock menu; then
+					Check_Bandwidth_Usage
+					Clear_Lock
+				fi
+				PressEnter
+				break
+			;;
+			6)
 				printf "\\n"
 				if Check_Lock menu; then
 					Menu_Edit
@@ -1188,6 +1199,8 @@ Menu_BandwidthAllowance(){
 	if [ "$exitmenu" != "exit" ]; then
 		BandwidthAllowance update "$bandwidthallowance"
 	fi
+	
+	Clear_Lock
 }
 
 Menu_Edit(){
