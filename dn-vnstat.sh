@@ -649,7 +649,6 @@ Generate_Email(){
 		emailtype="$1"
 		if [ "$emailtype" = "daily" ]; then
 			Print_Output true "Attempting to send summary statistic email"
-			
 			if [ "$(DailyEmail check)" = "text" ];  then
 				# plain text email to send #
 				{
@@ -712,6 +711,7 @@ Generate_Email(){
 				} >> /tmp/mail.txt
 			fi
 		elif [ "$emailtype" = "usage" ]; then
+			Print_Output true "Attempting to send bandwidth usage email"
 			usagepercentage="$2"
 			usagestring="$3"
 			# plain text email to send #
