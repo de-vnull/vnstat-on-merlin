@@ -620,35 +620,35 @@ Generate_Stats(){
 }
 
 Generate_Email(){
-	if [ "$(ToggleDailyEmail check)" != "none" ]; then
-		if [ ! -f /opt/bin/diversion ]; then
-			Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
-			Print_Output true "Diversion can be installed using amtm" "$ERR"
-			return 1
-		elif [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; then
-			Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
-			Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
-			return 1
-		else
+	if [ ! -f /opt/bin/diversion ]; then
+		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
+		Print_Output true "Diversion can be installed using amtm" "$ERR"
+		return 1
+	elif [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; then
+		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
+		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
+		return 1
+	else
+		# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
+		# Email settings #
+		. /opt/share/diversion/.conf/email.conf
+		PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
+		PASSWORD=""
+		# shellcheck disable=SC2154
+		if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+			# old OpenSSL 1.0.x
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+		elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+			# new OpenSSL 1.1.x non-converted password
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+		elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+			# new OpenSSL 1.1.x converted password with -pbkdf2 flag
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+		fi
+		
+		emailtype="$1"
+		if [ "$emailtype" = "daily" ]; then
 			Print_Output true "Attempting to send summary statistic email"
-			# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
-			# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
-			
-			# Email settings #
-			. /opt/share/diversion/.conf/email.conf
-			PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
-			PASSWORD=""
-			# shellcheck disable=SC2154
-			if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-				# old OpenSSL 1.0.x
-				PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-			elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-				# new OpenSSL 1.1.x non-converted password
-				PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-			elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-				# new OpenSSL 1.1.x converted password with -pbkdf2 flag
-				PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-			fi
 			
 			if [ "$(ToggleDailyEmail check)" = "text" ];  then
 				# plain text email to send #
@@ -711,24 +711,36 @@ Generate_Email(){
 					echo "--MULTIPART-MIXED-BOUNDARY--";
 				} >> /tmp/mail.txt
 			fi
-			
-			#Send Email
-			/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
-			--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
-			--upload-file /tmp/mail.txt \
-			--ssl-reqd \
-			--user "$USERNAME:$PASSWORD" $SSL_FLAG
-			# shellcheck disable=SC2181
-			if [ $? -eq 0 ]; then
-				Print_Output true "Summary statistic email sent" "$PASS"
-				rm -f /tmp/mail.txt
-				return 0
-			else
-				echo ""
-				Print_Output true "Summary statistic email failed to send" "$ERR"
-				rm -f /tmp/mail.txt
-				return 1
-			fi
+		elif [ "$emailtype" = "usage" ]; then
+			usagepercentage="$2"
+			usagestring="$3"
+			# plain text email to send #
+			{
+				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
+				echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
+				echo "Subject: vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")";
+				echo "Date: $(date -R)";
+				echo "";
+			} > /tmp/mail.txt
+			printf "$usagestring" >>/tmp/mail.txt
+		fi
+		
+		#Send Email
+		/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
+		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
+		--upload-file /tmp/mail.txt \
+		--ssl-reqd \
+		--user "$USERNAME:$PASSWORD" $SSL_FLAG
+		# shellcheck disable=SC2181
+		if [ $? -eq 0 ]; then
+			Print_Output true "Email sent successfully" "$PASS"
+			rm -f /tmp/mail.txt
+			return 0
+		else
+			echo ""
+			Print_Output true "Email failed to send" "$ERR"
+			rm -f /tmp/mail.txt
+			return 1
 		fi
 	fi
 }
@@ -807,7 +819,7 @@ ToggleDailyEmail(){
 				sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL='"$2"'/' "$SCRIPT_CONF"
 			fi
 			
-			Generate_Email
+			Generate_Email daily
 			if [ $? -eq 1 ]; then
 				ToggleDailyEmail disable
 			fi
@@ -1380,7 +1392,7 @@ case "$1" in
 		NTP_Ready
 		Entware_Ready
 		Generate_Stats
-		Generate_Email
+		Generate_Email daily
 		exit 0
 	;;
 	service_event)
