@@ -980,6 +980,7 @@ MainMenu(){
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_USAGE_ENABLED"
+	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(BandwidthAllowance check) GiB/GB"
 	printf "5.    Check bandwidth usage now\\n\\n"
 	printf "6.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
