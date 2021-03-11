@@ -20,7 +20,7 @@
 * Install script removed due to conflicts
 * Revert to manual install steps
 * Minor UI updates and tweaks
-* Addition of div-email option, which leverages Diversion's encrypted email functionality (with permission of @thelonelycoder)
+* Addition of div-email option (script from @elorimer), which leverages Diversion's encrypted email functionality (with permission of @thelonelycoder)
 
 ### v 0.9.0 - 08-Feb-2021 ###
 * Beta 1 version, public deployment
