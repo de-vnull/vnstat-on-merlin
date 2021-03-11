@@ -848,8 +848,8 @@ BandwidthAllowance(){
 
 Check_Bandwidth_Usage(){
 	$VNSTAT_COMMAND -u
-	bandwidthused="$(vnstat -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
-	bandwidthunit="$(vnstat -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
+	bandwidthused="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
+	bandwidthunit="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
 	userLimit="$(BandwidthAllowance check)"
 	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ]; then
 		return 1
