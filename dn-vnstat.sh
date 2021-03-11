@@ -845,7 +845,7 @@ UsageEmail(){
 		;;
 		check)
 			USAGEEMAIL=$(grep "USAGEEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$USAGEEMAIL"
+			if [ "$USAGEEMAIL" = "true" ]; then return 0; else return 1; fi
 		;;
 	esac
 }
@@ -875,17 +875,17 @@ Check_Bandwidth_Usage(){
 	Print_Output true "$usagestring"
 	if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 75%%" "$WARN"
-		if [ "$(UsageEmail check)" = "true" ]; then
+		if UsageEmail check; then
 			Generate_Email usage "100%" "$usagestring"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 90%%" "$ERR"
-		if [ "$(UsageEmail check)" = "true" ]; then
+		if UsageEmail check; then
 			Generate_Email usage "100%" "$usagestring"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 100%%" "$CRIT"
-		if [ "$(UsageEmail check)" = "true" ]; then
+		if UsageEmail check; then
 			Generate_Email usage "100%" "$usagestring"
 		fi
 	fi
@@ -975,9 +975,11 @@ MainMenu(){
 	elif [ "$MENU_DAILYEMAIL" = "none" ]; then
 		MENU_DAILYEMAIL="NONE"
 	fi
+	MENU_USAGE_ENABLED=""
+	if UsageEmail check; then MENU_USAGE_ENABLED="Enabled"; else MENU_USAGE_ENABLED="Disabled"; fi
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
-	printf "4.    Set bandwidth allowance for data usage warning emails\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(BandwidthAllowance check) GiB/GB"
+	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_USAGE_ENABLED"
 	printf "5.    Check bandwidth usage now\\n\\n"
 	printf "6.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
@@ -1014,9 +1016,9 @@ MainMenu(){
 			;;
 			3)
 				printf "\\n"
-				if [ "$(UsageEmail check)" = "true" ]; then
+				if UsageEmail check; then
 					UsageEmail disable
-				elif [ "$(UsageEmail check)" = "false" ]; then
+				elif ! UsageEmail check; then
 					UsageEmail enable
 				fi
 				PressEnter
