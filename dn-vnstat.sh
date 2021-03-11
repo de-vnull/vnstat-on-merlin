@@ -891,12 +891,12 @@ Check_Bandwidth_Usage(){
 	if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 75%%" "$WARN"
 		if UsageEmail check; then
-			Generate_Email usage "100%" "$usagestring"
+			Generate_Email usage "75%" "$usagestring"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 90%%" "$ERR"
 		if UsageEmail check; then
-			Generate_Email usage "100%" "$usagestring"
+			Generate_Email usage "90%" "$usagestring"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
 		Print_Output true "Data use is at or above 100%%" "$CRIT"
