@@ -347,10 +347,10 @@ Conf_Exists(){
 	if [ -f "$SCRIPT_CONF" ]; then
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
-		sed -i -e 's/"//g' "$SCRIPT_CONF"
+		sed -i -e 's/WARNINGEMAIL/USAGEEMAIL/;s/"//g' "$SCRIPT_CONF"
 		return 0
 	else
-		{ echo "DAILYEMAIL=html";  echo "DATAALLOWANCE=1200"; echo "WARNINGEMAIL=false"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=html";  echo "DATAALLOWANCE=1200"; echo "USAGEEMAIL=false"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }
