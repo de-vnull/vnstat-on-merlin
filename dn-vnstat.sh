@@ -1581,7 +1581,14 @@ case "$1" in
 		exit 0
 	;;
 	setversion)
-		postupdate
+		Create_Dirs
+		Conf_Exists
+		Create_Symlinks
+		Auto_Startup create 2>/dev/null
+		Auto_Cron create 2>/dev/null
+		Auto_ServiceEvent create 2>/dev/null
+		Shortcut_Script create
+		exit 0
 	;;
 	postupdate)
 		Create_Dirs
