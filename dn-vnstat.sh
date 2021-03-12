@@ -875,6 +875,7 @@ BandwidthAllowance(){
 	case "$1" in
 		update)
 			sed -i 's/^'"DATAALLOWANCE"'.*$/DATAALLOWANCE='"$2"'/' "$SCRIPT_CONF"
+			Reset_Allowance_Warnings force
 		;;
 		check)
 			DATAALLOWANCE=$(grep "DATAALLOWANCE" "$SCRIPT_CONF" | cut -f2 -d"=")
