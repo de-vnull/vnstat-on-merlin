@@ -637,7 +637,7 @@ Generate_Stats(){
 	} >> "$VNSTAT_OUTPUT_FILE"
 	cat "$VNSTAT_OUTPUT_FILE"
 	printf "\\n"
-	Print_Output true "vnstat_totals summary generated" "$PASS"
+	Print_Output false "vnstat_totals summary generated" "$PASS"
 }
 
 Generate_Email(){
@@ -918,21 +918,21 @@ Check_Bandwidth_Usage(){
 	fi
 	bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{print $1*100/$2}')
 	usagestring="You have used ${bandwidthpercentage}%% (${bandwidthused}${bandwidthunit}) of your ${userLimit}${bandwidthunit} allowance"
-	Print_Output true "$usagestring"
+	Print_Output false "$usagestring"
 	if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-		Print_Output true "Data use is at or above 75%%" "$WARN"
+		Print_Output false "Data use is at or above 75%%" "$WARN"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
 			Generate_Email usage "75%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning75"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-		Print_Output true "Data use is at or above 90%%" "$ERR"
+		Print_Output false "Data use is at or above 90%%" "$ERR"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
 			Generate_Email usage "90%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning90"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
-		Print_Output true "Data use is at or above 100%%" "$CRIT"
+		Print_Output false "Data use is at or above 100%%" "$CRIT"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
 			Generate_Email usage "100%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning100"
