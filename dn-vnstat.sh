@@ -913,6 +913,7 @@ Check_Bandwidth_Usage(){
 	bandwidthunit="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
 	userLimit="$(BandwidthAllowance check)"
 	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ]; then
+		Print_Output true "Not enough data gathered by vnstat" "$WARN"
 		return 1
 	fi
 	bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{print $1*100/$2}')
