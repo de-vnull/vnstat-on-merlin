@@ -416,7 +416,6 @@ GiB/GB <span style="color:#FFCC00;">(default: 1200)</span>
 </td>
 </tr>
 </table>
-
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_monthly">
@@ -426,7 +425,6 @@ GiB/GB <span style="color:#FFCC00;">(default: 1200)</span>
 <div><img src="/user/dn-vnstat/images/vnstat_m.png" id="img_monthly" alt="Monthly"/></div>
 </td></tr>
 </table>
-
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_daily">
@@ -436,7 +434,6 @@ GiB/GB <span style="color:#FFCC00;">(default: 1200)</span>
 <div><img src="/user/dn-vnstat/images/vnstat_d.png" id="img_daily" alt="Daily"/></div>
 </td></tr>
 </table>
-
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_hourly">
@@ -446,7 +443,6 @@ GiB/GB <span style="color:#FFCC00;">(default: 1200)</span>
 <div><img src="/user/dn-vnstat/images/vnstat_h.png" id="img_hourly" alt="Hourly" /></div>
 </td></tr>
 </table>
-
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_summary">
@@ -456,7 +452,6 @@ GiB/GB <span style="color:#FFCC00;">(default: 1200)</span>
 <div><img src="/user/dn-vnstat/images/vnstat_s.png" id="img_summary" alt="Summary" /></div>
 </td></tr>
 </table>
-
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_top10">
@@ -466,7 +461,6 @@ GiB/GB <span style="color:#FFCC00;">(default: 1200)</span>
 <div><img src="/user/dn-vnstat/images/vnstat_t.png" id="img_top10" alt="Top10" /></div>
 </td></tr>
 </table>
-
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_cli">
@@ -479,7 +473,6 @@ Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 </td>
 </tr>
 </table>
-
 <p align="right"><small><i>dev_null - https://github.com/de-vnull/vnstat-on-merlin</i></small></td>
 </tr>
 </tbody>
