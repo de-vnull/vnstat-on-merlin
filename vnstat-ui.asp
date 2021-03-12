@@ -25,6 +25,26 @@ thead.collapsible-jquery {
   outline: none;
   cursor: pointer;
 }
+
+input.settingvalue {
+  margin-left: 3px !important;
+}
+
+label.settingvalue {
+  margin-right: 10px !important;
+  vertical-align: top !important;
+}
+
+.invalid {
+  background-color: darkred !important;
+}
+
+.removespacing {
+  padding-left: 0px !important;
+  margin-left: 0px !important;
+  margin-bottom: 5px !important;
+  text-align: center !important;
+}
 </style>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/jquery.js"></script>
 <script language="JavaScript" type="text/javascript" src="/state.js"></script>
