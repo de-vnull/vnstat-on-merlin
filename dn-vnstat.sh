@@ -306,6 +306,44 @@ Update_File(){
 	fi
 }
 
+Conf_FromSettings(){
+	SETTINGSFILE="/jffs/addons/custom_settings.txt"
+	TMPFILE="/tmp/dnvnstat_settings.txt"
+	if [ -f "$SETTINGSFILE" ]; then
+		if [ "$(grep "dnvnstat_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
+			Print_Output true "Updated settings from WebUI found, merging..." "$PASS"
+			cp -a "$SCRIPT_CONF" "$SCRIPT_CONF.bak"
+			cp -a "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_DIR/vnstat.conf.bak"
+			grep "dnvnstat_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
+			sed -i "s/dnvnstat_//g;s/ /=/g" "$TMPFILE"
+			while IFS='' read -r line || [ -n "$line" ]; do
+				SETTINGNAME="$(echo "$line" | cut -f1 -d'=' | awk '{ print toupper($1) }')"
+				SETTINGVALUE="$(echo "$line" | cut -f2 -d'=')"
+				if [ "$SETTINGNAME" != "MONTHROTATE" ]; then
+					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
+				elif [ "$SETTINGNAME" = "MONTHROTATE" ]; then
+					sed -i 's/^'"MonthRotate"'.*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_DIR/vnstat.conf"
+				fi
+			done < "$TMPFILE"
+			grep 'dnvnstat_version' "$SETTINGSFILE" > "$TMPFILE"
+			sed -i "\\~dnvnstat_~d" "$SETTINGSFILE"
+			mv "$SETTINGSFILE" "$SETTINGSFILE.bak"
+			cat "$SETTINGSFILE.bak" "$TMPFILE" > "$SETTINGSFILE"
+			rm -f "$TMPFILE"
+			rm -f "$SETTINGSFILE.bak"
+			
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			$VNSTAT_COMMAND -u
+			
+			#Reset_Allowance_Warnings force
+			
+			Print_Output true "Merge of updated settings from WebUI completed successfully" "$PASS"
+		else
+			Print_Output false "No updated settings from WebUI found, no merge necessary" "$PASS"
+		fi
+	fi
+}
+
 ### Create directories in filesystem if they do not exist ###
 Create_Dirs(){
 	if [ ! -d "$SCRIPT_DIR" ]; then
@@ -845,7 +883,7 @@ DailyEmail(){
 				DailyEmail disable
 			fi
 		;;
-		disable|none)
+		disable)
 			sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=none/' "$SCRIPT_CONF"
 		;;
 		check)
@@ -1523,9 +1561,7 @@ case "$1" in
 			Generate_Stats
 			exit 0
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
-			settingstate="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f1 -d'_')";
-			settingtype="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f2 -d'_')";
-			DailyEmail "$settingstate" "$settingtype"
+			Conf_FromSettings
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
 			Update_Check

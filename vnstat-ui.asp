@@ -51,6 +51,34 @@ function LoadCustomSettings(){
 
 var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
 
+function Validate_AllowanceStartDay(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue > 31 || inputvalue < 1){
+		$j(forminput).addClass("invalid");
+		return false;
+	}
+	else{
+		$j(forminput).removeClass("invalid");
+		return true;
+	}
+}
+
+function Validate_DataAllowance(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue <= 0){
+		$j(forminput).addClass("invalid");
+		return false;
+	}
+	else{
+		$j(forminput).removeClass("invalid");
+		return true;
+	}
+}
+
 function GetCookie(cookiename,returntype){
 	var s;
 	if ((s = cookie.get("cookie_"+cookiename)) != null){
@@ -122,10 +150,8 @@ function CheckUpdate(){
 }
 
 function DoUpdate(){
-	var action_script_tmp = "start_dn-vnstatdoupdate";
-	document.form.action_script.value = action_script_tmp;
-	var restart_time = 10;
-	document.form.action_wait.value = restart_time;
+	document.form.action_script.value = start_dn-vnstatdoupdate;
+	document.form.action_wait.value = 10;
 	showLoading();
 	document.form.submit();
 }
@@ -147,11 +173,26 @@ function GetVersionNumber(versiontype){
 	}
 }
 
+$j.fn.serializeObject = function(){
+	var o = custom_settings;
+	var a = this.serializeArray();
+	$j.each(a, function(){
+		if (o[this.name] !== undefined && this.name.indexOf("dnvnstat") != -1 && this.name.indexOf("version") == -1){
+			if (!o[this.name].push){
+				o[this.name] = [o[this.name]];
+			}
+			o[this.name].push(this.value || '');
+		} else if (this.name.indexOf("dnvnstat") != -1 && this.name.indexOf("version") == -1){
+			o[this.name] = this.value || '';
+		}
+	});
+	return o;
+};
+
 function SaveConfig(){
-	var action_script_tmp = "start_dn-vnstatconfig" + document.form.dnvnstat_dailyemail.value;
-	document.form.action_script.value = action_script_tmp;
-	var restart_time = 10;
-	document.form.action_wait.value = restart_time;
+	document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
+	document.form.action_script.value = "start_dn-vnstatconfig";
+	document.form.action_wait.value = 15;
 	showLoading();
 	document.form.submit();
 }
@@ -167,17 +208,29 @@ function get_conf_file(){
 		success: function(data){
 			var configdata=data.split("\n");
 			configdata = configdata.filter(Boolean);
-			
 			for (var i = 0; i < configdata.length; i++){
-				if(configdata[i].indexOf("DAILYEMAIL") != -1){
-					var confvalue = configdata[i].split("=")[1].replace(/(\r\n|\n|\r)/gm,"");
-					if(confvalue == "none"){
-						eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value = confvalue;
-					}
-					else
-					{
-						eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value = "enable_" + confvalue;
-					}
+				eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value = configdata[i].split("=")[1].replace(/(\r\n|\n|\r)/gm,"");
+			}
+			get_vnstatconf_file();
+		}
+	});
+}
+
+function get_vnstatconf_file(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/vnstatconf.htm',
+		dataType: 'text',
+		timeout: 1000,
+		error: function(xhr){
+			setTimeout(get_vnstatconf_file, 1000);
+		},
+		success: function(data){
+			var configdata=data.split("\n");
+			configdata = configdata.filter(Boolean);
+			for (var i = 0; i < configdata.length; i++){
+				if(configdata[i].startsWith("MonthRotate")){
+					eval("document.form.dnvnstat_"+configdata[i].split(" ")[0].toLowerCase()).value = configdata[i].split(" ")[1].replace(/(\r\n|\n|\r)/gm,"");
+					break;
 				}
 			}
 		}
@@ -298,21 +351,43 @@ function reload(){
 </td>
 </tr>
 </table>
-
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_config">
 <thead class="collapsible-jquery" id="scriptconfig">
 <tr><td colspan="2">Configuration (click to expand/collapse)</td></tr>
 </thead>
-<tr class="even" id="rowenableemail">
+<tr class="even" id="rowenabledailyemail">
 <th width="40%">Enable daily summary emails</th>
 <td class="settingvalue">
-<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_enabled_html" class="input" value="enable_html" checked>
-<label for="dnvnstat_dailyemail_enabled_html" class="settingvalue">HTML</label>
-<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_enabled_text" class="input" value="enable_text">
+<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_html" class="input" value="html" checked>
+<label for="dnvnstat_dailyemail_html" class="settingvalue">HTML</label>
+<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_text" class="input" value="text">
 <label for="dnvnstat_dailyemail_text" class="settingvalue">Text</label>
 <input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_none" class="input" value="none">
-<label for="dnvnstat_dailyemail_none" class="settingvalue">None</label>
+<label for="dnvnstat_dailyemail_none" class="settingvalue">Disabled</label>
+</td>
+</tr>
+<tr class="even" id="rowenableusageemail">
+<th width="40%">Enable data usage warning emails</th>
+<td class="settingvalue">
+<input type="radio" name="dnvnstat_usageemail" id="dnvnstat_usageemail_true" class="input" value="true">
+<label for="dnvnstat_usageemail_true" class="settingvalue">Enabled</label>
+<input type="radio" name="dnvnstat_usageemail" id="dnvnstat_usageemail_false" class="input" value="false" checked>
+<label for="dnvnstat_usageemail_false" class="settingvalue">Disabled</label>
+</td>
+</tr>
+<tr class="even" id="rowdataallowance">
+<th width="40%">Bandwidth allowance for data usage warnings</th>
+<td class="settingvalue">
+<input autocomplete="off" type="text" maxlength="4" class="input_6_table removespacing" name="dnvnstat_dataallowance" value="1200" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this)" />
+GiB/GB <span style="color:#FFCC00;">(default: 1200)</span>
+</td>
+</tr>
+<tr class="even" id="rowmonthrotate">
+<th width="40%">Start day of month for bandwidth allowance</th>
+<td class="settingvalue">
+<input autocomplete="off" type="text" maxlength="2" class="input_3_table removespacing" name="dnvnstat_monthrotate" value="1" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_AllowanceStartDay(this)" onblur="Validate_AllowanceStartDay(this)" />
+<span style="color:#FFCC00;">(between 1 and 31, default: 1)</span>
 </td>
 </tr>
 <tr class="apply_gen" valign="top" height="35px">
