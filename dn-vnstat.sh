@@ -48,7 +48,7 @@ Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME" "$2"
 	fi
-	printf "\\e[1m${3}${2}\\e[0m\\n\\n"
+	printf "\\e[1m${3}%s\\e[0m\\n\\n" "$2"
 }
 
 ### Check firmware version contains the "am_addons" feature flag ###
@@ -374,6 +374,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
+	ln -s /tmp/vnstat-usage.tmp
 	ln -s "$VNSTAT_OUTPUT_FILE" "$SCRIPT_WEB_DIR/vnstatoutput.htm" 2>/dev/null
 	ln -s "$SCRIPT_CONF" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
@@ -964,28 +965,43 @@ Check_Bandwidth_Usage(){
 		Print_Output true "Not enough data gathered by vnstat" "$WARN"
 		return 1
 	fi
-	bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{print $1*100/$2}')
-	usagestring="You have used ${bandwidthpercentage}%% (${bandwidthused}${bandwidthunit}) of your ${userLimit}${bandwidthunit} allowance"
+	bandwidthpercentage=""
+	usagestring=""
+	if [ "$userLimit" -eq 0 ]; then
+		bandwidthpercentage="N/A"
+		usagestring="You have used ${bandwidthused}${bandwidthunit} of data this month"
+	else
+		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{print $1*100/$2}')
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}${bandwidthunit}) of your ${userLimit}${bandwidthunit} monthly allowance"
+	fi
+	
 	Print_Output false "$usagestring"
-	if [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-		Print_Output false "Data use is at or above 75%%" "$WARN"
+	
+	if [ "$bandwidthpercentage" = "N/A" ]; then
+		echo "var usagethreshold = false;" > /tmp/vnstat-usage.tmp
+	elif [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
+		Print_Output false "Data use is at or above 75%" "$WARN"
+		echo "var usagethreshold = true;" > /tmp/vnstat-usage.tmp
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
 			Generate_Email usage "75%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning75"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-		Print_Output false "Data use is at or above 90%%" "$ERR"
+		Print_Output false "Data use is at or above 90%" "$ERR"
+		echo "var usagethreshold = true;" > /tmp/vnstat-usage.tmp
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
 			Generate_Email usage "90%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning90"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
-		Print_Output false "Data use is at or above 100%%" "$CRIT"
+		Print_Output false "Data use is at or above 100%" "$CRIT"
+		echo "var usagethreshold = true;" > /tmp/vnstat-usage.tmp
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
 			Generate_Email usage "100%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning100"
 		fi
 	fi
+	printf "var usagestring = \"%s\";\\n" "$usagestring" >> /tmp/vnstat-usage.tmp
 }
 
 vom_rio(){
@@ -1339,13 +1355,9 @@ Menu_BandwidthAllowance(){
 		elif ! Validate_Number "" "$allowance" silent; then
 			printf "\\n\\e[31mPlease enter a valid number (GiB/GB, whole number)\\e[0m\\n"
 		else
-			if [ "$allowance" -le 0 ]; then
-				printf "\\n\\e[31mPlease enter a number greater than 0\\e[0m\\n"
-			else
-				bandwidthallowance="$allowance"
-				printf "\\n"
-				break
-			fi
+			bandwidthallowance="$allowance"
+			printf "\\n"
+			break
 		fi
 	done
 	
