@@ -89,7 +89,7 @@ function Validate_DataAllowance(forminput){
 	var inputname = forminput.name;
 	var inputvalue = forminput.value*1;
 	
-	if(inputvalue <= 0){
+	if(inputvalue < 0 || forminput.value.length == 0){
 		$j(forminput).addClass("invalid");
 		return false;
 	}
@@ -400,7 +400,7 @@ function reload(){
 <th width="40%">Bandwidth allowance for data usage warnings</th>
 <td class="settingvalue">
 <input autocomplete="off" type="text" maxlength="4" class="input_6_table removespacing" name="dnvnstat_dataallowance" value="1200" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this)" />
-GiB/GB <span style="color:#FFCC00;">(default: 1200)</span>
+GiB/GB <span style="color:#FFCC00;">(default: 1200, 0: unlimited)</span>
 </td>
 </tr>
 <tr class="even" id="rowmonthrotate">
