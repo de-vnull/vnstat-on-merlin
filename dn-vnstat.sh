@@ -1535,6 +1535,9 @@ if [ -z "$1" ]; then
 	Auto_Cron create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
+	if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
+		rm -f "$SCRIPT_DIR/.emailenabled"
+	fi
 	ScriptHeader
 	MainMenu
 	exit 0
@@ -1593,6 +1596,9 @@ case "$1" in
 		exit 0
 	;;
 	setversion)
+		if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
+			rm -f "$SCRIPT_DIR/.emailenabled"
+		fi
 		Create_Dirs
 		Conf_Exists
 		Create_Symlinks
@@ -1603,6 +1609,9 @@ case "$1" in
 		exit 0
 	;;
 	postupdate)
+		if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
+			rm -f "$SCRIPT_DIR/.emailenabled"
+		fi
 		Create_Dirs
 		Conf_Exists
 		Create_Symlinks
