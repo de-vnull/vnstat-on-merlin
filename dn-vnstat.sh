@@ -965,6 +965,7 @@ Check_Bandwidth_Usage(){
 	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ]; then
 		Print_Output false "Not enough data gathered by vnstat" "$WARN"
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
 		return 1
 	fi
@@ -985,6 +986,7 @@ Check_Bandwidth_Usage(){
 	elif [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output false "Data use is at or above 75%" "$WARN"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 75%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
 			Generate_Email usage "75%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning75"
@@ -992,6 +994,7 @@ Check_Bandwidth_Usage(){
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output false "Data use is at or above 90%" "$ERR"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 90%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
 			Generate_Email usage "90%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning90"
@@ -999,6 +1002,7 @@ Check_Bandwidth_Usage(){
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
 		Print_Output false "Data use is at or above 100%" "$CRIT"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 100%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
 			Generate_Email usage "100%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning100"
