@@ -173,7 +173,7 @@ Update_Version(){
 		fi
 		
 		if [ "$isupdate" != "false" ]; then
-			printf "\\e[1mDo you want to continue with the update? (y/n)\\e[0m\\n"
+			printf "\\e[1mDo you want to continue with the update? (y/n)\\e[0m  "
 			read -r confirm
 			case "$confirm" in
 				y|Y)
@@ -854,7 +854,7 @@ DailyEmail(){
 				printf "\\ne.    Exit to main menu\\n"
 				
 				while true; do
-					printf "\\n\\e[1mChoose an option:\\e[0m    "
+					printf "\\n\\e[1mChoose an option:\\e[0m  "
 					read -r emailtype
 					case "$emailtype" in
 						1)
@@ -1178,7 +1178,7 @@ MainMenu(){
 			;;
 			z)
 				while true; do
-					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m\\n" "$SCRIPT_NAME"
+					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m  " "$SCRIPT_NAME"
 					read -r confirm
 					case "$confirm" in
 						y|Y)
@@ -1229,7 +1229,7 @@ Menu_Install(){
 	IFACE=""
 	printf "\\n\\e[1mWAN Interface detected as %s\\e[0m\\n" "$(Get_WAN_IFace)"
 	while true; do
-		printf "\\n\\e[1mIs this correct? (y/n)\\e[0m    "
+		printf "\\n\\e[1mIs this correct? (y/n)\\e[0m  "
 		read -r confirm
 		case "$confirm" in
 			y|Y)
@@ -1238,7 +1238,7 @@ Menu_Install(){
 			;;
 			n|N)
 				while true; do
-					printf "\\n\\e[1mPlease enter correct interface:\\e[0m    "
+					printf "\\n\\e[1mPlease enter correct interface:\\e[0m  "
 					read -r iface
 					iface_lower="$(echo "$iface" | tr "A-Z" "a-z")"
 					if [ "$iface" = "e" ]; then
@@ -1330,7 +1330,7 @@ Menu_BandwidthAllowance(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance (GiB/GB, whole number):\\e[0m\\n"
+		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance\\n(GiB/GB, whole number, 0 = unlimited):\\e[0m  "
 		read -r allowance
 		
 		if [ "$allowance" = "e" ]; then
@@ -1362,7 +1362,7 @@ Menu_AllowanceStartDay(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance resets (1-31):\\e[0m\\n"
+		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance\\nresets (1-31):\\e[0m  "
 		read -r startday
 		
 		if [ "$startday" = "e" ]; then
@@ -1398,7 +1398,7 @@ Menu_Edit(){
 	printf "\\ne.    Exit to main menu\\n"
 	
 	while true; do
-		printf "\\n\\e[1mChoose an option:\\e[0m    "
+		printf "\\n\\e[1mChoose an option:\\e[0m  "
 		read -r editor
 		case "$editor" in
 			1)
@@ -1467,7 +1467,7 @@ Menu_Uninstall(){
 	sed -i '/dnvnstat_version_local/d' "$SETTINGSFILE"
 	sed -i '/dnvnstat_version_server/d' "$SETTINGSFILE"
 	
-	printf "\\n\\e[1mWould you like to keep the vnstat data files and configuration? (y/n)\\e[0m\\n"
+	printf "\\n\\e[1mWould you like to keep the vnstat\\ndata files and configuration? (y/n)\\e[0m  "
 	read -r confirm
 	case "$confirm" in
 		y|Y)
