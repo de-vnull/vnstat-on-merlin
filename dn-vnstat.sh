@@ -333,6 +333,8 @@ Conf_FromSettings(){
 			rm -f "$SETTINGSFILE.bak"
 			
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			TZ=$(cat /etc/TZ)
+			export TZ
 			$VNSTAT_COMMAND -u
 			
 			#Reset_Allowance_Warnings force
@@ -652,6 +654,8 @@ Get_WAN_IFace(){
 }
 
 Generate_Images(){
+	TZ=$(cat /etc/TZ)
+	export TZ
 	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 	Print_Output false "vnstati updating stats for UI" "$PASS"
 	$VNSTAT_COMMAND -u
@@ -666,6 +670,8 @@ Generate_Images(){
 }
 
 Generate_Stats(){
+	TZ=$(cat /etc/TZ)
+	export TZ
 	printf "vnstats as of:\\n%s" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	$VNSTAT_COMMAND -u
 	{
@@ -927,6 +933,8 @@ AllowanceStartDay(){
 		update)
 			sed -i 's/^'"MonthRotate"'.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			TZ=$(cat /etc/TZ)
+			export TZ
 			$VNSTAT_COMMAND -u
 			Reset_Allowance_Warnings force
 		;;
@@ -946,6 +954,8 @@ Reset_Allowance_Warnings(){
 }
 
 Check_Bandwidth_Usage(){
+	TZ=$(cat /etc/TZ)
+	export TZ
 	$VNSTAT_COMMAND -u
 	bandwidthused="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
 	bandwidthunit="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
@@ -1416,6 +1426,8 @@ Menu_Edit(){
 		newmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
 		if [ "$oldmd5" != "$newmd5" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			TZ=$(cat /etc/TZ)
+			export TZ
 			$VNSTAT_COMMAND -u
 		fi
 	fi
