@@ -2,10 +2,12 @@
 
 ### v 0.9.5 - TBD ###
 * Beta 3/RC1
-* Updated menu options
-* Updated UI for several menu options
-* Deprecate the "CLI daily total" graphic in favor of textual view
 * Data use monitoring (data limit monitoring) with email notification (of particular interest to those with data caps)
+* Data use warning message on UI page (if data limit is set and saved)
+* Updated menu options to include data-use monitoring, notification types
+* Added ability to set menu settings to UI
+* Deprecate the "CLI daily total" graphic in favor of textual view
+
 
 ### v 0.9.4 - 02-Mar-2021 ###
 * Expanded menu options (some deplyed as mimimal updates), including ability to edit vnstat.conf
