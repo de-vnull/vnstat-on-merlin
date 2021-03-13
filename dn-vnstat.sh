@@ -374,7 +374,7 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
-	ln -s /tmp/vnstat-usage.tmp "$SCRIPT_WEB_DIR/vnstat-usage.js" 2>/dev/null
+	ln -s "$SCRIPT_DIR/.vnstatusage" "$SCRIPT_WEB_DIR/vnstatusage.js" 2>/dev/null
 	ln -s "$VNSTAT_OUTPUT_FILE" "$SCRIPT_WEB_DIR/vnstatoutput.htm" 2>/dev/null
 	ln -s "$SCRIPT_CONF" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
@@ -962,7 +962,9 @@ Check_Bandwidth_Usage(){
 	bandwidthunit="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
 	userLimit="$(BandwidthAllowance check)"
 	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ]; then
-		Print_Output true "Not enough data gathered by vnstat" "$WARN"
+		Print_Output false "Not enough data gathered by vnstat" "$WARN"
+		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
 		return 1
 	fi
 	bandwidthpercentage=""
@@ -978,30 +980,30 @@ Check_Bandwidth_Usage(){
 	Print_Output false "$usagestring"
 	
 	if [ "$bandwidthpercentage" = "N/A" ]; then
-		echo "var usagethreshold = false;" > /tmp/vnstat-usage.tmp
+		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
 	elif [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output false "Data use is at or above 75%" "$WARN"
-		echo "var usagethreshold = true;" > /tmp/vnstat-usage.tmp
+		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
 			Generate_Email usage "75%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning75"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output false "Data use is at or above 90%" "$ERR"
-		echo "var usagethreshold = true;" > /tmp/vnstat-usage.tmp
+		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
 			Generate_Email usage "90%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning90"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
 		Print_Output false "Data use is at or above 100%" "$CRIT"
-		echo "var usagethreshold = true;" > /tmp/vnstat-usage.tmp
+		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
 			Generate_Email usage "100%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning100"
 		fi
 	fi
-	printf "var usagestring = \"%s\";\\n" "$usagestring" >> /tmp/vnstat-usage.tmp
+	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_DIR/.vnstatusage"
 }
 
 vom_rio(){
@@ -1090,10 +1092,16 @@ MainMenu(){
 	fi
 	MENU_USAGE_ENABLED=""
 	if UsageEmail check; then MENU_USAGE_ENABLED="ENABLED"; else MENU_USAGE_ENABLED="DISABLED"; fi
+	MENU_BANDWIDTHALLOWANCE=""
+	if [ "$(BandwidthAllowance check)" -eq 0 ]; then
+		MENU_BANDWIDTHALLOWANCE="UNLIMITED"
+	else
+		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check) GiB/GB"
+	fi
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_DAILYEMAIL"
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_USAGE_ENABLED"
-	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(BandwidthAllowance check) GiB/GB"
+	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
 	printf "5.    Set start day of month for bandwidth allowance\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
 	printf "6.    Check bandwidth usage now\\n\\n"
 	printf "v.    Edit vnstat config\\n\\n"
@@ -1473,6 +1481,7 @@ Menu_Uninstall(){
 	rm -f /opt/etc/vnstat.conf
 	
 	Reset_Allowance_Warnings force
+	rm -f "$SCRIPT_DIR/.vnstatusage"
 	rm -rf "$IMAGE_OUTPUT_DIR"
 	
 	SETTINGSFILE=/jffs/addons/custom_settings.txt
