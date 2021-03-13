@@ -45,6 +45,10 @@ label.settingvalue {
   margin-bottom: 5px !important;
   text-align: center !important;
 }
+
+.usagehint {
+  color: #FFFF00 !important;
+}
 </style>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/jquery.js"></script>
 <script language="JavaScript" type="text/javascript" src="/state.js"></script>
@@ -56,6 +60,7 @@ label.settingvalue {
 <script language="JavaScript" type="text/javascript" src="/tmmenu.js"></script>
 <script language="JavaScript" type="text/javascript" src="/client_function.js"></script>
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/dn-vnstat/vnstatusage.js"></script>
 <script>
 var custom_settings;
 function LoadCustomSettings(){
@@ -70,6 +75,15 @@ function LoadCustomSettings(){
 }
 
 var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
+
+function UsageHint(){
+	var tag_name= document.getElementsByTagName('a');
+	for(var i=0;i<tag_name.length;i++){
+		tag_name[i].onmouseout=nd;
+	}
+	hinttext=thresholdstring;
+	return overlib(hinttext, 0, 0);
+}
 
 function Validate_AllowanceStartDay(forminput){
 	var inputname = forminput.name;
@@ -270,6 +284,17 @@ function loadVnStatOutput(){
 	});
 }
 
+function ShowHideDataUsageWarning(showusage){
+	if(showusage){
+		document.getElementById("datausagewarning").style.display = "";
+		document.getElementById("scripttitle").style.marginLeft = "166px";
+	}
+	else{
+		document.getElementById("datausagewarning").style.display = "none";
+		document.getElementById("scripttitle").style.marginLeft = "0px";
+	}
+}
+
 function AddEventHandlers(){
 	$j(".collapsible-jquery").click(function(){
 		$j(this).siblings().toggle("fast",function(){
@@ -310,6 +335,8 @@ function initial(){
 	var time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2);
 	var dateTime = date+' '+time;
 	document.getElementById("statstitle").innerHTML = "This page last refreshed: " + dateTime;
+	$j("#spandatausage").html(usagestring);
+	ShowHideDataUsageWarning(usagethreshold);
 }
 
 function reload(){
@@ -348,8 +375,12 @@ function reload(){
 <tbody>
 <tr bgcolor="#4D595D">
 <td valign="top">
+<div id="datausagewarning">
+<div style="float:right;color:#FFFF00;font-weight:bold;font-size:14px;padding-top:2px;margin-right:10px;"><a class="hintstyle usagehint" href="javascript:void(0);" onclick="UsageHint();">Data usage warning</a></div>
+<div style="height:30px;width:24px;overflow:hidden;float:right;"><a class="hintstyle usagehint" href="javascript:void(0);" onclick="UsageHint();"><img src="/images/New_ui/notification.png" style=""></a></div>
+</div>
 <div>&nbsp;</div>
-<div class="formfonttitle" id="scripttitle" style="text-align:center;">Vnstat on Merlin</div>
+<div class="formfonttitle" id="scripttitle" style="text-align:center;margin-left:166px;">Vnstat on Merlin</div>
 <div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
 <div class="formfontdesc"><u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5; CMD+R or equiv).</i></u> vnstat and vnstati are Linux data usage reporting tools.</div>
@@ -368,6 +399,12 @@ function reload(){
 <img id="imgChkUpdate" style="display:none;vertical-align:middle;" src="images/InternetScan.gif"/>
 <input type="button" class="button_gen" onclick="DoUpdate();" value="Update" id="btnDoUpdate" style="display:none;">
 &nbsp;&nbsp;&nbsp;
+</td>
+</tr>
+<tr>
+<th width="20%">Data usage for current month</th>
+<td>
+<span id="spandatausage" style="color:#FFFFFF;"></span>
 </td>
 </tr>
 </table>
