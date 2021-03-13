@@ -1460,11 +1460,14 @@ Menu_Uninstall(){
 	rm -f /opt/etc/init.d/S33vnstat
 	rm -f /opt/etc/vnstat.conf
 	
+	Reset_Allowance_Warnings force
+	rm -rf "$IMAGE_OUTPUT_DIR"
+	
 	SETTINGSFILE=/jffs/addons/custom_settings.txt
 	sed -i '/dnvnstat_version_local/d' "$SETTINGSFILE"
 	sed -i '/dnvnstat_version_server/d' "$SETTINGSFILE"
 	
-	printf "\\n\\e[1mWould you like to keep the vnstat data files? (y/n)\\e[0m\\n"
+	printf "\\n\\e[1mWould you like to keep the vnstat data files and configuration? (y/n)\\e[0m\\n"
 	read -r confirm
 	case "$confirm" in
 		y|Y)
