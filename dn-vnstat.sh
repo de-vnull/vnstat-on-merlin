@@ -983,6 +983,7 @@ Check_Bandwidth_Usage(){
 	
 	if [ "$bandwidthpercentage" = "N/A" ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
 	elif [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		Print_Output false "Data use is at or above 75%" "$WARN"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
