@@ -41,7 +41,7 @@ readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
-readonly SETTING="\\e[36m"
+readonly SETTING="\\e[1m\\e[36m"
 ### End of output format variables ###
 
 # $1 = print to syslog, $2 = message to print, $3 = log level
@@ -1102,9 +1102,9 @@ MainMenu(){
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m$MENU_DAILYEMAIL\\e[0m\\n\\n"
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m$MENU_USAGE_ENABLED\\e[0m\\n\\n"
-	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: \\e[1m$SETTING%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
-	printf "5.    Set start day of month for bandwidth allowance\\n      Currently: \\e[1m$SETTING%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
-	printf "6.    Check bandwidth usage now\\n      Current usage: \\e[1m$SETTING%s\\e[0m\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
+	printf "5.    Set start day of month for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
+	printf "6.    Check bandwidth usage now\\n      Current usage: ${SETTING}%s\\e[0m\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
