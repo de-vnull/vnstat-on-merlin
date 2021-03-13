@@ -789,7 +789,7 @@ Generate_Email(){
 				echo "Date: $(date -R)";
 				echo "";
 			} > /tmp/mail.txt
-			printf "$usagestring" >>/tmp/mail.txt
+			printf "%s" "$usagestring" >>/tmp/mail.txt
 		fi
 		
 		#Send Email
