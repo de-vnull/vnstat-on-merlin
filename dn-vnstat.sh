@@ -1538,6 +1538,9 @@ if [ -z "$1" ]; then
 	if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
 		rm -f "$SCRIPT_DIR/.emailenabled"
 	fi
+	if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
+		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
+	fi
 	ScriptHeader
 	MainMenu
 	exit 0
@@ -1599,6 +1602,9 @@ case "$1" in
 		if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
 			rm -f "$SCRIPT_DIR/.emailenabled"
 		fi
+		if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
+			rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
+		fi
 		Create_Dirs
 		Conf_Exists
 		Create_Symlinks
@@ -1611,6 +1617,9 @@ case "$1" in
 	postupdate)
 		if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
 			rm -f "$SCRIPT_DIR/.emailenabled"
+		fi
+		if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
+			rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
 		fi
 		Create_Dirs
 		Conf_Exists
