@@ -103,12 +103,25 @@ function Validate_DataAllowance(forminput){
 	var inputname = forminput.name;
 	var inputvalue = forminput.value*1;
 	
-	if(inputvalue < 0 || forminput.value.length == 0){
+	if(inputvalue < 0 || forminput.value.length == 0 || inputvalue == NaN || forminput.value == "."){
 		$j(forminput).addClass("invalid");
 		return false;
 	}
 	else{
 		$j(forminput).removeClass("invalid");
+		return true;
+	}
+}
+
+function Format_DataAllowance(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue < 0 || forminput.value.length == 0 || inputvalue == NaN || forminput.value == "."){
+		return false;
+	}
+	else{
+		forminput.value=parseFloat(forminput.value).toFixed(2);
 		return true;
 	}
 }
@@ -264,7 +277,6 @@ function get_vnstatconf_file(){
 			for (var i = 0; i < configdata.length; i++){
 				if(configdata[i].startsWith("MonthRotate")){
 					eval("document.form.dnvnstat_"+configdata[i].split(" ")[0].toLowerCase()).value = configdata[i].split(" ")[1].replace(/(\r\n|\n|\r)/gm,"");
-					break;
 				}
 			}
 		}
@@ -436,8 +448,17 @@ function reload(){
 <tr class="even" id="rowdataallowance">
 <th width="40%">Bandwidth allowance for data usage warnings</th>
 <td class="settingvalue">
-<input autocomplete="off" type="text" maxlength="4" class="input_6_table removespacing" name="dnvnstat_dataallowance" value="1200" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this)" />
-GiB/GB <span style="color:#FFCC00;">(default: 1200, 0: unlimited)</span>
+<input autocomplete="off" type="text" maxlength="8" class="input_12_table removespacing" name="dnvnstat_dataallowance" value="1200" onkeypress="return validator.isNumberFloat(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this);Format_DataAllowance(this)" />
+&nbsp;<span id="spandefaultallowance" style="color:#FFCC00;">(0: unlimited)</span>
+</td>
+</tr>
+<tr class="even" id="rowallowanceunit">
+<th width="40%">Unit for bandwidth allowance</th>
+<td class="settingvalue">
+<input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_g" class="input" value="G" checked>
+<label for="dnvnstat_allowanceunit_g" id="label_allowanceunit_g" class="settingvalue">GB</label>
+<input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_t" class="input" value="T">
+<label for="dnvnstat_allowanceunit_t" id="label_allowanceunit_t" class="settingvalue">TB</label>
 </td>
 </tr>
 <tr class="even" id="rowmonthrotate">
