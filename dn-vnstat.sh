@@ -1092,7 +1092,7 @@ ScriptHeader(){
 	printf "\\e[1m##  vnstat and vnstati data usage statistics   ##\\e[0m\\n"
 	printf "\\e[1m##            for AsusWRT-Merlin               ##\\e[0m\\n"
 	printf "\\e[1m##                                             ##\\e[0m\\n"
-	printf "\\e[1m##            %s on %-9s              ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "\\e[1m##            %s on %-11s            ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "\\e[1m##                                             ## \\e[0m\\n"
 	printf "\\e[1m##            Created by dev_null              ##\\e[0m\\n"
 	printf "\\e[1m##    github.com/de-vnull/vnstat-on-merlin     ##\\e[0m\\n"
