@@ -237,6 +237,14 @@ Validate_Number(){
 	fi
 }
 
+Validate_Bandwidth(){
+	if echo "$1" | /bin/grep -oq "^[0-9]*\.\?[0-9]*$"; then
+		return 0
+	else
+		return 1
+	fi
+}
+
 ### Perform relevant actions for secondary files when being updated ###
 Update_File(){
 	if [ "$1" = "vnstat-ui.asp" ]; then ### WebUI page
@@ -973,7 +981,7 @@ Check_Bandwidth_Usage(){
 	fi
 	bandwidthpercentage=""
 	usagestring=""
-	if [ "$userLimit" -eq 0 ]; then
+	if [ "$(echo "$userLimit 0" | awk '{print ($1 = $2)}')" -eq 1 ]; then
 		bandwidthpercentage="N/A"
 		usagestring="You have used ${bandwidthused}${bandwidthunit} of data this month"
 	else
@@ -1115,7 +1123,7 @@ MainMenu(){
 	MENU_USAGE_ENABLED=""
 	if UsageEmail check; then MENU_USAGE_ENABLED="${PASS}ENABLED"; else MENU_USAGE_ENABLED="${ERR}DISABLED"; fi
 	MENU_BANDWIDTHALLOWANCE=""
-	if [ "$(BandwidthAllowance check)" -eq 0 ]; then
+	if [ "$(echo "$(BandwidthAllowance check) 0" | awk '{print ($1 = $2)}')" -eq 1 ]   ; then
 		MENU_BANDWIDTHALLOWANCE="UNLIMITED"
 	else
 		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check) GiB/GB"
@@ -1380,14 +1388,14 @@ Menu_BandwidthAllowance(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance\\n(GiB/GB, whole number, 0 = unlimited):\\e[0m  "
+		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance\\n(%s, 0 = unlimited):\\e[0m  " "$(AllowanceUnit check)"
 		read -r allowance
 		
 		if [ "$allowance" = "e" ]; then
 			exitmenu="exit"
 			break
-		elif ! Validate_Number "" "$allowance" silent; then
-			printf "\\n\\e[31mPlease enter a valid number (GiB/GB, whole number)\\e[0m\\n"
+		elif ! Validate_Bandwidth "$allowance"; then
+			printf "\\n\\e[31mPlease enter a valid number (%s)\\e[0m\\n" "$(AllowanceUnit check)"
 		else
 			bandwidthallowance="$allowance"
 			printf "\\n"
