@@ -1466,14 +1466,14 @@ Menu_BandwidthAllowance(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance\\n(%s, 0 = unlimited):\\e[0m  " "$(AllowanceUnit check)"
+		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance\\n(%s, 0 = unlimited, max. 2 decimals):\\e[0m  " "$(AllowanceUnit check)"
 		read -r allowance
 		
 		if [ "$allowance" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Bandwidth "$allowance"; then
-			printf "\\n\\e[31mPlease enter a valid number (%s)\\e[0m\\n" "$(AllowanceUnit check)"
+			printf "\\n\\e[31mPlease enter a valid number (%s, 0 = unlimited, max. 2 decimals)\\e[0m\\n" "$(AllowanceUnit check)"
 		else
 			bandwidthallowance="$allowance"
 			printf "\\n"
