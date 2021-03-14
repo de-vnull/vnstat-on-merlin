@@ -238,7 +238,7 @@ Validate_Number(){
 }
 
 Validate_Bandwidth(){
-	if echo "$1" | /bin/grep -oq "^[0-9]*\.\?[0-9]*$"; then
+	if echo "$1" | /bin/grep -oq "^[0-9]*\.\?[0-9]\?[0-9]$"; then
 		return 0
 	else
 		return 1
@@ -1543,12 +1543,12 @@ Menu_AllowanceUnit(){
 			if [ "$scaletype" != "none" ]; then
 				bandwidthallowance="$(BandwidthAllowance check)"
 				if [ "$scaletype" = "multiply" ]; then
-					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.1f\n", $1*$2);}')
+					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
 				elif [ "$scaletype" = "divide" ]; then
 				
-					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.1f\n", $1/$2);}')
+					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 				fi
-				BandwidthAllowance update "$(echo "$bandwidthallowance" | sed 's/\.0//')" noreset
+				BandwidthAllowance update "$(echo "$bandwidthallowance" | sed 's/\.00//')" noreset
 			fi
 		fi
 	fi
