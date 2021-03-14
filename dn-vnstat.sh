@@ -966,7 +966,6 @@ AllowanceUnit(){
 	case "$1" in
 		update)
 		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
-		Reset_Allowance_Warnings force
 		;;
 		check)
 			UnitMode=$(grep "^UnitMode" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
