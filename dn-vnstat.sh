@@ -932,7 +932,9 @@ BandwidthAllowance(){
 	case "$1" in
 		update)
 			sed -i 's/^DATAALLOWANCE.*$/DATAALLOWANCE='"$2"'/' "$SCRIPT_CONF"
-			Reset_Allowance_Warnings force
+			if [ -z "$3" ]; then
+				Reset_Allowance_Warnings force
+			fi
 			Check_Bandwidth_Usage
 		;;
 		check)
@@ -1523,7 +1525,7 @@ Menu_AllowanceUnit(){
 				
 					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.1f\n", $1/$2);}')
 				fi
-				BandwidthAllowance update "$(echo "$bandwidthallowance" | sed 's/\.0//')"
+				BandwidthAllowance update "$(echo "$bandwidthallowance" | sed 's/\.0//')" noreset
 			fi
 		fi
 	fi
