@@ -1070,6 +1070,20 @@ vom_rio(){
 	fi
 }
 
+Process_Upgrade(){
+	if [ ! -f "$SCRIPT_DIR/.vnstatusage" ]; then
+		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
+		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
+	fi
+	if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
+		rm -f "$SCRIPT_DIR/.emailenabled"
+	fi
+	if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
+		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
+	fi
+}
+
 ScriptHeader(){
 	clear
 	printf "\\n"
@@ -1308,6 +1322,8 @@ Menu_Install(){
 	Auto_Cron create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
+	
+	Process_Upgrade
 	
 	if [ -n "$(pidof vnstatd)" ];then
 		Print_Output true "Sleeping for 5s before generating initial stats" "$WARN"
@@ -1565,12 +1581,7 @@ if [ -z "$1" ]; then
 	Auto_Cron create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
-	if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
-		rm -f "$SCRIPT_DIR/.emailenabled"
-	fi
-	if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
-		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
-	fi
+	Process_Upgrade
 	ScriptHeader
 	MainMenu
 	exit 0
@@ -1629,12 +1640,7 @@ case "$1" in
 		exit 0
 	;;
 	setversion)
-		if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
-			rm -f "$SCRIPT_DIR/.emailenabled"
-		fi
-		if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
-			rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
-		fi
+		Process_Upgrade
 		Create_Dirs
 		Conf_Exists
 		Create_Symlinks
@@ -1645,12 +1651,7 @@ case "$1" in
 		exit 0
 	;;
 	postupdate)
-		if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
-			rm -f "$SCRIPT_DIR/.emailenabled"
-		fi
-		if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
-			rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
-		fi
+		Process_Upgrade
 		Create_Dirs
 		Conf_Exists
 		Create_Symlinks
