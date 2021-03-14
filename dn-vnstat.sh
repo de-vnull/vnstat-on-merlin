@@ -965,7 +965,6 @@ AllowanceUnit(){
 		update)
 		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
 		Reset_Allowance_Warnings force
-		Check_Bandwidth_Usage
 		;;
 		check)
 			UnitMode=$(grep "^UnitMode" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
@@ -1499,6 +1498,34 @@ Menu_AllowanceUnit(){
 	done
 	if [ "$exitmenu" != "exit" ]; then
 		AllowanceUnit update "$allowanceunit"
+		
+		allowanceunit="$(AllowanceUnit check)"
+		if [ "$prevallowanceunit" != "$allowanceunit" ]; then
+			scalefactor=1000
+			if echo "$allowanceunit" | grep -q i ; then
+				scalefactor=1024
+			fi
+			
+			scaletype="none"
+			if [ "$(echo "$prevallowanceunit" | sed 's/i//')" != "$(AllowanceUnit check | sed 's/i//')" ]; then
+				if echo "$prevallowanceunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
+					scaletype="divide"
+				elif echo "$prevallowanceunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
+					scaletype="multiply"
+				fi
+			fi
+			
+			if [ "$scaletype" != "none" ]; then
+				bandwidthallowance="$(BandwidthAllowance check)"
+				if [ "$scaletype" = "multiply" ]; then
+					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.1f\n", $1*$2);}')
+				elif [ "$scaletype" = "divide" ]; then
+				
+					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.1f\n", $1/$2);}')
+				fi
+				BandwidthAllowance update "$(echo "$bandwidthallowance" | sed 's/\.0//')"
+			fi
+		fi
 	fi
 	
 	Clear_Lock
