@@ -619,22 +619,22 @@ Check_Requirements(){
 	if [ "$(nvram get jffs2_scripts)" -ne 1 ]; then
 		nvram set jffs2_scripts=1
 		nvram commit
-		Print_Output true "Custom JFFS Scripts enabled" "$WARN"
+		Print_Output false "Custom JFFS Scripts enabled" "$WARN"
 	fi
 
 	if [ ! -f /opt/bin/opkg ]; then
-		Print_Output true "Entware not detected!" "$ERR"
+		Print_Output false "Entware not detected!" "$ERR"
 		CHECKSFAILED="true"
 	fi
 
 	if ! Firmware_Version_Check; then
-		Print_Output true "Unsupported firmware version detected" "$ERR"
-		Print_Output true "$SCRIPT_NAME requires Merlin 384.15/384.13_4 or Fork 43E5 (or later)" "$ERR"
+		Print_Output false "Unsupported firmware version detected" "$ERR"
+		Print_Output false "$SCRIPT_NAME requires Merlin 384.15/384.13_4 or Fork 43E5 (or later)" "$ERR"
 		CHECKSFAILED="true"
 	fi
 
 	if [ "$CHECKSFAILED" = "false" ]; then
-		Print_Output true "Installing required packages from Entware" "$PASS"
+		Print_Output false "Installing required packages from Entware" "$PASS"
 		opkg update
 		opkg install vnstat
 		opkg install vnstati
@@ -1260,10 +1260,10 @@ Menu_Install(){
 		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
 	fi
 	
-	Print_Output true "Checking your router meets the requirements for $SCRIPT_NAME"
+	Print_Output false "Checking your router meets the requirements for $SCRIPT_NAME"
 	
 	if ! Check_Requirements; then
-		Print_Output true "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
+		Print_Output false "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
 		PressEnter
 		Clear_Lock
 		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
@@ -1326,12 +1326,12 @@ Menu_Install(){
 	Process_Upgrade
 	
 	if [ -n "$(pidof vnstatd)" ];then
-		Print_Output true "Sleeping for 5s before generating initial stats" "$WARN"
+		Print_Output false "Sleeping for 5s before generating initial stats" "$WARN"
 		sleep 5
 		Generate_Stats
 		Generate_Images
 	else
-		Print_Output true "vnstatd not running, please check system log" "$ERR"
+		Print_Output false "vnstatd not running, please check system log" "$ERR"
 	fi
 	
 	Clear_Lock
