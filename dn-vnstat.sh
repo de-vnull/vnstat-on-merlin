@@ -323,7 +323,7 @@ Conf_FromSettings(){
 				if [ "$SETTINGNAME" != "MONTHROTATE" ]; then
 					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
 				elif [ "$SETTINGNAME" = "MONTHROTATE" ]; then
-					sed -i 's/^'"MonthRotate"'.*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_DIR/vnstat.conf"
+					sed -i 's/^MonthRotate.*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_DIR/vnstat.conf"
 				fi
 			done < "$TMPFILE"
 			grep 'dnvnstat_version' "$SETTINGSFILE" > "$TMPFILE"
@@ -920,7 +920,7 @@ UsageEmail(){
 BandwidthAllowance(){
 	case "$1" in
 		update)
-			sed -i 's/^'"DATAALLOWANCE"'.*$/DATAALLOWANCE='"$2"'/' "$SCRIPT_CONF"
+			sed -i 's/^DATAALLOWANCE.*$/DATAALLOWANCE='"$2"'/' "$SCRIPT_CONF"
 			Reset_Allowance_Warnings force
 			Check_Bandwidth_Usage
 		;;
@@ -934,7 +934,7 @@ BandwidthAllowance(){
 AllowanceStartDay(){
 	case "$1" in
 		update)
-			sed -i 's/^'"MonthRotate"'.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
+			sed -i 's/^MonthRotate.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
