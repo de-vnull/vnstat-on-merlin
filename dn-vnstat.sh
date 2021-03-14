@@ -981,7 +981,7 @@ Check_Bandwidth_Usage(){
 	
 	Print_Output false "$usagestring"
 	
-	if [ "$bandwidthpercentage" = "N/A" ]; then
+	if [ "$bandwidthpercentage" = "N/A" ] || [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
 	elif [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
