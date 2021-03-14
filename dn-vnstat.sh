@@ -1040,7 +1040,7 @@ Check_Bandwidth_Usage(){
 	usagestring=""
 	if [ "$(echo "$userLimit 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
 		bandwidthpercentage="N/A"
-		usagestring="You have used ${bandwidthused}${bandwidthunit} of data this month"
+		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this month"
 	else
 		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
 		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) monthly allowance"
