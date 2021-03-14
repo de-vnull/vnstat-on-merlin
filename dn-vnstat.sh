@@ -325,12 +325,21 @@ Conf_FromSettings(){
 			cp -a "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_DIR/vnstat.conf.bak"
 			grep "dnvnstat_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
 			sed -i "s/dnvnstat_//g;s/ /=/g" "$TMPFILE"
+			warningresetrequired="false"
 			while IFS='' read -r line || [ -n "$line" ]; do
 				SETTINGNAME="$(echo "$line" | cut -f1 -d'=' | awk '{ print toupper($1) }')"
 				SETTINGVALUE="$(echo "$line" | cut -f2 -d'=')"
 				if [ "$SETTINGNAME" != "MONTHROTATE" ]; then
+					if [ "$SETTINGNAME" = "DATAALLOWANCE" ]; then
+						if [ "$(echo "$SETTINGVALUE $(BandwidthAllowance check)" | awk '{print ($1 != $2)}')" -eq 1 ]; then
+							warningresetrequired="true"
+						fi
+					fi
 					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
 				elif [ "$SETTINGNAME" = "MONTHROTATE" ]; then
+					if [ "$SETTINGVALUE" != "$(AllowanceStartDay check)" ]; then
+						warningresetrequired="true"
+					fi
 					sed -i 's/^MonthRotate.*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_DIR/vnstat.conf"
 				fi
 			done < "$TMPFILE"
@@ -346,7 +355,10 @@ Conf_FromSettings(){
 			export TZ
 			$VNSTAT_COMMAND -u
 			
-			#Reset_Allowance_Warnings force
+			if [ "$warningresetrequired" = "true" ]; then
+				Reset_Allowance_Warnings force
+			fi
+			Check_Bandwidth_Usage silent
 			
 			Print_Output true "Merge of updated settings from WebUI completed successfully" "$PASS"
 		else
