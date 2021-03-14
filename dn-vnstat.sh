@@ -1038,7 +1038,7 @@ Check_Bandwidth_Usage(){
 	
 	bandwidthpercentage=""
 	usagestring=""
-	if [ "$(echo "$userLimit 0" | awk '{print ($1 = $2)}')" -eq 1 ]; then
+	if [ "$(echo "$userLimit 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
 		bandwidthpercentage="N/A"
 		usagestring="You have used ${bandwidthused}${bandwidthunit} of data this month"
 	else
@@ -1180,7 +1180,7 @@ MainMenu(){
 	MENU_USAGE_ENABLED=""
 	if UsageEmail check; then MENU_USAGE_ENABLED="${PASS}ENABLED"; else MENU_USAGE_ENABLED="${ERR}DISABLED"; fi
 	MENU_BANDWIDTHALLOWANCE=""
-	if [ "$(echo "$(BandwidthAllowance check) 0" | awk '{print ($1 = $2)}')" -eq 1 ]   ; then
+	if [ "$(echo "$(BandwidthAllowance check) 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
 		MENU_BANDWIDTHALLOWANCE="UNLIMITED"
 	else
 		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check)$(AllowanceUnit check)"
