@@ -943,7 +943,8 @@ UsageEmail(){
 BandwidthAllowance(){
 	case "$1" in
 		update)
-			sed -i 's/^DATAALLOWANCE.*$/DATAALLOWANCE='"$2"'/' "$SCRIPT_CONF"
+			bandwidth="$(echo "$2" | awk '{printf("%.2f", $1);}')"
+			sed -i 's/^DATAALLOWANCE.*$/DATAALLOWANCE='"$bandwidth"'/' "$SCRIPT_CONF"
 			if [ -z "$3" ]; then
 				Reset_Allowance_Warnings force
 			fi
@@ -1545,10 +1546,9 @@ Menu_AllowanceUnit(){
 				if [ "$scaletype" = "multiply" ]; then
 					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
 				elif [ "$scaletype" = "divide" ]; then
-				
 					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 				fi
-				BandwidthAllowance update "$(echo "$bandwidthallowance" | sed 's/\.00//')" noreset
+				BandwidthAllowance update "$(echo "$bandwidthallowance")" noreset
 			fi
 		fi
 	fi
