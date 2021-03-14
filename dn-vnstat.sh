@@ -801,7 +801,7 @@ Generate_Email(){
 				} >> /tmp/mail.txt
 			fi
 		elif [ "$emailtype" = "usage" ]; then
-			Print_Output true "Attempting to send bandwidth usage email"
+			[ -z "$4" ] && Print_Output true "Attempting to send bandwidth usage email"
 			usagepercentage="$2"
 			usagestring="$3"
 			# plain text email to send #
@@ -823,12 +823,12 @@ Generate_Email(){
 		--user "$USERNAME:$PASSWORD" $SSL_FLAG
 		# shellcheck disable=SC2181
 		if [ $? -eq 0 ]; then
-			Print_Output true "Email sent successfully" "$PASS"
+			[ -z "$4" ] && Print_Output true "Email sent successfully" "$PASS"
 			rm -f /tmp/mail.txt
 			return 0
 		else
 			echo ""
-			Print_Output true "Email failed to send" "$ERR"
+			[ -z "$4" ] && Print_Output true "Email failed to send" "$ERR"
 			rm -f /tmp/mail.txt
 			return 1
 		fi
@@ -1055,24 +1055,36 @@ Check_Bandwidth_Usage(){
 		[ -z "$1" ] && Print_Output false "Data use is at or above 75%" "$WARN"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "Data use is at or above 75%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ] && [ -z "$1" ]; then
-			Generate_Email usage "75%" "$usagestring"
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
+			if [ -n "$1" ]; then
+				Generate_Email usage "75%" "$usagestring" silent
+			else
+				Generate_Email usage "75%" "$usagestring"
+			fi
 			touch "$SCRIPT_DIR/.warning75"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		[ -z "$1" ] && Print_Output false "Data use is at or above 90%" "$ERR"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "Data use is at or above 90%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ] && [ -z "$1" ]; then
-			Generate_Email usage "90%" "$usagestring"
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
+			if [ -n "$1" ]; then
+				Generate_Email usage "90%" "$usagestring" silent
+			else
+				Generate_Email usage "90%" "$usagestring"
+			fi
 			touch "$SCRIPT_DIR/.warning90"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
 		[ -z "$1" ] && Print_Output false "Data use is at or above 100%" "$CRIT"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "Data use is at or above 100%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ] && [ -z "$1" ]; then
-			Generate_Email usage "100%" "$usagestring"
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
+			if [ -n "$1" ]; then
+				Generate_Email usage "100%" "$usagestring" silent
+			else
+				Generate_Email usage "100%" "$usagestring"
+			fi
 			touch "$SCRIPT_DIR/.warning100"
 		fi
 	fi
