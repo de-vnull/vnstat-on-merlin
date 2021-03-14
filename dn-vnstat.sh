@@ -399,9 +399,12 @@ Conf_Exists(){
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
 		sed -i -e 's/WARNINGEMAIL/USAGEEMAIL/;s/"//g' "$SCRIPT_CONF"
+		if [ "$(wc -l < "$SCRIPT_CONF")" -eq 3 ]; then
+			echo "ALLOWANCEUNIT=G" >> "$SCRIPT_CONF"
+		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=html";  echo "DATAALLOWANCE=1200"; echo "USAGEEMAIL=false"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=html";  echo "DATAALLOWANCE=1200"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }
@@ -957,6 +960,25 @@ AllowanceStartDay(){
 	esac
 }
 
+AllowanceUnit(){
+	case "$1" in
+		update)
+		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
+		Reset_Allowance_Warnings force
+		Check_Bandwidth_Usage
+		;;
+		check)
+			UnitMode=$(grep "^UnitMode" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			ALLOWANCEUNIT=$(grep "ALLOWANCEUNIT" "$SCRIPT_CONF" | cut -f2 -d"=")
+			if [ "$UnitMode" = 0 ]; then
+				echo "${ALLOWANCEUNIT}iB"
+			elif [ "$UnitMode" = 1 ]; then
+				echo "${ALLOWANCEUNIT}B"
+			fi
+		;;
+	esac
+}
+
 Reset_Allowance_Warnings(){
 	if [ "$(($(date +%d) + 1))" -eq "$(AllowanceStartDay check)" ] || [ "$1" = "force" ]; then
 		rm -f "$SCRIPT_DIR/.warning75"
@@ -979,14 +1001,37 @@ Check_Bandwidth_Usage(){
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
 		return 1
 	fi
+	
+	scalefactor=1000
+	if echo "$bandwidthunit" | grep -q i ; then
+		scalefactor=1024
+	fi
+	
+	scaletype="none"
+	if [ "$(echo "$bandwidthunit" | sed 's/i//')" != "$(AllowanceUnit check | sed 's/i//')" ]; then
+		if echo "$bandwidthunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
+			scaletype="divide"
+		elif echo "$bandwidthunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
+			scaletype="multiply"
+		fi
+	fi
+	
+	if [ "$scaletype" != "none" ]; then
+		if [ "$scaletype" = "multiply" ]; then
+			bandwidthused=$(echo "$bandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
+		elif [ "$scaletype" = "divide" ]; then
+			bandwidthused=$(echo "$bandwidthused $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
+		fi
+	fi
+	
 	bandwidthpercentage=""
 	usagestring=""
 	if [ "$(echo "$userLimit 0" | awk '{print ($1 = $2)}')" -eq 1 ]; then
 		bandwidthpercentage="N/A"
 		usagestring="You have used ${bandwidthused}${bandwidthunit} of data this month"
 	else
-		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{print $1*100/$2}')
-		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}${bandwidthunit}) of your ${userLimit}${bandwidthunit} monthly allowance"
+		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) monthly allowance"
 	fi
 	
 	[ -z "$1" ] && Print_Output false "$usagestring"
@@ -1126,14 +1171,15 @@ MainMenu(){
 	if [ "$(echo "$(BandwidthAllowance check) 0" | awk '{print ($1 = $2)}')" -eq 1 ]   ; then
 		MENU_BANDWIDTHALLOWANCE="UNLIMITED"
 	else
-		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check) GiB/GB"
+		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check)$(AllowanceUnit check)"
 	fi
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m$MENU_DAILYEMAIL\\e[0m\\n\\n"
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m$MENU_USAGE_ENABLED\\e[0m\\n\\n"
 	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
-	printf "5.    Set start day of month for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
-	printf "6.    Check bandwidth usage now\\n      Current usage: ${SETTING}%s\\e[0m\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$(AllowanceUnit check)"
+	printf "6.    Set start day of month for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
+	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\e[0m\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
@@ -1188,12 +1234,20 @@ MainMenu(){
 			5)
 				printf "\\n"
 				if Check_Lock menu; then
-					Menu_AllowanceStartDay
+					Menu_AllowanceUnit
 				fi
 				PressEnter
 				break
 			;;
 			6)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_AllowanceStartDay
+				fi
+				PressEnter
+				break
+			;;
+			b)
 				printf "\\n"
 				if Check_Lock menu; then
 					Check_Bandwidth_Usage
@@ -1405,6 +1459,46 @@ Menu_BandwidthAllowance(){
 	
 	if [ "$exitmenu" != "exit" ]; then
 		BandwidthAllowance update "$bandwidthallowance"
+	fi
+	
+	Clear_Lock
+}
+
+Menu_AllowanceUnit(){
+	exitmenu="false"
+	allowanceunit=""
+	prevallowanceunit="$(AllowanceUnit check)"
+	unitsuffix="$(echo "$(AllowanceUnit check)" | sed 's/T//;s/G//;')"
+	ScriptHeader
+	
+	while true; do
+		printf "\\n\\e[1mPlease select the unit to use for bandwidth allowance:\\e[0m\\n"
+		printf "1.    G%s\\n" "$unitsuffix"
+		printf "2.    T%s\\n\\n" "$unitsuffix"
+		printf "Choose an option:  "
+		read -r unitchoice
+		case "$unitchoice" in
+			1)
+				allowanceunit="G"
+				printf "\\n"
+				break
+			;;
+			2)
+				allowanceunit="T"
+				printf "\\n"
+				break
+			;;
+			e)
+				exitmenu="exit"
+				break
+			;;
+			*)
+				printf "\\nPlease choose a valid option\\n\\n"
+			;;
+		esac
+	done
+	if [ "$exitmenu" != "exit" ]; then
+		AllowanceUnit update "$allowanceunit"
 	fi
 	
 	Clear_Lock
