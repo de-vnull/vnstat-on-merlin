@@ -922,6 +922,7 @@ BandwidthAllowance(){
 		update)
 			sed -i 's/^'"DATAALLOWANCE"'.*$/DATAALLOWANCE='"$2"'/' "$SCRIPT_CONF"
 			Reset_Allowance_Warnings force
+			Check_Bandwidth_Usage
 		;;
 		check)
 			DATAALLOWANCE=$(grep "DATAALLOWANCE" "$SCRIPT_CONF" | cut -f2 -d"=")
@@ -939,6 +940,7 @@ AllowanceStartDay(){
 			export TZ
 			$VNSTAT_COMMAND -u
 			Reset_Allowance_Warnings force
+			Check_Bandwidth_Usage
 		;;
 		check)
 			MonthRotate=$(grep "MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
@@ -1172,6 +1174,7 @@ MainMenu(){
 				if Check_Lock menu; then
 					Menu_BandwidthAllowance
 				fi
+				PressEnter
 				break
 			;;
 			5)
@@ -1179,6 +1182,7 @@ MainMenu(){
 				if Check_Lock menu; then
 					Menu_AllowanceStartDay
 				fi
+				PressEnter
 				break
 			;;
 			6)
