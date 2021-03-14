@@ -972,8 +972,8 @@ Check_Bandwidth_Usage(){
 	bandwidthused="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
 	bandwidthunit="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
 	userLimit="$(BandwidthAllowance check)"
-	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ]; then
-		Print_Output false "Not enough data gathered by vnstat" "$WARN"
+	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ] && [ "$bandwidthunit" != "TiB" ] && [ "$bandwidthunit" != "TB" ]; then
+		[ -z "$1" ] && Print_Output false "Not enough data gathered by vnstat" "$WARN"
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
@@ -989,32 +989,32 @@ Check_Bandwidth_Usage(){
 		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}${bandwidthunit}) of your ${userLimit}${bandwidthunit} monthly allowance"
 	fi
 	
-	Print_Output false "$usagestring"
+	[ -z "$1" ] && Print_Output false "$usagestring"
 	
 	if [ "$bandwidthpercentage" = "N/A" ] || [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
 	elif [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-		Print_Output false "Data use is at or above 75%" "$WARN"
+		[ -z "$1" ] && Print_Output false "Data use is at or above 75%" "$WARN"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "Data use is at or above 75%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ] && [ -z "$1" ]; then
 			Generate_Email usage "75%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning75"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-		Print_Output false "Data use is at or above 90%" "$ERR"
+		[ -z "$1" ] && Print_Output false "Data use is at or above 90%" "$ERR"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "Data use is at or above 90%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ] && [ -z "$1" ]; then
 			Generate_Email usage "90%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning90"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
-		Print_Output false "Data use is at or above 100%" "$CRIT"
+		[ -z "$1" ] && Print_Output false "Data use is at or above 100%" "$CRIT"
 		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "Data use is at or above 100%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ] && [ -z "$1" ]; then
 			Generate_Email usage "100%" "$usagestring"
 			touch "$SCRIPT_DIR/.warning100"
 		fi
@@ -1483,6 +1483,9 @@ Menu_Edit(){
 			TZ=$(cat /etc/TZ)
 			export TZ
 			$VNSTAT_COMMAND -u
+			Check_Bandwidth_Usage silent
+			Clear_Lock
+			PressEnter
 		fi
 	fi
 	Clear_Lock
