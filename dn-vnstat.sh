@@ -175,7 +175,7 @@ Update_Version(){
 		fi
 		
 		if [ "$isupdate" != "false" ]; then
-			printf "\\e[1mDo you want to continue with the update? (y/n)\\e[0m  "
+			printf "\\n\\e[1mDo you want to continue with the update? (y/n)\\e[0m  "
 			read -r confirm
 			case "$confirm" in
 				y|Y)
