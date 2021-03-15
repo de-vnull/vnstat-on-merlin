@@ -448,7 +448,7 @@ function reload(){
 <tr class="even" id="rowdataallowance">
 <th width="40%">Bandwidth allowance for data usage warnings</th>
 <td class="settingvalue">
-<input autocomplete="off" type="text" maxlength="8" class="input_12_table removespacing" name="dnvnstat_dataallowance" value="1200" onkeypress="return validator.isNumberFloat(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this);Format_DataAllowance(this)" />
+<input autocomplete="off" type="text" maxlength="8" class="input_12_table removespacing" name="dnvnstat_dataallowance" value="1200.00" onkeypress="return validator.isNumberFloat(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this);Format_DataAllowance(this)" />
 &nbsp;<span id="spandefaultallowance" style="color:#FFCC00;">(0: unlimited)</span>
 </td>
 </tr>
