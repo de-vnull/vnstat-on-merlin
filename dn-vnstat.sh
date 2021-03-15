@@ -5,7 +5,8 @@
 ##  vnstat and vnstati data usage statistics   ##
 ##            for AsusWRT-Merlin               ##
 ##                                             ##
-##            Created by dev_null              ##
+##            Concept by dev_null              ##
+##          Implemented by Jack Yaz            ##
 ##    github.com/de-vnull/vnstat-on-merlin     ##
 ##                                             ##
 #################################################
@@ -1174,7 +1175,6 @@ ScriptHeader(){
 	printf "\\e[1m##                                             ##\\e[0m\\n"
 	printf "\\e[1m##            %s on %-11s            ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "\\e[1m##                                             ## \\e[0m\\n"
-	printf "\\e[1m##            Created by dev_null              ##\\e[0m\\n"
 	printf "\\e[1m##    github.com/de-vnull/vnstat-on-merlin     ##\\e[0m\\n"
 	printf "\\e[1m##                                             ##\\e[0m\\n"
 	printf "\\e[1m#################################################\\e[0m\\n"
@@ -1337,7 +1337,7 @@ MainMenu(){
 }
 
 Menu_Install(){
-	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null"
+	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz"
 	sleep 1
 	
 	if [ -d /jffs/addons/vnstat.d ] || [ -f /opt/etc/vnstat.conf ] || [ -f /jffs/scripts/vnstat-install.sh ]; then
