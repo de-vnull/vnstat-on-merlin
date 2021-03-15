@@ -417,7 +417,7 @@ Conf_Exists(){
 		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=html";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }

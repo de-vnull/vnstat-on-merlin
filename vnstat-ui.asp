@@ -428,11 +428,11 @@ function reload(){
 <tr class="even" id="rowenabledailyemail">
 <th width="40%">Enable daily summary emails</th>
 <td class="settingvalue">
-<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_html" class="input" value="html" checked>
+<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_html" class="input" value="html">
 <label for="dnvnstat_dailyemail_html" class="settingvalue">HTML</label>
 <input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_text" class="input" value="text">
 <label for="dnvnstat_dailyemail_text" class="settingvalue">Text</label>
-<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_none" class="input" value="none">
+<input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_none" class="input" value="none" checked>
 <label for="dnvnstat_dailyemail_none" class="settingvalue">Disabled</label>
 </td>
 </tr>
