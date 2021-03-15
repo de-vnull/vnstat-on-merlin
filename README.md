@@ -93,6 +93,7 @@
 * Note: db files can in some instances be moved across devices, but only of the same architecture (e.g., ARM7 to ARM7). Different architecture will result in an error and requires a db reinitialization. 
 * There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). 
 * It has been reported that with _hardware acceleration_ implemented, the data counts provided by vnstat are no more accurate than the built-in tools (which is to say, not accurate).
+* For the __day of month reset__ attribute in the menu (0.9.5 and later) and vnstat.conf: the count does not reset until the following month (see: https://ubuntuforums.org/showthread.php?t=2324673&s=70286d0c6612020a14bf2b38c9d8d1cc&p=13490762#post13490762). This is a current limitation of vnstat, and there is no known work-around.
 
 
 
@@ -188,3 +189,20 @@ See here for default view: https://imgur.com/a/ufMQgeA
 
 * Repo owner or admin - dev_null @ snbforums
 * Other community or team contact - dev_null @ snbforums
+
+
+#
+# Donations
+
+* If you like this software and wish to make a donation, the author requests that you make a contribution to __your favorite local charity__, or to one of his:
+
+    http://www.careandshareofel.org/monetary-donations.html
+    
+    https://www.uri.edu/giving/
+    
+    https://www.uwsect.org/give
+    
+* Some employers will __match your charitable donation__ amount, multiplying your contribution. Ask your manager or HR representative.
+* Let's pay it forward and thanks for your consideration!
+
+
