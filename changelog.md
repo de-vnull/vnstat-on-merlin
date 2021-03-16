@@ -3,7 +3,7 @@
 ### v 0.9.5 - 16-Mar-2021 ###
 * Beta 3/RC1
 * Many under the hood optimizations to improve reliability, accuracy and functionality based on Beta 2 feedback
-* Added user-specified data limits: check vnstat-reported data use against a user-specific limit
+* Added user-specified data limits: check vnstat-reported data use against a user-set limit
   - __Of particular interest to those with data caps__, e.g., Comcast, Cox, others
   - Data limit monitoring with:
     - Optional email notification when reach 75%, 90% and 100% of data limit
