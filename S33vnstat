@@ -25,7 +25,9 @@ if [ "$1" = "start" ] || [ "$1" = "restart" ]; then
 	[ "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ] || vnstat --config "$SCRIPT_DIR/vnstat.conf" -u -i "$IFACE"
 fi
 
-export TZ=$(cat /etc/TZ)
+TZ=$(cat /etc/TZ)
+export TZ
+
 ENABLED=yes
 PROCS=vnstatd
 ARGS="-d --config $SCRIPT_DIR/vnstat.conf"

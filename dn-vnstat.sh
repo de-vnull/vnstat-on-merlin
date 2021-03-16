@@ -5,23 +5,26 @@
 ##  vnstat and vnstati data usage statistics   ##
 ##            for AsusWRT-Merlin               ##
 ##                                             ##
-##            Created by dev_null              ##
+##            Concept by dev_null              ##
+##          Implemented by Jack Yaz            ##
 ##    github.com/de-vnull/vnstat-on-merlin     ##
 ##                                             ##
 #################################################
 
-########         Shellcheck directives     ########
+########         Shellcheck directives     ######
 # shellcheck disable=SC1091
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
-###################################################
+# shellcheck disable=SC2059
+#################################################
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v0.9.4"
+readonly SCRIPT_VERSION="v0.9.5"
 SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
+readonly SCRIPT_CONF="$SCRIPT_DIR/config"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
 readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
 readonly IMAGE_OUTPUT_DIR="$SCRIPT_DIR/images"
@@ -30,7 +33,7 @@ readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
 readonly VNSTAT_COMMAND="vnstat --config $SCRIPT_DIR/vnstat.conf"
 readonly VNSTATI_COMMAND="vnstati --config $SCRIPT_DIR/vnstat.conf"
-readonly ENABLE_EMAIL_FILE="$SCRIPT_DIR/.emailenabled"
+readonly VNSTAT_OUTPUT_FILE=/tmp/vnstat.txt
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 ### End of script variables ###
 
@@ -39,16 +42,15 @@ readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
+readonly SETTING="\\e[1m\\e[36m"
 ### End of output format variables ###
 
 # $1 = print to syslog, $2 = message to print, $3 = log level
 Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME" "$2"
-		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME"
-	else
-		printf "\\e[1m$3%s: $2\\e[0m\\n\\n" "$SCRIPT_NAME"
 	fi
+	printf "\\e[1m${3}%s\\e[0m\\n\\n" "$2"
 }
 
 ### Check firmware version contains the "am_addons" feature flag ###
@@ -98,19 +100,19 @@ Clear_Lock(){
 ### Create "settings" in the custom_settings file, used by the WebUI for version information and script updates ###
 ### local is the version of the script installed, server is the version on Github ###
 Set_Version_Custom_Settings(){
-	SETTINGSFILE=/jffs/addons/custom_settings.txt
+	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	case "$1" in
 		local)
 			if [ -f "$SETTINGSFILE" ]; then
 				if [ "$(grep -c "dnvnstat_version_local" $SETTINGSFILE)" -gt 0 ]; then
-					if [ "$SCRIPT_VERSION" != "$(grep "dnvnstat_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
-						sed -i "s/dnvnstat_version_local.*/dnvnstat_version_local $SCRIPT_VERSION/" "$SETTINGSFILE"
+					if [ "$2" != "$(grep "dnvnstat_version_local" /jffs/addons/custom_settings.txt | cut -f2 -d' ')" ]; then
+						sed -i "s/dnvnstat_version_local.*/dnvnstat_version_local $2/" "$SETTINGSFILE"
 					fi
 				else
-					echo "dnvnstat_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+					echo "dnvnstat_version_local $2" >> "$SETTINGSFILE"
 				fi
 			else
-				echo "dnvnstat_version_local $SCRIPT_VERSION" >> "$SETTINGSFILE"
+				echo "dnvnstat_version_local $2" >> "$SETTINGSFILE"
 			fi
 		;;
 		server)
@@ -160,35 +162,44 @@ Update_Check(){
 ### force - download from server even if no change detected
 ### unattended - don't return user to script CLI menu
 Update_Version(){
-	if [ -z "$1" ] || [ "$1" = "unattended" ]; then
+	if [ -z "$1" ]; then
 		updatecheckresult="$(Update_Check)"
 		isupdate="$(echo "$updatecheckresult" | cut -f1 -d',')"
 		localver="$(echo "$updatecheckresult" | cut -f2 -d',')"
 		serverver="$(echo "$updatecheckresult" | cut -f3 -d',')"
 		
 		if [ "$isupdate" = "version" ]; then
-			Print_Output true "New version of $SCRIPT_NAME available - updating to $serverver" "$PASS"
+			Print_Output true "New version of $SCRIPT_NAME available - $serverver" "$PASS"
 		elif [ "$isupdate" = "md5" ]; then
-			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - downloading updated $serverver" "$PASS"
+			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available - $serverver" "$PASS"
 		fi
 		
-		Update_File shared-jy.tar.gz
-		
 		if [ "$isupdate" != "false" ]; then
-			Update_File vnstat-ui.asp
-			Update_File vnstat.conf
-			Update_File S33vnstat
-			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
-			chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
-			Clear_Lock
-			if [ -z "$1" ]; then
-				exec "$0" setversion
-			elif [ "$1" = "unattended" ]; then
-				exec "$0" setversion unattended
-			fi
-			exit 0
+			printf "\\n\\e[1mDo you want to continue with the update? (y/n)\\e[0m  "
+			read -r confirm
+			case "$confirm" in
+				y|Y)
+					Update_File shared-jy.tar.gz
+					Update_File vnstat-ui.asp
+					Update_File vnstat.conf
+					Update_File S33vnstat
+					/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+					chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
+					Set_Version_Custom_Settings local "$serverver"
+					Set_Version_Custom_Settings server "$serverver"
+					Clear_Lock
+					PressEnter
+					exec "$0"
+					exit 0
+				;;
+				*)
+					printf "\\n"
+					Clear_Lock
+					return 1
+				;;
+			esac
 		else
-			Print_Output true "No new version - latest is $localver" "$WARN"
+			Print_Output true "No updates available - latest is $localver" "$WARN"
 			Clear_Lock
 		fi
 	fi
@@ -196,20 +207,42 @@ Update_Version(){
 	if [ "$1" = "force" ]; then
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
+		Update_File shared-jy.tar.gz
 		Update_File vnstat-ui.asp
 		Update_File vnstat.conf
 		Update_File S33vnstat
-		Update_File shared-jy.tar.gz
-		
 		/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
-		chmod 0755 /jffs/scripts/"$SCRIPT_NAME"
+		chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
+		Set_Version_Custom_Settings local "$serverver"
+		Set_Version_Custom_Settings server "$serverver"
 		Clear_Lock
 		if [ -z "$2" ]; then
-			exec "$0" setversion
+			PressEnter
+			exec "$0"
 		elif [ "$2" = "unattended" ]; then
-			exec "$0" setversion unattended
+			exec "$0" postupdate
 		fi
 		exit 0
+	fi
+}
+
+Validate_Number(){
+	if [ "$2" -eq "$2" ] 2>/dev/null; then
+		return 0
+	else
+		formatted="$(echo "$1" | sed -e 's/|/ /g')"
+		if [ -z "$3" ]; then
+			Print_Output false "$formatted - $2 is not a number" "$ERR"
+		fi
+		return 1
+	fi
+}
+
+Validate_Bandwidth(){
+	if echo "$1" | /bin/grep -oq "^[0-9]*\.\?[0-9]\?[0-9]$"; then
+		return 0
+	else
+		return 1
 	fi
 }
 
@@ -283,6 +316,58 @@ Update_File(){
 	fi
 }
 
+Conf_FromSettings(){
+	SETTINGSFILE="/jffs/addons/custom_settings.txt"
+	TMPFILE="/tmp/dnvnstat_settings.txt"
+	if [ -f "$SETTINGSFILE" ]; then
+		if [ "$(grep "dnvnstat_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
+			Print_Output true "Updated settings from WebUI found, merging..." "$PASS"
+			cp -a "$SCRIPT_CONF" "$SCRIPT_CONF.bak"
+			cp -a "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_DIR/vnstat.conf.bak"
+			grep "dnvnstat_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
+			sed -i "s/dnvnstat_//g;s/ /=/g" "$TMPFILE"
+			warningresetrequired="false"
+			while IFS='' read -r line || [ -n "$line" ]; do
+				SETTINGNAME="$(echo "$line" | cut -f1 -d'=' | awk '{ print toupper($1) }')"
+				SETTINGVALUE="$(echo "$line" | cut -f2 -d'=')"
+				if [ "$SETTINGNAME" != "MONTHROTATE" ]; then
+					if [ "$SETTINGNAME" = "DATAALLOWANCE" ]; then
+						if [ "$(echo "$SETTINGVALUE $(BandwidthAllowance check)" | awk '{print ($1 != $2)}')" -eq 1 ]; then
+							warningresetrequired="true"
+						fi
+					fi
+					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
+				elif [ "$SETTINGNAME" = "MONTHROTATE" ]; then
+					if [ "$SETTINGVALUE" != "$(AllowanceStartDay check)" ]; then
+						warningresetrequired="true"
+					fi
+					sed -i 's/^MonthRotate.*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_DIR/vnstat.conf"
+				fi
+			done < "$TMPFILE"
+			grep 'dnvnstat_version' "$SETTINGSFILE" > "$TMPFILE"
+			sed -i "\\~dnvnstat_~d" "$SETTINGSFILE"
+			mv "$SETTINGSFILE" "$SETTINGSFILE.bak"
+			cat "$SETTINGSFILE.bak" "$TMPFILE" > "$SETTINGSFILE"
+			rm -f "$TMPFILE"
+			rm -f "$SETTINGSFILE.bak"
+			
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			TZ=$(cat /etc/TZ)
+			export TZ
+			$VNSTAT_COMMAND -u
+			
+			if [ "$warningresetrequired" = "true" ]; then
+				Reset_Allowance_Warnings force
+			fi
+			Check_Bandwidth_Usage silent
+			
+			Print_Output true "Merge of updated settings from WebUI completed successfully" "$PASS"
+		else
+			Print_Output false "No updated settings from WebUI found, no merge necessary" "$PASS"
+		fi
+	fi
+}
+
 ### Create directories in filesystem if they do not exist ###
 Create_Dirs(){
 	if [ ! -d "$SCRIPT_DIR" ]; then
@@ -311,11 +396,29 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
-	
+	ln -s "$SCRIPT_DIR/.vnstatusage" "$SCRIPT_WEB_DIR/vnstatusage.js" 2>/dev/null
+	ln -s "$VNSTAT_OUTPUT_FILE" "$SCRIPT_WEB_DIR/vnstatoutput.htm" 2>/dev/null
+	ln -s "$SCRIPT_CONF" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
+	ln -s "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
 	ln -s "$IMAGE_OUTPUT_DIR" "$SCRIPT_WEB_DIR/images" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
+	fi
+}
+
+Conf_Exists(){
+	if [ -f "$SCRIPT_CONF" ]; then
+		dos2unix "$SCRIPT_CONF"
+		chmod 0644 "$SCRIPT_CONF"
+		sed -i -e 's/WARNINGEMAIL/USAGEEMAIL/;s/"//g' "$SCRIPT_CONF"
+		if [ "$(wc -l < "$SCRIPT_CONF")" -eq 3 ]; then
+			echo "ALLOWANCEUNIT=G" >> "$SCRIPT_CONF"
+		fi
+		return 0
+	else
+		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; } > "$SCRIPT_CONF"
+		return 1
 	fi
 }
 
@@ -390,18 +493,27 @@ Auto_Startup(){
 	esac
 }
 
-
 Auto_Cron(){
 	case $1 in
 		create)
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_images")
-			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
-				cru a "${SCRIPT_NAME}_images" "*/5 * * * * /jffs/scripts/$SCRIPT_NAME generateimages"
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "${SCRIPT_NAME}_images"
 			fi
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "${SCRIPT_NAME}_stats"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_generate")
 			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
-				cru a "${SCRIPT_NAME}_stats" "59 23 * * * /jffs/scripts/$SCRIPT_NAME generatestats"
+				cru a "${SCRIPT_NAME}_generate" "*/5 * * * * /jffs/scripts/$SCRIPT_NAME generate"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_summary")
+			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
+				cru a "${SCRIPT_NAME}_summary" "59 23 * * * /jffs/scripts/$SCRIPT_NAME summary"
 			fi
 		;;
 		delete)
@@ -411,6 +523,16 @@ Auto_Cron(){
 			fi
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "${SCRIPT_NAME}_stats"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_generate")
+			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				cru d "${SCRIPT_NAME}_images"
+			fi
+			
+			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_summary")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 				cru d "${SCRIPT_NAME}_stats"
 			fi
@@ -437,6 +559,7 @@ Get_WebUI_Page(){
 
 ### locking mechanism code credit to Martineau (@MartineauUK) ###
 Mount_WebUI(){
+	Print_Output true "Mounting WebUI tab for $SCRIPT_NAME" "$PASS"
 	LOCKFILE=/tmp/addonwebui.lock
 	FD=386
 	eval exec "$FD>$LOCKFILE"
@@ -448,7 +571,7 @@ Mount_WebUI(){
 		return 1
 	fi
 	cp -f "$SCRIPT_DIR/vnstat-ui.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
-	echo "dn-vnstat" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
+	echo "$SCRIPT_NAME" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
 	
 	if [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
 		if [ ! -f /tmp/index_style.css ]; then
@@ -476,7 +599,7 @@ Mount_WebUI(){
 		if ! grep -q "javascript:window.open('/ext/shared-jy/redirect.htm'" /tmp/menuTree.js ; then
 			sed -i "s~ext/shared-jy/redirect.htm~javascript:window.open('/ext/shared-jy/redirect.htm','_blank')~" /tmp/menuTree.js
 		fi
-		sed -i "/url: \"javascript:window.open('\/ext\/shared-jy\/redirect.htm'/i {url: \"$MyPage\", tabName: \"dn-vnstat\"}," /tmp/menuTree.js
+		sed -i "/url: \"javascript:window.open('\/ext\/shared-jy\/redirect.htm'/i {url: \"$MyPage\", tabName: \"$SCRIPT_NAME\"}," /tmp/menuTree.js
 		
 		umount /www/require/modules/menuTree.js 2>/dev/null
 		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
@@ -489,13 +612,13 @@ Shortcut_Script(){
 	case $1 in
 		create)
 			if [ -d /opt/bin ] && [ ! -f "/opt/bin/$SCRIPT_NAME" ] && [ -f "/jffs/scripts/$SCRIPT_NAME" ]; then
-				ln -s /jffs/scripts/"$SCRIPT_NAME" /opt/bin
-				chmod 0755 /opt/bin/"$SCRIPT_NAME"
+				ln -s "/jffs/scripts/$SCRIPT_NAME" /opt/bin
+				chmod 0755 "/opt/bin/$SCRIPT_NAME"
 			fi
 		;;
 		delete)
 			if [ -f "/opt/bin/$SCRIPT_NAME" ]; then
-				rm -f /opt/bin/"$SCRIPT_NAME"
+				rm -f "/opt/bin/$SCRIPT_NAME"
 			fi
 		;;
 	esac
@@ -520,33 +643,31 @@ Check_Requirements(){
 	if [ "$(nvram get jffs2_scripts)" -ne 1 ]; then
 		nvram set jffs2_scripts=1
 		nvram commit
-		Print_Output true "Custom JFFS Scripts enabled" "$WARN"
+		Print_Output false "Custom JFFS Scripts enabled" "$WARN"
 	fi
 
 	if [ ! -f /opt/bin/opkg ]; then
-		Print_Output true "Entware not detected!" "$ERR"
+		Print_Output false "Entware not detected!" "$ERR"
 		CHECKSFAILED="true"
 	fi
 
 	if ! Firmware_Version_Check; then
-		Print_Output true "Unsupported firmware version detected" "$ERR"
-		Print_Output true "$SCRIPT_NAME requires Merlin 384.15/384.13_4 or Fork 43E5 (or later)" "$ERR"
+		Print_Output false "Unsupported firmware version detected" "$ERR"
+		Print_Output false "$SCRIPT_NAME requires Merlin 384.15/384.13_4 or Fork 43E5 (or later)" "$ERR"
 		CHECKSFAILED="true"
 	fi
 
 	if [ "$CHECKSFAILED" = "false" ]; then
-		Print_Output true "Installing required packages from Entware" "$PASS"
+		Print_Output false "Installing required packages from Entware" "$PASS"
 		opkg update
 		opkg install vnstat
 		opkg install vnstati
-		opkg install imagemagick
 		rm -f /opt/etc/vnstat.conf
 		return 0
 	else
 		return 1
 	fi
 }
-
 
 ### Determine WAN interface using nvram ###
 Get_WAN_IFace(){
@@ -559,6 +680,8 @@ Get_WAN_IFace(){
 }
 
 Generate_Images(){
+	TZ=$(cat /etc/TZ)
+	export TZ
 	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 	Print_Output false "vnstati updating stats for UI" "$PASS"
 	$VNSTAT_COMMAND -u
@@ -573,51 +696,51 @@ Generate_Images(){
 }
 
 Generate_Stats(){
-	printf "vnstats as of:\\n%s" "$(date)" > /tmp/vnstat.txt
+	TZ=$(cat /etc/TZ)
+	export TZ
+	printf "vnstats as of:\\n%s" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	$VNSTAT_COMMAND -u
 	{
 		$VNSTAT_COMMAND -m;
 		$VNSTAT_COMMAND -w;
 		$VNSTAT_COMMAND -d;
-	} >> /tmp/vnstat.txt
-	cat /tmp/vnstat.txt
-	convert -font DejaVu-Sans-Mono -channel RGB -negate label:@- "$IMAGE_OUTPUT_DIR/vnstat.png" < /tmp/vnstat.txt
+	} >> "$VNSTAT_OUTPUT_FILE"
+	cat "$VNSTAT_OUTPUT_FILE"
 	printf "\\n"
-	Print_Output true "vnstat_totals summary generated" "$PASS"
+	Print_Output false "vnstat_totals summary generated" "$PASS"
 }
 
 Generate_Email(){
-	if [ -f "$ENABLE_EMAIL_FILE" ]; then
-		if [ ! -f /opt/bin/diversion ]; then
-			Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
-			Print_Output true "Diversion can be installed using amtm" "$ERR"
-			return 1
-		elif [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; then
-			Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
-			Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
-			return 1
-		else
+	if [ ! -f /opt/bin/diversion ]; then
+		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
+		Print_Output true "Diversion can be installed using amtm" "$ERR"
+		return 1
+	elif [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; then
+		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
+		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
+		return 1
+	else
+		# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
+		# Email settings #
+		. /opt/share/diversion/.conf/email.conf
+		PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
+		PASSWORD=""
+		# shellcheck disable=SC2154
+		if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+			# old OpenSSL 1.0.x
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+		elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+			# new OpenSSL 1.1.x non-converted password
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+		elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+			# new OpenSSL 1.1.x converted password with -pbkdf2 flag
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+		fi
+		
+		emailtype="$1"
+		if [ "$emailtype" = "daily" ]; then
 			Print_Output true "Attempting to send summary statistic email"
-			# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
-			# This script is used to email the daily/weekly/monthly vnstat usage for the Vnstat on Merlin script and UI - by dev_null at snbforums
-			
-			# Email settings #
-			. /opt/share/diversion/.conf/email.conf
-			PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
-			PASSWORD=""
-			# shellcheck disable=SC2154
-			if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-				# old OpenSSL 1.0.x
-				PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-			elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-				# new OpenSSL 1.1.x non-converted password
-				PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-			elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-				# new OpenSSL 1.1.x converted password with -pbkdf2 flag
-				PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-			fi
-			
-			if grep -q TEXT "$ENABLE_EMAIL_FILE";  then
+			if [ "$(DailyEmail check)" = "text" ];  then
 				# plain text email to send #
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -626,8 +749,8 @@ Generate_Email(){
 					echo "Date: $(date -R)";
 					echo "";
 				} > /tmp/mail.txt
-				cat /tmp/vnstat.txt >>/tmp/mail.txt
-			elif grep -q HTML "$ENABLE_EMAIL_FILE"; then
+				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
+			elif [ "$(DailyEmail check)" = "html" ]; then
 				# html message to send #
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -670,7 +793,7 @@ Generate_Email(){
 					Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
 				done
 				
-				Encode_Text vnstat.txt "$(cat /tmp/vnstat.txt)" /tmp/mail.txt
+				Encode_Text vnstat.txt "$(cat "$VNSTAT_OUTPUT_FILE")" /tmp/mail.txt
 				
 				{
 					echo "--MULTIPART-RELATED-BOUNDARY--";
@@ -678,24 +801,37 @@ Generate_Email(){
 					echo "--MULTIPART-MIXED-BOUNDARY--";
 				} >> /tmp/mail.txt
 			fi
-			
-			#Send Email
-			/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
-			--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
-			--upload-file /tmp/mail.txt \
-			--ssl-reqd \
-			--user "$USERNAME:$PASSWORD" $SSL_FLAG
-			# shellcheck disable=SC2181
-			if [ $? -eq 0 ]; then
-				Print_Output true "Summary statistic email sent" "$PASS"
-				rm -f /tmp/mail.txt
-				return 0
-			else
-				echo ""
-				Print_Output true "Summary statistic email failed to send" "$ERR"
-				rm -f /tmp/mail.txt
-				return 1
-			fi
+		elif [ "$emailtype" = "usage" ]; then
+			[ -z "$4" ] && Print_Output true "Attempting to send bandwidth usage email"
+			usagepercentage="$2"
+			usagestring="$3"
+			# plain text email to send #
+			{
+				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
+				echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
+				echo "Subject: vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")";
+				echo "Date: $(date -R)";
+				echo "";
+			} > /tmp/mail.txt
+			printf "%s" "$usagestring" >>/tmp/mail.txt
+		fi
+		
+		#Send Email
+		/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
+		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
+		--upload-file /tmp/mail.txt \
+		--ssl-reqd \
+		--user "$USERNAME:$PASSWORD" $SSL_FLAG
+		# shellcheck disable=SC2181
+		if [ $? -eq 0 ]; then
+			[ -z "$4" ] && Print_Output true "Email sent successfully" "$PASS"
+			rm -f /tmp/mail.txt
+			return 0
+		else
+			echo ""
+			[ -z "$4" ] && Print_Output true "Email failed to send" "$ERR"
+			rm -f /tmp/mail.txt
+			return 1
 		fi
 	fi
 }
@@ -732,27 +868,27 @@ Encode_Text(){
 	} >> "$3"
 }
 
-ToggleEmail(){
+DailyEmail(){
 	case "$1" in
 		enable)
 			if [ -z "$2" ]; then
 				ScriptHeader
 				exitmenu="false"
 				printf "\\n\\e[1mA choice of emails is available:\\e[0m\\n"
-				printf "1.    Plain text (summary stats only)\\n"
-				printf "2.    HTML (beta - includes images from WebUI + summary stats as attachment)\\n"
+				printf "1.    HTML (includes images from WebUI + summary stats as attachment)\\n"
+				printf "2.    Plain text (summary stats only)\\n"
 				printf "\\ne.    Exit to main menu\\n"
 				
 				while true; do
-					printf "\\n\\e[1mChoose an option:\\e[0m    "
+					printf "\\n\\e[1mChoose an option:\\e[0m  "
 					read -r emailtype
 					case "$emailtype" in
 						1)
-							echo "TEXT" > "$ENABLE_EMAIL_FILE"
+							sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=html/' "$SCRIPT_CONF"
 							break
 						;;
 						2)
-							echo "HTML" > "$ENABLE_EMAIL_FILE"
+							sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=text/' "$SCRIPT_CONF"
 							break
 						;;
 						e)
@@ -770,28 +906,191 @@ ToggleEmail(){
 				if [ "$exitmenu" = "true" ]; then
 					return
 				fi
+			else
+				sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL='"$2"'/' "$SCRIPT_CONF"
 			fi
 			
-			Generate_Email
-			if [ "$?" -eq 1 ]; then
-				ToggleEmail disable
+			Generate_Email daily
+			if [ $? -eq 1 ]; then
+				DailyEmail disable
 			fi
 		;;
 		disable)
-			rm -f "$ENABLE_EMAIL_FILE"
+			sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=none/' "$SCRIPT_CONF"
 		;;
 		check)
-			if [ -f "$ENABLE_EMAIL_FILE" ]; then
-				if grep -q HTML "$ENABLE_EMAIL_FILE"; then
-					echo "ENABLED - HTML"
-				elif grep -q TEXT "$ENABLE_EMAIL_FILE";  then
-					echo "ENABLED - TEXT"
-				fi
-			else
-				echo "DISABLED"
+			DAILYEMAIL=$(grep "DAILYEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
+			echo "$DAILYEMAIL"
+		;;
+	esac
+}
+
+UsageEmail(){
+	case "$1" in
+		enable)
+			sed -i 's/^USAGEEMAIL.*$/USAGEEMAIL=true/' "$SCRIPT_CONF"
+			Check_Bandwidth_Usage
+		;;
+		disable)
+			sed -i 's/^USAGEEMAIL.*$/USAGEEMAIL=false/' "$SCRIPT_CONF"
+		;;
+		check)
+			USAGEEMAIL=$(grep "USAGEEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
+			if [ "$USAGEEMAIL" = "true" ]; then return 0; else return 1; fi
+		;;
+	esac
+}
+
+BandwidthAllowance(){
+	case "$1" in
+		update)
+			bandwidth="$(echo "$2" | awk '{printf("%.2f", $1);}')"
+			sed -i 's/^DATAALLOWANCE.*$/DATAALLOWANCE='"$bandwidth"'/' "$SCRIPT_CONF"
+			if [ -z "$3" ]; then
+				Reset_Allowance_Warnings force
+			fi
+			Check_Bandwidth_Usage
+		;;
+		check)
+			DATAALLOWANCE=$(grep "DATAALLOWANCE" "$SCRIPT_CONF" | cut -f2 -d"=")
+			echo "$DATAALLOWANCE"
+		;;
+	esac
+}
+
+AllowanceStartDay(){
+	case "$1" in
+		update)
+			sed -i 's/^MonthRotate.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			TZ=$(cat /etc/TZ)
+			export TZ
+			$VNSTAT_COMMAND -u
+			Reset_Allowance_Warnings force
+			Check_Bandwidth_Usage
+		;;
+		check)
+			MonthRotate=$(grep "MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			echo "$MonthRotate"
+		;;
+	esac
+}
+
+AllowanceUnit(){
+	case "$1" in
+		update)
+		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
+		;;
+		check)
+			UnitMode=$(grep "^UnitMode" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			ALLOWANCEUNIT=$(grep "ALLOWANCEUNIT" "$SCRIPT_CONF" | cut -f2 -d"=")
+			if [ "$UnitMode" = 0 ]; then
+				echo "${ALLOWANCEUNIT}iB"
+			elif [ "$UnitMode" = 1 ]; then
+				echo "${ALLOWANCEUNIT}B"
 			fi
 		;;
 	esac
+}
+
+Reset_Allowance_Warnings(){
+	if [ "$(($(date +%d) + 1))" -eq "$(AllowanceStartDay check)" ] || [ "$1" = "force" ]; then
+		rm -f "$SCRIPT_DIR/.warning75"
+		rm -f "$SCRIPT_DIR/.warning90"
+		rm -f "$SCRIPT_DIR/.warning100"
+	fi
+}
+
+Check_Bandwidth_Usage(){
+	TZ=$(cat /etc/TZ)
+	export TZ
+	$VNSTAT_COMMAND -u
+	bandwidthused="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
+	bandwidthunit="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
+	userLimit="$(BandwidthAllowance check)"
+	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ] && [ "$bandwidthunit" != "TiB" ] && [ "$bandwidthunit" != "TB" ]; then
+		[ -z "$1" ] && Print_Output false "Not enough data gathered by vnstat" "$WARN"
+		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
+		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
+		return 1
+	fi
+	
+	scalefactor=1000
+	if echo "$bandwidthunit" | grep -q i ; then
+		scalefactor=1024
+	fi
+	
+	scaletype="none"
+	if [ "$(echo "$bandwidthunit" | sed 's/i//')" != "$(AllowanceUnit check | sed 's/i//')" ]; then
+		if echo "$bandwidthunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
+			scaletype="divide"
+		elif echo "$bandwidthunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
+			scaletype="multiply"
+		fi
+	fi
+	
+	if [ "$scaletype" != "none" ]; then
+		if [ "$scaletype" = "multiply" ]; then
+			bandwidthused=$(echo "$bandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
+		elif [ "$scaletype" = "divide" ]; then
+			bandwidthused=$(echo "$bandwidthused $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
+		fi
+	fi
+	
+	bandwidthpercentage=""
+	usagestring=""
+	if [ "$(echo "$userLimit 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
+		bandwidthpercentage="N/A"
+		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this month"
+	else
+		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) monthly allowance"
+	fi
+	
+	[ -z "$1" ] && Print_Output false "$usagestring"
+	
+	if [ "$bandwidthpercentage" = "N/A" ] || [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 < $2)}')" -eq 1 ]; then
+		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
+	elif [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
+		[ -z "$1" ] && Print_Output false "Data use is at or above 75%" "$WARN"
+		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 75%";' >> "$SCRIPT_DIR/.vnstatusage"
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
+			if [ -n "$1" ]; then
+				Generate_Email usage "75%" "$usagestring" silent
+			else
+				Generate_Email usage "75%" "$usagestring"
+			fi
+			touch "$SCRIPT_DIR/.warning75"
+		fi
+	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
+		[ -z "$1" ] && Print_Output false "Data use is at or above 90%" "$ERR"
+		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 90%";' >> "$SCRIPT_DIR/.vnstatusage"
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
+			if [ -n "$1" ]; then
+				Generate_Email usage "90%" "$usagestring" silent
+			else
+				Generate_Email usage "90%" "$usagestring"
+			fi
+			touch "$SCRIPT_DIR/.warning90"
+		fi
+	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
+		[ -z "$1" ] && Print_Output false "Data use is at or above 100%" "$CRIT"
+		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 100%";' >> "$SCRIPT_DIR/.vnstatusage"
+		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
+			if [ -n "$1" ]; then
+				Generate_Email usage "100%" "$usagestring" silent
+			else
+				Generate_Email usage "100%" "$usagestring"
+			fi
+			touch "$SCRIPT_DIR/.warning100"
+		fi
+	fi
+	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_DIR/.vnstatusage"
 }
 
 vom_rio(){
@@ -852,33 +1151,67 @@ vom_rio(){
 	fi
 }
 
+Process_Upgrade(){
+	if [ ! -f "$SCRIPT_DIR/.vnstatusage" ]; then
+		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
+		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
+	fi
+	if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
+		rm -f "$SCRIPT_DIR/.emailenabled"
+	fi
+	if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
+		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
+	fi
+}
+
 ScriptHeader(){
 	clear
 	printf "\\n"
-	printf "\\e[1m#################################################\\e[0m\\n"
-	printf "\\e[1m##                                             ##\\e[0m\\n"
-	printf "\\e[1m##  vnstat and vnstati data usage statistics   ##\\e[0m\\n"
-	printf "\\e[1m##            for AsusWRT-Merlin               ##\\e[0m\\n"
-	printf "\\e[1m##                                             ##\\e[0m\\n"
-	printf "\\e[1m##            %s on %-9s              ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
-	printf "\\e[1m##                                             ## \\e[0m\\n"
-	printf "\\e[1m##            Created by dev_null              ##\\e[0m\\n"
-        printf "\\e[1m##    github.com/de-vnull/vnstat-on-merlin     ##\\e[0m\\n"
-	printf "\\e[1m##                                             ##\\e[0m\\n"
-	printf "\\e[1m#################################################\\e[0m\\n"
+	printf "\\e[1m################################################\\e[0m\\n"
+	printf "\\e[1m##                                            ##\\e[0m\\n"
+	printf "\\e[1m##  vnstat and vnstati data usage statistics  ##\\e[0m\\n"
+	printf "\\e[1m##            for AsusWRT-Merlin              ##\\e[0m\\n"
+	printf "\\e[1m##                                            ##\\e[0m\\n"
+	printf "\\e[1m##            %s on %-11s           ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "\\e[1m##                                            ## \\e[0m\\n"
+	printf "\\e[1m##    github.com/de-vnull/vnstat-on-merlin    ##\\e[0m\\n"
+	printf "\\e[1m##                                            ##\\e[0m\\n"
+	printf "\\e[1m################################################\\e[0m\\n"
 	printf "\\n"
 }
 
 MainMenu(){
+	MENU_DAILYEMAIL="$(DailyEmail check)"
+	if [ "$MENU_DAILYEMAIL" = "html" ]; then
+		MENU_DAILYEMAIL="${PASS}ENABLED - HTML"
+	elif [ "$MENU_DAILYEMAIL" = "text" ]; then
+		MENU_DAILYEMAIL="${PASS}ENABLED - TEXT"
+	elif [ "$MENU_DAILYEMAIL" = "none" ]; then
+		MENU_DAILYEMAIL="${ERR}DISABLED"
+	fi
+	MENU_USAGE_ENABLED=""
+	if UsageEmail check; then MENU_USAGE_ENABLED="${PASS}ENABLED"; else MENU_USAGE_ENABLED="${ERR}DISABLED"; fi
+	MENU_BANDWIDTHALLOWANCE=""
+	if [ "$(echo "$(BandwidthAllowance check) 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
+		MENU_BANDWIDTHALLOWANCE="UNLIMITED"
+	else
+		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check)$(AllowanceUnit check)"
+	fi
 	printf "1.    Update stats now\\n\\n"
-	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m%s\\e[0m\\n\\n" "$(ToggleEmail check)"
-	printf "3.    Edit %s config\\n\\n" "$SCRIPT_NAME"
+	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m$MENU_DAILYEMAIL\\e[0m\\n\\n"
+	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m$MENU_USAGE_ENABLED\\e[0m\\n\\n"
+	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
+	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$(AllowanceUnit check)"
+	printf "6.    Set start day of month for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
+	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\e[0m\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "v.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
-	printf "e.    Exit %s\\n\\n" "$SCRIPT_NAME"
+	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
 	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
 	printf "\\n"
-	printf "\\e[1m#################################################\\e[0m\\n"
+	printf "\\e[1m################################################\\e[0m\\n"
 	printf "\\n"
 	
 	while true; do
@@ -888,18 +1221,67 @@ MainMenu(){
 			1)
 				printf "\\n"
 				if Check_Lock menu; then
-					Menu_GenerateStats
+					Generate_Images
+					Generate_Stats
+					Clear_Lock
 				fi
 				PressEnter
 				break
 			;;
 			2)
 				printf "\\n"
-				Menu_ToggleEmail
+				if [ "$(DailyEmail check)" != "none" ]; then
+					DailyEmail disable
+				elif [ "$(DailyEmail check)" = "none" ]; then
+					DailyEmail enable
+				fi
 				PressEnter
 				break
 			;;
 			3)
+				printf "\\n"
+				if UsageEmail check; then
+					UsageEmail disable
+				elif ! UsageEmail check; then
+					UsageEmail enable
+				fi
+				PressEnter
+				break
+			;;
+			4)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_BandwidthAllowance
+				fi
+				PressEnter
+				break
+			;;
+			5)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_AllowanceUnit
+				fi
+				PressEnter
+				break
+			;;
+			6)
+				printf "\\n"
+				if Check_Lock menu; then
+					Menu_AllowanceStartDay
+				fi
+				PressEnter
+				break
+			;;
+			b)
+				printf "\\n"
+				if Check_Lock menu; then
+					Check_Bandwidth_Usage
+					Clear_Lock
+				fi
+				PressEnter
+				break
+			;;
+			v)
 				printf "\\n"
 				if Check_Lock menu; then
 					Menu_Edit
@@ -909,7 +1291,8 @@ MainMenu(){
 			u)
 				printf "\\n"
 				if Check_Lock menu; then
-					Menu_Update
+					Update_Version
+					Clear_Lock
 				fi
 				PressEnter
 				break
@@ -917,7 +1300,8 @@ MainMenu(){
 			uf)
 				printf "\\n"
 				if Check_Lock menu; then
-					Menu_ForceUpdate
+					Update_Version force
+					Clear_Lock
 				fi
 				PressEnter
 				break
@@ -929,7 +1313,7 @@ MainMenu(){
 			;;
 			z)
 				while true; do
-					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m\\n" "$SCRIPT_NAME"
+					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m  " "$SCRIPT_NAME"
 					read -r confirm
 					case "$confirm" in
 						y|Y)
@@ -953,17 +1337,24 @@ MainMenu(){
 }
 
 Menu_Install(){
-	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null"
+	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz"
 	sleep 1
 	
 	if [ -d /jffs/addons/vnstat.d ] || [ -f /opt/etc/vnstat.conf ] || [ -f /jffs/scripts/vnstat-install.sh ]; then
 		vom_rio
 	fi
 	
-	Print_Output true "Checking your router meets the requirements for $SCRIPT_NAME"
+	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
+		if [ ! -d "$SCRIPT_DIR" ]; then
+			mkdir -p "$SCRIPT_DIR"
+		fi
+		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
+	fi
+	
+	Print_Output false "Checking your router meets the requirements for $SCRIPT_NAME"
 	
 	if ! Check_Requirements; then
-		Print_Output true "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
+		Print_Output false "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
 		PressEnter
 		Clear_Lock
 		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
@@ -973,7 +1364,7 @@ Menu_Install(){
 	IFACE=""
 	printf "\\n\\e[1mWAN Interface detected as %s\\e[0m\\n" "$(Get_WAN_IFace)"
 	while true; do
-		printf "\\n\\e[1mIs this correct? (y/n)\\e[0m    "
+		printf "\\n\\e[1mIs this correct? (y/n)\\e[0m  "
 		read -r confirm
 		case "$confirm" in
 			y|Y)
@@ -982,7 +1373,7 @@ Menu_Install(){
 			;;
 			n|N)
 				while true; do
-					printf "\\n\\e[1mPlease enter correct interface:\\e[0m    "
+					printf "\\n\\e[1mPlease enter correct interface:\\e[0m  "
 					read -r iface
 					iface_lower="$(echo "$iface" | tr "A-Z" "a-z")"
 					if [ "$iface" = "e" ]; then
@@ -1006,7 +1397,8 @@ Menu_Install(){
 	printf "\\n"
 	
 	Create_Dirs
-	Set_Version_Custom_Settings local
+	Conf_Exists
+	Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 	Set_Version_Custom_Settings server "$SCRIPT_VERSION"
 	Create_Symlinks
 	
@@ -1022,13 +1414,15 @@ Menu_Install(){
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
 	
+	Process_Upgrade
+	
 	if [ -n "$(pidof vnstatd)" ];then
-		Print_Output true "Sleeping for 5s before generating initial stats" "$WARN"
+		Print_Output false "Sleeping for 5s before generating initial stats" "$WARN"
 		sleep 5
 		Generate_Stats
 		Generate_Images
 	else
-		Print_Output true "vnstatd not running, please check system log" "$ERR"
+		Print_Output false "vnstatd not running, please check system log" "$ERR"
 	fi
 	
 	Clear_Lock
@@ -1057,7 +1451,7 @@ Menu_Startup(){
 		sleep 5
 	fi
 	Create_Dirs
-	Set_Version_Custom_Settings local
+	Conf_Exists
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -1067,22 +1461,131 @@ Menu_Startup(){
 	Clear_Lock
 }
 
-Menu_GenerateStats(){
-	Generate_Images
-	Generate_Stats
+Menu_BandwidthAllowance(){
+	exitmenu="false"
+	bandwidthallowance=""
+	ScriptHeader
+	
+	while true; do
+		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance\\n(%s, 0 = unlimited, max. 2 decimals):\\e[0m  " "$(AllowanceUnit check)"
+		read -r allowance
+		
+		if [ "$allowance" = "e" ]; then
+			exitmenu="exit"
+			break
+		elif ! Validate_Bandwidth "$allowance"; then
+			printf "\\n\\e[31mPlease enter a valid number (%s, 0 = unlimited, max. 2 decimals)\\e[0m\\n" "$(AllowanceUnit check)"
+		else
+			bandwidthallowance="$allowance"
+			printf "\\n"
+			break
+		fi
+	done
+	
+	if [ "$exitmenu" != "exit" ]; then
+		BandwidthAllowance update "$bandwidthallowance"
+	fi
+	
 	Clear_Lock
 }
 
-Menu_ToggleEmail(){
-	if [ -z "$1" ]; then
-		if [ -f "$ENABLE_EMAIL_FILE" ]; then
-			ToggleEmail disable
-		elif [ ! -f "$ENABLE_EMAIL_FILE" ]; then
-			ToggleEmail enable
-		fi
-	else
-		ToggleEmail "$@"
+Menu_AllowanceUnit(){
+	exitmenu="false"
+	allowanceunit=""
+	prevallowanceunit="$(AllowanceUnit check)"
+	unitsuffix="$(echo "$(AllowanceUnit check)" | sed 's/T//;s/G//;')"
+	ScriptHeader
+	
+	while true; do
+		printf "\\n\\e[1mPlease select the unit to use for bandwidth allowance:\\e[0m\\n"
+		printf "1.    G%s\\n" "$unitsuffix"
+		printf "2.    T%s\\n\\n" "$unitsuffix"
+		printf "Choose an option:  "
+		read -r unitchoice
+		case "$unitchoice" in
+			1)
+				allowanceunit="G"
+				printf "\\n"
+				break
+			;;
+			2)
+				allowanceunit="T"
+				printf "\\n"
+				break
+			;;
+			e)
+				exitmenu="exit"
+				break
+			;;
+			*)
+				printf "\\nPlease choose a valid option\\n\\n"
+			;;
+		esac
+	done
+	if [ "$exitmenu" != "exit" ]; then
+		AllowanceUnit update "$allowanceunit"
+		
+		#allowanceunit="$(AllowanceUnit check)"
+		#if [ "$prevallowanceunit" != "$allowanceunit" ]; then
+		#	scalefactor=1000
+		#	if echo "$allowanceunit" | grep -q i ; then
+		#		scalefactor=1024
+		#	fi
+		#
+		#	scaletype="none"
+		#	if [ "$(echo "$prevallowanceunit" | sed 's/i//')" != "$(AllowanceUnit check | sed 's/i//')" ]; then
+		#		if echo "$prevallowanceunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
+		#			scaletype="divide"
+		#		elif echo "$prevallowanceunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
+		#			scaletype="multiply"
+		#		fi
+		#	fi
+		#
+		#	if [ "$scaletype" != "none" ]; then
+		#		bandwidthallowance="$(BandwidthAllowance check)"
+		#		if [ "$scaletype" = "multiply" ]; then
+		#			bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
+		#		elif [ "$scaletype" = "divide" ]; then
+		#			bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
+		#		fi
+		#		BandwidthAllowance update "$(echo "$bandwidthallowance")" noreset
+		#	fi
+		#fi
 	fi
+	
+	Clear_Lock
+}
+
+Menu_AllowanceStartDay(){
+	exitmenu="false"
+	allowancestartday=""
+	ScriptHeader
+	
+	while true; do
+		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance\\nresets (1-31):\\e[0m  "
+		read -r startday
+		
+		if [ "$startday" = "e" ]; then
+			exitmenu="exit"
+			break
+		elif ! Validate_Number "" "$startday" silent; then
+			printf "\\n\\e[31mPlease enter a valid number (1-31)\\e[0m\\n"
+		else
+			if [ "$startday" -lt 1 ] || [ "$startday" -gt 31 ]; then
+				printf "\\n\\e[31mPlease enter a number between 1 and 31\\e[0m\\n"
+			else
+				allowancestartday="$startday"
+				printf "\\n"
+				break
+			fi
+		fi
+	done
+	
+	if [ "$exitmenu" != "exit" ]; then
+		AllowanceStartDay update "$allowancestartday"
+	fi
+	
+	Clear_Lock
 }
 
 Menu_Edit(){
@@ -1095,7 +1598,7 @@ Menu_Edit(){
 	printf "\\ne.    Exit to main menu\\n"
 	
 	while true; do
-		printf "\\n\\e[1mChoose an option:\\e[0m    "
+		printf "\\n\\e[1mChoose an option:\\e[0m  "
 		read -r editor
 		case "$editor" in
 			1)
@@ -1123,18 +1626,14 @@ Menu_Edit(){
 		newmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
 		if [ "$oldmd5" != "$newmd5" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			TZ=$(cat /etc/TZ)
+			export TZ
+			$VNSTAT_COMMAND -u
+			Check_Bandwidth_Usage silent
+			Clear_Lock
+			PressEnter
 		fi
 	fi
-	Clear_Lock
-}
-
-Menu_Update(){
-	Update_Version
-	Clear_Lock
-}
-
-Menu_ForceUpdate(){
-	Update_Version force
 	Clear_Lock
 }
 
@@ -1164,11 +1663,15 @@ Menu_Uninstall(){
 	rm -f /opt/etc/init.d/S33vnstat
 	rm -f /opt/etc/vnstat.conf
 	
+	Reset_Allowance_Warnings force
+	rm -f "$SCRIPT_DIR/.vnstatusage"
+	rm -rf "$IMAGE_OUTPUT_DIR"
+	
 	SETTINGSFILE=/jffs/addons/custom_settings.txt
 	sed -i '/dnvnstat_version_local/d' "$SETTINGSFILE"
 	sed -i '/dnvnstat_version_server/d' "$SETTINGSFILE"
 	
-	printf "\\n\\e[1mWould you like to keep the vnstat data files? (y/n)\\e[0m\\n"
+	printf "\\n\\e[1mWould you like to keep the vnstat\\ndata files and configuration? (y/n)\\e[0m  "
 	read -r confirm
 	case "$confirm" in
 		y|Y)
@@ -1189,16 +1692,14 @@ Menu_Uninstall(){
 NTP_Ready(){
 	if [ "$(nvram get ntp_ready)" -eq 0 ]; then
 		Check_Lock
-		ntpwaitcount="0"
-		while [ "$(nvram get ntp_ready)" -eq 0 ] && [ "$ntpwaitcount" -lt 300 ]; do
-			ntpwaitcount="$((ntpwaitcount + 1))"
-			if [ "$ntpwaitcount" -eq 60 ]; then
-				Print_Output true "Waiting for NTP to sync..." "$WARN"
-			fi
-			sleep 1
+		ntpwaitcount=0
+		while [ "$(nvram get ntp_ready)" -eq 0 ] && [ "$ntpwaitcount" -lt 600 ]; do
+			ntpwaitcount="$((ntpwaitcount + 30))"
+			Print_Output true "Waiting for NTP to sync..." "$WARN"
+			sleep 30
 		done
-		if [ "$ntpwaitcount" -ge 300 ]; then
-			Print_Output true "NTP failed to sync after 5 minutes. Please resolve!" "$CRIT"
+		if [ "$ntpwaitcount" -ge 600 ]; then
+			Print_Output true "NTP failed to sync after 10 minutes. Please resolve!" "$CRIT"
 			Clear_Lock
 			exit 1
 		else
@@ -1235,12 +1736,13 @@ if [ -z "$1" ]; then
 	NTP_Ready
 	Entware_Ready
 	Create_Dirs
-	Set_Version_Custom_Settings local
+	Conf_Exists
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
+	Process_Upgrade
 	ScriptHeader
 	MainMenu
 	exit 0
@@ -1261,19 +1763,16 @@ case "$1" in
 		Entware_Ready
 		Generate_Images
 		Generate_Stats
+		Check_Bandwidth_Usage
 		exit 0
 	;;
-	generateimages)
+	summary)
 		NTP_Ready
 		Entware_Ready
+		Reset_Allowance_Warnings
 		Generate_Images
-		exit 0
-	;;
-	generatestats)
-		NTP_Ready
-		Entware_Ready
 		Generate_Stats
-		Generate_Email
+		Generate_Email daily
 		exit 0
 	;;
 	service_event)
@@ -1282,9 +1781,7 @@ case "$1" in
 			Generate_Stats
 			exit 0
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
-			settingstate="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f1 -d'_')";
-			settingtype="$(echo "$3" | sed "s/${SCRIPT_NAME}config//" | cut -f2 -d'_')";
-			Menu_ToggleEmail "$settingstate" "$settingtype"
+			Conf_FromSettings
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]; then
 			Update_Check
@@ -1296,23 +1793,35 @@ case "$1" in
 		exit 0
 	;;
 	update)
-		Update_Version unattended
+		Update_Version
 		exit 0
 	;;
 	forceupdate)
-		Update_Version force unattended
+		Update_Version force
 		exit 0
 	;;
 	setversion)
-		Set_Version_Custom_Settings local
+		Process_Upgrade
+		Create_Dirs
+		Conf_Exists
+		Create_Symlinks
+		Auto_Startup create 2>/dev/null
+		Auto_Cron create 2>/dev/null
+		Auto_ServiceEvent create 2>/dev/null
+		Shortcut_Script create
+		Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
-		if [ -z "$2" ]; then
-			exec "$0"
-		fi
 		exit 0
 	;;
-	checkupdate)
-		Update_Check
+	postupdate)
+		Process_Upgrade
+		Create_Dirs
+		Conf_Exists
+		Create_Symlinks
+		Auto_Startup create 2>/dev/null
+		Auto_Cron create 2>/dev/null
+		Auto_ServiceEvent create 2>/dev/null
+		Shortcut_Script create
 		exit 0
 	;;
 	develop)
