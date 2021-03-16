@@ -21,7 +21,7 @@
 * CLI menu option to enable editing of vnstat.conf
 * UI updates, including defaulting to "AsusWRT color theme"
 * Universal date reformatting (deployed as hotfix, for new or full re-installs only)
-* Inclusion in AMTM menu (AMTM version 3.1.9 and later) - the first beta add-on included in AMTM!
+* Inclusion in AMTM (`amtm`) menu (AMTM version 3.1.9 and later) - the first beta add-on included in AMTM!
 
 ### v 0.9.3 - 27-Feb-2021 ###
 * Beta 2 version, public deployment
