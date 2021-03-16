@@ -34,6 +34,7 @@
 
 ### v 0.9.1 - 15-Feb-2021 ###
 * Addition of div-email option (script from _elorimer_), which leverages Diversion's encrypted email functionality (with permission of _thelonelycoder_)
+* Email support for daily usage email (contains day, week, monthly usage)
 * Install script removed due to conflicts
 * Revert to manual install steps
 * Minor UI updates and tweaks
