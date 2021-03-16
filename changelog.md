@@ -10,10 +10,9 @@
   - Data limit calculations - UI and menu (% data limit used)
   - CLI menu- and UI-driven
   - Selectable GB or TB limits
-* Expanded options for settings in UI
-* Backup existing vnstat databases (if found) during initial install
-* Deprecate the "CLI daily total" graphic in favor of textual view (that updates every 5 minutes; the daily summary is still sent sent at 23:59 local, if enabled)
-* Feature-locked version
+* Expanded UI settings options
+* Automatically backup existing vnstat databases (if found) during initial and full re-install
+* Deprecate the "CLI daily total" graphic in favor of textual view (updates every 5 minutes; daily summary emailed at 23:59 local, if enabled)
 
 ### v 0.9.4 - 02-Mar-2021 ###
 * Expanded menu options (some deployed as mimimal updates/hotfixes)
