@@ -8,7 +8,7 @@
   - Data limit monitoring with:
     - Optional email notification when reach 75%, 90% and 100% of data limit
     - Data use warning message on UI page (75% and higher)
-  - Data limit calculations - UI and menu (% data limit used)
+  - Data limit calculations - UI and CLI menu (% data limit used)
   - CLI menu- and UI-updatable
   - Selectable GB or TB limits
 * Expanded UI settings options
@@ -17,8 +17,8 @@
 * Deprecate the "CLI daily total" graphic in favor of textual view (updates every 5 minutes; daily summary emailed at 23:59 local, if enabled)
 
 ### v 0.9.4 - 02-Mar-2021 ###
-* Expanded menu options (some deployed as mimimal updates/hotfixes)
-* Menu option to enable editing of vnstat.conf
+* Expanded CLI menu options (some deployed as mimimal updates/hotfixes)
+* CLI menu option to enable editing of vnstat.conf
 * UI updates, including defaulting to "AsusWRT color theme"
 * Universal date reformatting (deployed as hotfix, for new or full re-installs only)
 * Inclusion in AMTM menu (AMTM version 3.1.9 and later) - the first beta add-on included in AMTM!
@@ -27,7 +27,7 @@
 * Beta 2 version, public deployment
 * With _JackYaz_ install script
 * Automated removal of manual/alpha/beta 1 installs (cleans up any scripts and cron jobs created by pre-beta 2 installations)
-* Introduces menu of configuration options (limited number of options)
+* Introduces CLI menu of configuration options (limited number of options)
 
 ### v 0.9.2 - Date not applicable ###
 * Internal development version, not distrubuted publicly; collaboration with _JackYaz_
