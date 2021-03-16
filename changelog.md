@@ -5,8 +5,9 @@
 * Many under the hood optimizations to improve reliability, accuracy and functionality based on Beta 2 feedback
 * Added user-specified data limits: check vnstat-reported data use against a user-specific limit
   - __Of particular interest to those with data caps__, e.g., Comcast, Cox, others
-  - Monitoring with email notification when reach 75%, 90% and 100% of data limit
-  - Data use warning message on UI page (75% and higher)
+  - Monitoring with:
+    - Optional email notification when reach 75%, 90% and 100% of data limit
+    - Data use warning message on UI page (75% and higher)
   - Data limit calculations - UI and menu (% data limit used)
   - CLI menu- and UI-driven
   - Selectable GB or TB limits
