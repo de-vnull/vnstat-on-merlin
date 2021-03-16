@@ -27,7 +27,7 @@
 * Beta 2 version, public deployment
 * With _JackYaz_ install script
 * Automated removal of manual/alpha/beta 1 installs (cleans up any scripts and cron jobs created by pre-beta 2 installations)
-* Introduces CLI menu of configuration options (limited number of options)
+* Introduces CLI menu (/jffs/scripts/dn-vnstat) with configuration options (limited number of options, but includes removal)
 
 ### v 0.9.2 - Date not applicable ###
 * Internal development version, not distrubuted publicly; collaboration with _JackYaz_
