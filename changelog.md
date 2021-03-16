@@ -29,6 +29,9 @@
 * Automated removal of manual/alpha/beta 1 installs (cleans up any scripts and cron jobs created by pre-beta 2 installations)
 * Introduces menu of configuration options (limited number of options)
 
+### v 0.9.2 - 22-Feb-2021 ###
+* Internal development version, not distrubuted publically; collaboration with _JackYaz_
+
 ### v 0.9.1 - 15-Feb-2021 ###
 * Addition of div-email option (script from _elorimer_), which leverages Diversion's encrypted email functionality (with permission of _thelonelycoder_)
 * Install script removed due to conflicts
