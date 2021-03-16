@@ -20,8 +20,8 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v0.9.5"
-SCRIPT_BRANCH="main"
+readonly SCRIPT_VERSION="v0.9.6"
+SCRIPT_BRANCH="jackyaz-dev"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_CONF="$SCRIPT_DIR/config"
