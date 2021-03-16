@@ -1,23 +1,28 @@
 # Changelog #
 
-### v 0.9.5 - TBD ###
+### v 0.9.5 - 16-Mar-2021 ###
 * Beta 3/RC1
-* Data use monitoring (data limit monitoring) with email notification (of particular interest to those with data caps)
-* Data use warning message on UI page (if data limit is set and saved)
-* Updated menu options to include data-use monitoring, notification types
-* Added ability to set menu settings to UI
-* Deprecate the "CLI daily total" graphic in favor of textual view
-
+* Many under the hood optimizations to improve reliability, accuracy and functionality based on Beta 2 feedback
+* Added user-specified data limits: check vnstat-reported data use against a user-specific limit
+  - Of particular interest to those with data caps, e.g., Comcast, Cox, others
+  - Monitoring with email notification when reach 75%, 90% and 100% of data limit
+  - CLI menu- and UI-driven
+  - Selectable GB or TB limits
+  - Data use warning message on UI page (75% and higher)
+  - Data limit calculations - UI and menu (% data limit used)
+* Expanded options for settings in UI
+* Deprecate the "CLI daily total" graphic in favor of textual view (that updates every 5 minutes; the daily summary is still sent sent at 23:59 local, if enabled)
 
 ### v 0.9.4 - 02-Mar-2021 ###
 * Expanded menu options (some deplyed as mimimal updates), including ability to edit vnstat.conf
-* UI tweaks, including "AsusWRT color theme" and universal date reformatting (deployed as hot-fix, for new or full re-installs only)
-* Inclusion in AMTM menu (AMTM version 3.1.9) - the first beta add-on included in AMTM!
+* UI tweaks, including defaulting to "AsusWRT color theme" 
+* Universal date reformatting (deployed as hot-fix, for new or full re-installs only)
+* Inclusion in AMTM menu (AMTM version 3.1.9 and later) - the first beta add-on included in AMTM!
 
 ### v 0.9.3 - 27-Feb-2021 ###
 * Beta 2 version, public deployment
 * With full @JackYaz install script
-* Introduces menu of configuration options
+* Introduces menu of configuration options (limited number of options)
 
 ### v 0.9.1 - 15-Feb-2021 ###
 * Install script removed due to conflicts
