@@ -42,4 +42,4 @@
 ### v 0.0.1 - 06-Feb-2021 ###
 * Alpha/"how-to" manual install
 * Initial version, designed for personal use
-* Uses @JackYaz scaffolding from connmon (with permission and support from _JackYaz_)
+* Uses _JackYaz_ scaffolding from connmon (with permission and support from _JackYaz_)
