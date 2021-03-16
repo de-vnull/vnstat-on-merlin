@@ -29,7 +29,7 @@
 * Automated removal of manual/alpha/beta 1 installs (cleans up any scripts and cron jobs created by pre-beta 2 installations)
 * Introduces menu of configuration options (limited number of options)
 
-### v 0.9.2 - 22-Feb-2021 ###
+### v 0.9.2 - Date not applicable ###
 * Internal development version, not distrubuted publically; collaboration with _JackYaz_
 
 ### v 0.9.1 - 15-Feb-2021 ###
