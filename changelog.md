@@ -6,10 +6,10 @@
 * Added user-specified data limits: check vnstat-reported data use against a user-specific limit
   - __Of particular interest to those with data caps__, e.g., Comcast, Cox, others
   - Monitoring with email notification when reach 75%, 90% and 100% of data limit
-  - CLI menu- and UI-driven
-  - Selectable GB or TB limits
   - Data use warning message on UI page (75% and higher)
   - Data limit calculations - UI and menu (% data limit used)
+  - CLI menu- and UI-driven
+  - Selectable GB or TB limits
 * Expanded options for settings in UI
 * Backup existing vnstat databases (if found) during initial install
 * Deprecate the "CLI daily total" graphic in favor of textual view (that updates every 5 minutes; the daily summary is still sent sent at 23:59 local, if enabled)
