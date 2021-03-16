@@ -12,6 +12,7 @@
   - CLI menu- and UI-updatable
   - Selectable GB or TB limits
 * Expanded UI settings options
+* Self-contained emailer (leverages Diversion credentials, but no longer calls separate script)
 * Automatically backup existing vnstat databases (if found) during initial and full re-install
 * Deprecate the "CLI daily total" graphic in favor of textual view (updates every 5 minutes; daily summary emailed at 23:59 local, if enabled)
 
@@ -29,7 +30,7 @@
 * Introduces menu of configuration options (limited number of options)
 
 ### v 0.9.1 - 15-Feb-2021 ###
-* Addition of div-email option (script from @elorimer), which leverages Diversion's encrypted email functionality (with permission of _thelonelycoder_)
+* Addition of div-email option (script from _elorimer_), which leverages Diversion's encrypted email functionality (with permission of _thelonelycoder_)
 * Install script removed due to conflicts
 * Revert to manual install steps
 * Minor UI updates and tweaks
