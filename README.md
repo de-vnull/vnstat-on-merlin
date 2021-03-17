@@ -1,6 +1,9 @@
-# vnstat-on-merlin - _BETA 2_
+# vnstat-on-merlin - _BETA 3/RC1_
 
 # README #
+
+### See changelog for details ###
+* This is beta 3/RC 1 - feature locked
 
 ### What is this repository for? ###
 
