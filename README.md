@@ -65,8 +65,9 @@
 		b. `vnstat --importdb /path/to/vnstat-export-db.txt -i eth0 --force` (enter the correct interface for your setup), followed by 
 		c. `/opt/etc/init.d/S33vnstat start`
 
-### Install script - UI version - beta 2 ###
+### Install script - UI version - beta 2 and later ###
 
+* Install of Vnstat on Merlin is available in the amtm menu (from amtm version 3.1.9 and later). That is currently the best way to install and manage.
 * From the CLI, issue the following command (triple click to select all):
 ```
 /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
@@ -86,14 +87,15 @@
 
 
 ### Upgrade from a manual install or alpha or beta 1 ###
-* This __beta2__ version is re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
+* The __beta2__ version was re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
+* The installer for later versions (beta 3 and later) also performs this uninstall.
 * The updated install script will detect any previously installed scripts and will inform you that these will be removed. __Database files will be left intact on the device.__
 * If you don't want to migrate to the new version, you can abort the install.
 
 
 ### Miscellaneous notes ###
 * The vnstats UI page may require a hard refresh (`CTRL+F5` or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse.
-* Note: db files can in some instances be moved across devices, but only of the same architecture (e.g., ARM7 to ARM7). Different architecture will result in an error and requires a db reinitialization. 
+* Export and import of data usage tracking is possible, even across architectures (tested ARM <-> MIPS and ARM <-> AARCH). See instructions below. 
 * There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). 
 * It has been reported that with _hardware acceleration_ implemented, the data counts provided by vnstat are no more accurate than the built-in tools (which is to say, not accurate).
 * For the __day of month reset__ attribute in the menu (0.9.5 and later) and vnstat.conf: the count does not reset until the following month (see: https://ubuntuforums.org/showthread.php?t=2324673&s=70286d0c6612020a14bf2b38c9d8d1cc&p=13490762#post13490762). This is a current limitation of vnstat, and there is no known work-around.
