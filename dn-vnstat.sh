@@ -662,6 +662,7 @@ Check_Requirements(){
 		opkg update
 		opkg install vnstat
 		opkg install vnstati
+		opkg install libjpeg-turbo
 		opkg install jq
 		rm -f /opt/etc/vnstat.conf
 		return 0
@@ -681,6 +682,10 @@ Get_WAN_IFace(){
 }
 
 Generate_Images(){
+	if [ ! -f /opt/lib/libjpeg.so ]; then
+		opkg update
+		opkg install libjpeg-turbo
+	fi
 	TZ=$(cat /etc/TZ)
 	export TZ
 	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
@@ -1152,6 +1157,10 @@ Process_Upgrade(){
 		sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
 		sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
 		touch "$SCRIPT_DIR/.znewdefaults"
+	fi
+	if [ ! -f /opt/lib/libjpeg.so ]; then
+		opkg update
+		opkg install libjpeg-turbo
 	fi
 	if [ ! -f /opt/bin/jq ]; then
 		opkg update
