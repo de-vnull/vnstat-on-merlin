@@ -1164,6 +1164,13 @@ Process_Upgrade(){
 	if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
 		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
 	fi
+	if [ ! -f "$SCRIPT_DIR/.znewdefaults" ]; then
+		Print_Output false "Setting recommended defaults for MaxBandwidth, TimeSyncWait and UpdateInterval"
+		sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_DIR/vnstat.conf"
+		sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
+		sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
+		touch "$SCRIPT_DIR/.znewdefaults"
+	fi
 }
 
 ScriptHeader(){
