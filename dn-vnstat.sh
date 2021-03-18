@@ -355,7 +355,6 @@ Conf_FromSettings(){
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
-			$VNSTAT_COMMAND -u
 			
 			if [ "$warningresetrequired" = "true" ]; then
 				Reset_Allowance_Warnings force
@@ -685,7 +684,6 @@ Generate_Images(){
 	export TZ
 	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 	Print_Output false "vnstati updating stats for UI" "$PASS"
-	$VNSTAT_COMMAND -u
 	
 	outputs="s h d t m hs"   # what images to generate
 	
@@ -700,7 +698,6 @@ Generate_Stats(){
 	TZ=$(cat /etc/TZ)
 	export TZ
 	printf "vnstats as of:\\n%s" "$(date)" > "$VNSTAT_OUTPUT_FILE"
-	$VNSTAT_COMMAND -u
 	{
 		$VNSTAT_COMMAND -m;
 		$VNSTAT_COMMAND -w;
@@ -966,7 +963,6 @@ AllowanceStartDay(){
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
-			$VNSTAT_COMMAND -u
 			Reset_Allowance_Warnings force
 			Check_Bandwidth_Usage
 		;;
@@ -1636,7 +1632,6 @@ Menu_Edit(){
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
-			$VNSTAT_COMMAND -u
 			Check_Bandwidth_Usage silent
 			Clear_Lock
 			PressEnter
