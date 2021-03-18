@@ -1659,7 +1659,6 @@ Menu_Uninstall(){
 	touch /opt/etc/vnstat.conf
 	opkg remove --autoremove vnstati
 	opkg remove --autoremove vnstat
-	opkg remove --autoremove imagemagick
 	
 	rm -f /opt/etc/init.d/S33vnstat
 	rm -f /opt/etc/vnstat.conf
