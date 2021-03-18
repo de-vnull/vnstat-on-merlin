@@ -662,6 +662,7 @@ Check_Requirements(){
 		opkg update
 		opkg install vnstat
 		opkg install vnstati
+		opkg install jq
 		rm -f /opt/etc/vnstat.conf
 		return 0
 	else
@@ -999,41 +1000,26 @@ Reset_Allowance_Warnings(){
 }
 
 Check_Bandwidth_Usage(){
+	if [ ! -f /opt/bin/jq ]; then
+		opkg update
+		opkg install jq
+	fi
 	TZ=$(cat /etc/TZ)
 	export TZ
-	$VNSTAT_COMMAND -u
-	bandwidthused="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
-	bandwidthunit="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
+	bandwidthused="$($VNSTAT_COMMAND --json m | jq -r --arg month "$(date +%m)" '.interfaces[].traffic.months[] | select(.date.month == ($month | tonumber)) | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
-	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ] && [ "$bandwidthunit" != "TiB" ] && [ "$bandwidthunit" != "TB" ]; then
-		[ -z "$1" ] && Print_Output false "Not enough data gathered by vnstat" "$WARN"
-		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
-		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
-		return 1
+	
+	scalefactor=1
+	if ! echo "$(AllowanceUnit check)" | grep -q i ; then
+		scalefactor=1.024
 	fi
 	
-	scalefactor=1000
-	if echo "$bandwidthunit" | grep -q i ; then
-		scalefactor=1024
+	unitfactor=1000000
+	if echo "$(AllowanceUnit check)" | grep -q T; then
+		unitfactor=1000000000
 	fi
 	
-	scaletype="none"
-	if [ "$(echo "$bandwidthunit" | sed 's/i//')" != "$(AllowanceUnit check | sed 's/i//')" ]; then
-		if echo "$bandwidthunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
-			scaletype="divide"
-		elif echo "$bandwidthunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
-			scaletype="multiply"
-		fi
-	fi
-	
-	if [ "$scaletype" != "none" ]; then
-		if [ "$scaletype" = "multiply" ]; then
-			bandwidthused=$(echo "$bandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
-		elif [ "$scaletype" = "divide" ]; then
-			bandwidthused=$(echo "$bandwidthused $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
-		fi
-	fi
+	bandwidthused=$(echo "$bandwidthused $scalefactor $unitfactor" | awk '{printf("%.2f\n", $1*$2/$3);}')
 	
 	bandwidthpercentage=""
 	usagestring=""
@@ -1166,6 +1152,10 @@ Process_Upgrade(){
 		sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
 		sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
 		touch "$SCRIPT_DIR/.znewdefaults"
+	fi
+	if [ ! -f /opt/bin/jq ]; then
+		opkg update
+		opkg install jq
 	fi
 }
 
