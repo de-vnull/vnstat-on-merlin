@@ -774,6 +774,7 @@ Generate_Email(){
 				
 				outputs="s h d t m hs"
 				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
+				echo "<p>$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
 				for output in $outputs; do
 					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
 				done
