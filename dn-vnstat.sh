@@ -693,7 +693,7 @@ Generate_Images(){
 	
 	outputs="s h d t m hs"   # what images to generate
 	
-	interface="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
 	for output in $outputs; do
 		$VNSTATI_COMMAND -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
@@ -974,7 +974,7 @@ AllowanceStartDay(){
 			Check_Bandwidth_Usage
 		;;
 		check)
-			MonthRotate=$(grep "MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			MonthRotate=$(grep "^MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
 			echo "$MonthRotate"
 		;;
 	esac
