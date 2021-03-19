@@ -1012,7 +1012,10 @@ Check_Bandwidth_Usage(){
 	fi
 	TZ=$(cat /etc/TZ)
 	export TZ
-	bandwidthused="$($VNSTAT_COMMAND --json m | jq -r --arg month "$(date +%m)" '.interfaces[].traffic.months[] | select(.date.month == ($month | tonumber)) | .rx + .tx')"
+	
+	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	
+	bandwidthused="$($VNSTAT_COMMAND --json m | jq -r --arg month "$(date +%m)" --arg wanif "$interface" '.interfaces[] | select (.id == $wanif) | .traffic.months[] | select(.date.month == ($month | tonumber)) | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
 	
 	scalefactor=1
