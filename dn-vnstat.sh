@@ -1015,7 +1015,7 @@ Check_Bandwidth_Usage(){
 	
 	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
-	bandwidthused="$($VNSTAT_COMMAND --json m | jq -r --arg month "$(date +%m)" --arg wanif "$interface" '.interfaces[] | select (.id == $wanif) | .traffic.months[] | select(.date.month == ($month | tonumber)) | .rx + .tx')"
+	bandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.months[0] | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
 	
 	scalefactor=1
