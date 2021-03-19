@@ -2,8 +2,8 @@
 
 #################################################
 ##                                             ##
-##  vnstat and vnstati data usage statistics   ##
-##            for AsusWRT-Merlin               ##
+##             vnStat on Merlin                ##
+##        for AsusWRT-Merlin routers           ##
 ##                                             ##
 ##            Concept by dev_null              ##
 ##          Implemented by Jack Yaz            ##
@@ -1177,8 +1177,8 @@ ScriptHeader(){
 	printf "\\n"
 	printf "\\e[1m################################################\\e[0m\\n"
 	printf "\\e[1m##                                            ##\\e[0m\\n"
-	printf "\\e[1m##  vnstat and vnstati data usage statistics  ##\\e[0m\\n"
-	printf "\\e[1m##            for AsusWRT-Merlin              ##\\e[0m\\n"
+	printf "\\e[1m##            vnStat on Merlin                ##\\e[0m\\n"
+	printf "\\e[1m##       for AsusWRT-Merlin routers           ##\\e[0m\\n"
 	printf "\\e[1m##                                            ##\\e[0m\\n"
 	printf "\\e[1m##            %s on %-11s           ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "\\e[1m##                                            ## \\e[0m\\n"
