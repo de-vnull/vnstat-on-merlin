@@ -1634,6 +1634,7 @@ Menu_Edit(){
 			export TZ
 			Check_Bandwidth_Usage silent
 			Clear_Lock
+			printf "\\n"
 			PressEnter
 		fi
 	fi
