@@ -1,0 +1,16 @@
+### More information - vnStat-on-Merlin ###
+
+# MonthRotate
+
+* In a post, the author of vnStat provied more detail on the `MonthRotate` setting found in vnstat.conf:
+
+  "_If MonthRotate has a value of 1 then the month obviously changes on the first day of every month._ [Note: This is the default install setting, and is correct for Comcast customers.]
+  
+  "_If you give it, for example, a value of 10 then the month would change on the 10th day. However, from vnStat point of view, when you make that change the month can't already be the ongoing month or otherwise you aren't going to see any change until the next month. As an example, if in January I'd set MonthRotate to 10 then vnStat would continue showing January until it's the 10th of February._ 
+
+  "_If I'd change the value from 10 to 1 on the 3rd of February then I'd right away get vnStat to start counting for February. So increasing the MonthRotate value results in the change being visible only during the next month if the current day of month was equal or greater than the previous value. Decreasing the MonthRotate value results in the month to change if the new value is less or equal to the current day of month."_
+
+* Therefore, for this setting, changing the date during the month will typically not result in any observable change until that date in the __following month__.
+* The example in paragraph 2, the "month" reported will be the month at the start of the cycle, _January_, and will continue to report usage as _January_ until the _10th of February_ (calendar date). It will then report usage as _February_ until the _10th of March_ (calendar date).
+* The example in paragraph 3, the "month" reported will be the February, but some usage may have already been accounted for as _January_ and therefore the totals for _February_ may not be accurate.
+* You should consider the usage as the __start of the cycle__ rather than __end of cycle__, which may be more familiar billing- and accountability-wise.
