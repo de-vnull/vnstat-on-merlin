@@ -15,6 +15,6 @@
 * The example in paragraph 3, the "month" reported will be the February, but some usage may have already been accounted for as _January_ and therefore the totals for _February_ may not be accurate.
 * You should consider the usage as the __start of the cycle__ rather than __end of cycle__, which may be more familiar billing- and accountability-wise.
 
-# Data limits
+# Data-limits
 
 The information that is reported by vnStat (and therefore vnStat-on-Merlin) regarding data use should be considered a guide - an approximation of actual use. The application vnStat reports totals that may or may not be equivalent to those recorded by your provider, may start and/or stop on a different date, and/or be affected by variables such as hardware acceleration, router settings that bypass the TCP/IP stack, or even by scheduled reboots. The user must conduct proper due diligence to determine if the usage reported by vnStat aligns with your provider. The user assumes all responsibility for the use of the information provided by vnStat and vnStat-on-Merlin.
