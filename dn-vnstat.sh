@@ -408,6 +408,26 @@ Create_Symlinks(){
 }
 
 Conf_Exists(){
+	if [ -f "$SCRIPT_DIR/vnstat.conf" ]; then
+		if ! grep -q "^MaxBandwidth 1000"; then
+			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_DIR/vnstat.conf"
+		fi
+		if ! grep -q "^TimeSyncWait 10"; then
+			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
+		fi
+		if ! grep -q "^UpdateInterval 30"; then
+			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
+		fi
+		if ! grep -q "^UnitMode 0"; then
+			sed -i 's/^UnitMode.*$/UnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
+		fi
+		if ! grep -q "^RateUnitMode 0"; then
+			sed -i 's/^RateUnitMode.*$/RateUnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
+		fi
+	else
+		Update_File vnstat.conf
+	fi
+	
 	if [ -f "$SCRIPT_CONF" ]; then
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
@@ -682,6 +702,14 @@ Get_WAN_IFace(){
 }
 
 Generate_Images(){
+	Create_Dirs
+	Conf_Exists
+	Create_Symlinks
+	Auto_Startup create 2>/dev/null
+	Auto_Cron create 2>/dev/null
+	Auto_ServiceEvent create 2>/dev/null
+	Shortcut_Script create
+	Process_Upgrade
 	if [ ! -f /opt/lib/libjpeg.so ]; then
 		opkg update
 		opkg install libjpeg-turbo
@@ -701,6 +729,14 @@ Generate_Images(){
 }
 
 Generate_Stats(){
+	Create_Dirs
+	Conf_Exists
+	Create_Symlinks
+	Auto_Startup create 2>/dev/null
+	Auto_Cron create 2>/dev/null
+	Auto_ServiceEvent create 2>/dev/null
+	Shortcut_Script create
+	Process_Upgrade
 	TZ=$(cat /etc/TZ)
 	export TZ
 	printf "vnstats as of:\\n%s" "$(date)" > "$VNSTAT_OUTPUT_FILE"
@@ -1156,13 +1192,6 @@ Process_Upgrade(){
 	if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
 		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
 	fi
-	if [ ! -f "$SCRIPT_DIR/.znewdefaults" ]; then
-		Print_Output false "Setting recommended defaults for MaxBandwidth, TimeSyncWait and UpdateInterval"
-		sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_DIR/vnstat.conf"
-		sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
-		sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
-		touch "$SCRIPT_DIR/.znewdefaults"
-	fi
 	if [ ! -f /opt/lib/libjpeg.so ]; then
 		opkg update
 		opkg install libjpeg-turbo
@@ -1171,6 +1200,7 @@ Process_Upgrade(){
 		opkg update
 		opkg install jq
 	fi
+	rm -f "$SCRIPT_DIR/.znewdefaults"
 }
 
 ScriptHeader(){
