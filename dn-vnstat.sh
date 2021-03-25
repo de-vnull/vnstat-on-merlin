@@ -409,20 +409,32 @@ Create_Symlinks(){
 
 Conf_Exists(){
 	if [ -f "$SCRIPT_DIR/vnstat.conf" ]; then
+		restartvnstat="false"
 		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
 		fi
 		if ! grep -q "^TimeSyncWait 10" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
 		fi
 		if ! grep -q "^UpdateInterval 30" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
 		fi
 		if ! grep -q "^UnitMode 0" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^UnitMode.*$/UnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
 		fi
 		if ! grep -q "^RateUnitMode 0" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^RateUnitMode.*$/RateUnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
+		fi
+		if [ "$restartvnstat" = "true" ]; then
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			Generate_Images
+			Generate_Stats
+			Check_Bandwidth_Usage
 		fi
 	else
 		Update_File vnstat.conf
