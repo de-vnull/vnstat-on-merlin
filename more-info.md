@@ -18,3 +18,11 @@
 # Data-limits
 
 The information that is reported by vnStat (and therefore vnStat-on-Merlin) regarding data use should be considered a guide - an approximation of actual use. The application vnStat reports totals that may or may not be equivalent to those recorded by your provider, may start and/or stop on a different date, and/or be affected by variables such as hardware acceleration, router settings that bypass the TCP/IP stack, or even by scheduled reboots. The user must conduct proper due diligence to determine if the usage reported by vnStat aligns with your provider. The user assumes all responsibility for the use of the information provided by vnStat and vnStat-on-Merlin.
+
+# Units
+
+The units reported by vnstat 1.18, upon which vnStat-on-Merlin is based, calculate using IEC standards (KiB/MiB), which differs slightly from KB/MB typically used by ISPs (1.049 actually). Three is a setting in `vnstat.conf` (UnitMode) which allows the user to change the preferred unit, but no recalculation is performed. This has been confirmed directly with the author of vnStat.
+
+The calculations for `Data usage for current month` against the data limit is calculated in KB/MB as would typically be used by ISPs, by leveraging the underlying vnstat totals and multiplying accordingly. 
+
+Therefore a __divergence__ between the numbers reported in the `Data usage for current month` and those reported in the charts __is to be expected__. Newer versions of vnStat - not currently available in Entware, but requested - are expected to address this issue. 
