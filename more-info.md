@@ -21,7 +21,7 @@ The information that is reported by vnStat (and therefore vnStat-on-Merlin) rega
 
 # Units
 
-The units reported by vnstat 1.18, upon which vnStat-on-Merlin is based, calculate using IEC standards (KiB/MiB), which differs slightly from KB/MB typically used by ISPs (1.049 actually). Three is a setting in `vnstat.conf` (UnitMode) which allows the user to change the preferred unit, but no recalculation is performed. This has been confirmed directly with the author of vnStat.
+The units reported by vnstat 1.18, upon which vnStat-on-Merlin is based, calculate using IEC standards (KiB/MiB), which differs slightly from KB/MB typically used by ISPs (1.049 actually). There is a setting in `vnstat.conf` ("UnitMode") which allows the user to change the preferred unit, __but no recalculation is performed__. This has been confirmed verified by the author of vnStat (Teemu Toivola).
 
 The calculations for `Data usage for current month` against the data limit is calculated in KB/MB as would typically be used by ISPs, by leveraging the underlying vnstat totals and multiplying accordingly. 
 
