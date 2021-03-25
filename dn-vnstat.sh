@@ -409,19 +409,19 @@ Create_Symlinks(){
 
 Conf_Exists(){
 	if [ -f "$SCRIPT_DIR/vnstat.conf" ]; then
-		if ! grep -q "^MaxBandwidth 1000"; then
+		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_DIR/vnstat.conf"
 		fi
-		if ! grep -q "^TimeSyncWait 10"; then
+		if ! grep -q "^TimeSyncWait 10" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
 		fi
-		if ! grep -q "^UpdateInterval 30"; then
+		if ! grep -q "^UpdateInterval 30" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
 		fi
-		if ! grep -q "^UnitMode 0"; then
+		if ! grep -q "^UnitMode 0" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^UnitMode.*$/UnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
 		fi
-		if ! grep -q "^RateUnitMode 0"; then
+		if ! grep -q "^RateUnitMode 0" "$SCRIPT_DIR/vnstat.conf"; then
 			sed -i 's/^RateUnitMode.*$/RateUnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
 		fi
 	else
