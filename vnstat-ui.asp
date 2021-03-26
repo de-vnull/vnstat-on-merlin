@@ -126,6 +126,16 @@ function Format_DataAllowance(forminput){
 	}
 }
 
+function ScaleDataAllowance(){
+	if(document.form.dnvnstat_allowanceunit.value == "T"){
+		document.form.dnvnstat_dataallowance.value = document.form.dnvnstat_dataallowance.value*1 / 1000;
+	}
+	else if(document.form.dnvnstat_allowanceunit.value == "G"){
+		document.form.dnvnstat_dataallowance.value = document.form.dnvnstat_dataallowance.value*1 * 1000;
+	}
+	Format_DataAllowance(document.form.dnvnstat_dataallowance);
+}
+
 function GetCookie(cookiename,returntype){
 	var s;
 	if ((s = cookie.get("cookie_"+cookiename)) != null){
@@ -464,9 +474,9 @@ function reload(){
 <tr class="even" id="rowallowanceunit">
 <th width="40%">Unit for bandwidth allowance</th>
 <td class="settingvalue">
-<input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_g" class="input" value="G" checked>
+<input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_g" class="input" value="G" onchange="ScaleDataAllowance();" checked>
 <label for="dnvnstat_allowanceunit_g" id="label_allowanceunit_g" class="settingvalue">GB</label>
-<input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_t" class="input" value="T">
+<input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_t" class="input" value="T" onchange="ScaleDataAllowance();">
 <label for="dnvnstat_allowanceunit_t" id="label_allowanceunit_t" class="settingvalue">TB</label>
 </td>
 </tr>
