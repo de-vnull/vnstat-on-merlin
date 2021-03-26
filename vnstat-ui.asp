@@ -352,11 +352,7 @@ function initial(){
 	loadVnStatOutput();
 	get_conf_file();
 	AddEventHandlers();
-	var today = new Date();
-	var date = today.getFullYear()+'-'+("0" + (today.getMonth()+1)).slice(-2) +'-'+("0" + today.getDate()).slice(-2);
-	var time = ("0" + today.getHours()).slice(-2) + ":" + ("0" + today.getMinutes()).slice(-2) + ":" + ("0" + today.getSeconds()).slice(-2);
-	var dateTime = date+' '+time;
-	document.getElementById("statstitle").innerHTML = "This page last refreshed: " + dateTime;
+	$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: " + daterefeshed);
 	$j("#spandatausage").html(usagestring);
 	$j("#spanrealdatausage").html(realusagestring);
 	ShowHideDataUsageWarning(usagethreshold);
