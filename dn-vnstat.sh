@@ -1825,8 +1825,11 @@ case "$1" in
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
+			echo 'var vnstatstatus = "InProgress";' > /tmp/detect_vnstat.js
 			Generate_Images
 			Generate_Stats
+			Check_Bandwidth_Usage
+			echo 'var vnstatstatus = "Done";' > /tmp/detect_vnstat.js
 			exit 0
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
 			Conf_FromSettings
