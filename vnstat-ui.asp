@@ -532,12 +532,12 @@ function reload(){
 </td>
 </tr>
 <tr class="even" id="rowmonthrotate">
-<th width="40%">Start day of month for bandwidth allowance<br />
+<th width="40%">Start day for bandwidth allowance cycle<br />
 <a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#MonthRotate" target="_blank" style="color:#FFCC00;">More info</a>
 </th>
-<td class="settingvalue">
+<td class="settingvalue">Day&nbsp;
 <input autocomplete="off" type="text" maxlength="2" class="input_3_table removespacing" name="dnvnstat_monthrotate" value="1" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_AllowanceStartDay(this)" onblur="Validate_AllowanceStartDay(this)" />
-<span style="color:#FFCC00;">(between 1 and 31, default: 1)</span>
+&nbsp;of month&nbsp;<span style="color:#FFCC00;">(between 1 and 31, default: 1)</span>
 </td>
 </tr>
 <tr class="apply_gen" valign="top" height="35px">
