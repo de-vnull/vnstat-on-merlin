@@ -332,7 +332,7 @@ function UpdateText(){
 function UpdateImages(){
 	var images=["s","h","d","t","m"];
 	for(var index = 0; index < images.length; index++){
-		document.getElementById("img_"+images[index]).style.backgroundImage="url(/ext/dn-vnstat/images/vnstat_"+images[index]+".htm?cachebuster="+new Date().getTime()+")";
+		document.getElementById("img_"+images[index]).style.backgroundImage="url(/ext/dn-vnstat/images/.vnstat_"+images[index]+".htm?cachebuster="+new Date().getTime()+")";
 	}
 }
 
@@ -560,7 +560,7 @@ function reload(){
 </td>
 </tr>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_m" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_m.htm');">
+<div id="img_m" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_m.htm');">
 <img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_m.png" alt="Monthly"/>
 </div>
 </td></tr>
@@ -571,7 +571,7 @@ function reload(){
 <tr><td colspan="2">Daily usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_d" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_d.htm');">
+<div id="img_d" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_d.htm');">
 <img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_d.png" alt="Daily"/>
 </div>
 </td></tr>
@@ -582,7 +582,7 @@ function reload(){
 <tr><td colspan="2">Hourly usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_h" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_h.htm');">
+<div id="img_h" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_h.htm');">
 <img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_h.png" alt="Hourly" />
 </div>
 </td></tr>
@@ -593,7 +593,7 @@ function reload(){
 <tr><td colspan="2">Summary of all usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_s" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_s.htm');">
+<div id="img_s" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_s.htm');">
 <img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_s.png" alt="Summary" />
 </div>
 </td></tr>
@@ -604,7 +604,7 @@ function reload(){
 <tr><td colspan="2">Top 10 usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_t" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_t.htm');">
+<div id="img_t" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_t.htm');">
 <img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_t.png" alt="Top10" />
 </div>
 </td></tr>
