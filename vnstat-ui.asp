@@ -538,7 +538,7 @@ function reload(){
 <tr><td colspan="2">Monthly usage (click to expand/collapse)</td></tr>
 </thead>
 <tr>
-<th width="20%">Data usage for current month</th>
+<th width="20%">Data usage for current cycle</th>
 <td>
 <span id="spandatausage" style="color:#FFFFFF;"></span>
 <br />

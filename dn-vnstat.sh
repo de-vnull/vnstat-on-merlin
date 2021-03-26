@@ -1072,16 +1072,16 @@ Check_Bandwidth_Usage(){
 	realbandwidthusedg=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 	realscalefactor=$(($realscalefactor*1024))
 	realbandwidthusedt=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
-	realusagestring="vnStat will show your monthly usage as ${realbandwidthusedg}GiB / ${realbandwidthusedt}TiB"
+	realusagestring="vnStat will show your usage as ${realbandwidthusedg}GiB / ${realbandwidthusedt}TiB"
 	
 	bandwidthpercentage=""
 	usagestring=""
 	if [ "$(echo "$userLimit 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
 		bandwidthpercentage="N/A"
-		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this month"
+		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this cycle"
 	else
 		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
-		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check) of your ${userLimit}$(AllowanceUnit check) monthly allowance"
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check) of your ${userLimit}$(AllowanceUnit check) cycle allowance"
 	fi
 	
 	[ -z "$1" ] && Print_Output false "$usagestring"
@@ -1251,7 +1251,7 @@ MainMenu(){
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m$MENU_USAGE_ENABLED\\e[0m\\n\\n"
 	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
 	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$(AllowanceUnit check)"
-	printf "6.    Set start day of month for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
+	printf "6.    Set start day of cycle for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
 	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\n      %s\\e[0m\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')" "$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
