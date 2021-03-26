@@ -731,7 +731,7 @@ Generate_Images(){
 	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 	Print_Output false "vnstati updating stats for UI" "$PASS"
 	
-	outputs="s h d t m hs"   # what images to generate
+	outputs="s h d t m"   # what images to generate
 	
 	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
@@ -821,7 +821,7 @@ Generate_Email(){
 					echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\"";
 				} > /tmp/mail.txt
 				
-				outputs="s h d t m hs"
+				outputs="s h d t m"
 				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
 				echo "<p>$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
 				for output in $outputs; do
