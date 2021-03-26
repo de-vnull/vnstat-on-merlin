@@ -317,6 +317,13 @@ function ShowHideDataUsageWarning(showusage){
 	}
 }
 
+function UpdateText(){
+	$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: " + daterefeshed);
+	$j("#spandatausage").html(usagestring);
+	$j("#spanrealdatausage").html(realusagestring);
+	ShowHideDataUsageWarning(usagethreshold);
+}
+
 function AddEventHandlers(){
 	$j(".collapsible-jquery").off('click').on('click', function(){
 		$j(this).siblings().toggle("fast",function(){
@@ -352,10 +359,7 @@ function initial(){
 	loadVnStatOutput();
 	get_conf_file();
 	AddEventHandlers();
-	$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: " + daterefeshed);
-	$j("#spandatausage").html(usagestring);
-	$j("#spanrealdatausage").html(realusagestring);
-	ShowHideDataUsageWarning(usagethreshold);
+	UpdateText();
 }
 
 function reload(){
