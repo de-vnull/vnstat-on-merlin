@@ -200,14 +200,14 @@ function update_status(){
 
 function CheckUpdate(){
 	showhide("btnChkUpdate", false);
-	document.formScriptActions.action_script.value="start_dn-vnstatcheckupdate";
+	document.formScriptActions.action_script.value = "start_dn-vnstatcheckupdate";
 	document.formScriptActions.submit();
 	document.getElementById("imgChkUpdate").style.display = "";
 	setTimeout(update_status, 2000);
 }
 
 function DoUpdate(){
-	document.form.action_script.value = start_dn-vnstatdoupdate;
+	document.form.action_script.value = "start_dn-vnstatdoupdate";
 	document.form.action_wait.value = 10;
 	showLoading();
 	document.form.submit();
