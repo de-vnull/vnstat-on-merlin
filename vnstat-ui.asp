@@ -49,6 +49,11 @@ label.settingvalue {
 .usagehint {
   color: #FFFF00 !important;
 }
+
+div.vnstat {
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
 </style>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/jquery.js"></script>
 <script language="JavaScript" type="text/javascript" src="/state.js"></script>
@@ -324,6 +329,13 @@ function UpdateText(){
 	ShowHideDataUsageWarning(usagethreshold);
 }
 
+function UpdateImages(){
+	var images=["s","h","d","t","m"];
+	for(var index = 0; index < images.length; index++){
+		document.getElementById("img_"+images[index]).style.backgroundImage="url(/ext/dn-vnstat/images/vnstat_"+images[index]+".htm?cachebuster="+new Date().getTime()+")";
+	}
+}
+
 function UpdateStats(){
 	showhide("btnUpdateStats", false);
 	document.formScriptActions.action_script.value="start_dn-vnstat";
@@ -349,6 +361,7 @@ function update_vnstat(){
 			else if(vnstatstatus == "Done"){
 				reload_js('/ext/dn-vnstat/vnstatusage.js');
 				UpdateText();
+				UpdateImages();
 				document.getElementById("vnstatupdate_text").innerHTML = "";
 				showhide("imgVnStatUpdate", false);
 				showhide("vnstatupdate_text", false);
@@ -399,6 +412,7 @@ function initial(){
 	get_conf_file();
 	AddEventHandlers();
 	UpdateText();
+	UpdateImages();
 }
 
 function reload(){
@@ -445,7 +459,7 @@ function reload(){
 <div class="formfonttitle" id="scripttitle" style="text-align:center;margin-left:166px;">Vnstat on Merlin</div>
 <div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
-<div class="formfontdesc">vnstat and vnstati are Linux data usage reporting tools. <u><i>NOTE: A hard refresh may be required to get latest stats (CTRL+F5; CMD+R or equiv).</i></u></div>
+<div class="formfontdesc">vnstat and vnstati are Linux data usage reporting tools.</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons">
 <thead class="collapsible-jquery" id="scripttools">
 <tr><td colspan="2">Utilities (click to expand/collapse)</td></tr>
@@ -546,7 +560,9 @@ function reload(){
 </td>
 </tr>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/ext/dn-vnstat/images/vnstat_m.png" id="img_monthly" alt="Monthly"/></div>
+<div id="img_m" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_m.htm');">
+<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_m.png" alt="Monthly"/>
+</div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
@@ -555,7 +571,9 @@ function reload(){
 <tr><td colspan="2">Daily usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/ext/dn-vnstat/images/vnstat_d.png" id="img_daily" alt="Daily"/></div>
+<div id="img_d" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_d.htm');">
+<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_d.png" alt="Daily"/>
+</div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
@@ -564,7 +582,9 @@ function reload(){
 <tr><td colspan="2">Hourly usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/ext/dn-vnstat/images/vnstat_h.png" id="img_hourly" alt="Hourly" /></div>
+<div id="img_h" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_h.htm');">
+<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_h.png" alt="Hourly" />
+</div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
@@ -573,7 +593,9 @@ function reload(){
 <tr><td colspan="2">Summary of all usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/ext/dn-vnstat/images/vnstat_s.png" id="img_summary" alt="Summary" /></div>
+<div id="img_s" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_s.htm');">
+<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_s.png" alt="Summary" />
+</div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
@@ -582,7 +604,9 @@ function reload(){
 <tr><td colspan="2">Top 10 usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/ext/dn-vnstat/images/vnstat_t.png" id="img_top10" alt="Top10" /></div>
+<div id="img_t" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/vnstat_t.htm');">
+<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_t.png" alt="Top10" />
+</div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
