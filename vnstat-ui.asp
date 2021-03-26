@@ -415,7 +415,10 @@ function reload(){
 </td>
 </tr>
 <tr>
-<th width="20%">Data usage for current month</th>
+<th width="20%">Data usage for current month
+<br />
+<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units" target="_blank" style="color:#FFCC00;">More info</a>
+</th>
 <td>
 <span id="spandatausage" style="color:#FFFFFF;"></span>
 <br />
@@ -449,7 +452,10 @@ function reload(){
 </td>
 </tr>
 <tr class="even" id="rowdataallowance">
-<th width="40%">Bandwidth allowance for data usage warnings</th>
+<th width="40%">Bandwidth allowance for data usage warnings
+<br />
+<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Data-limits" target="_blank" style="color:#FFCC00;">More info</a>
+</th>
 <td class="settingvalue">
 <input autocomplete="off" type="text" maxlength="8" class="input_12_table removespacing" name="dnvnstat_dataallowance" value="1200.00" onkeypress="return validator.isNumberFloat(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this);Format_DataAllowance(this)" />
 &nbsp;<span id="spandefaultallowance" style="color:#FFCC00;">(0: unlimited)</span>
@@ -465,8 +471,9 @@ function reload(){
 </td>
 </tr>
 <tr class="even" id="rowmonthrotate">
-<th width="40%">Start day of month for bandwidth allowance<br >
-<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#MonthRotate" target="_blank" style="color:#FFCC00;">More info</a></th>
+<th width="40%">Start day of month for bandwidth allowance<br />
+<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#MonthRotate" target="_blank" style="color:#FFCC00;">More info</a>
+</th>
 <td class="settingvalue">
 <input autocomplete="off" type="text" maxlength="2" class="input_3_table removespacing" name="dnvnstat_monthrotate" value="1" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_AllowanceStartDay(this)" onblur="Validate_AllowanceStartDay(this)" />
 <span style="color:#FFCC00;">(between 1 and 31, default: 1)</span>
