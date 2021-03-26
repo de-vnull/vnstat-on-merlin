@@ -1129,6 +1129,7 @@ Check_Bandwidth_Usage(){
 	fi
 	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_DIR/.vnstatusage"
 	printf "var realusagestring = \"%s\";\\n" "$realusagestring" >> "$SCRIPT_DIR/.vnstatusage"
+	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_DIR/.vnstatusage"
 }
 
 vom_rio(){
@@ -1818,6 +1819,7 @@ case "$1" in
 		Reset_Allowance_Warnings
 		Generate_Images
 		Generate_Stats
+		Check_Bandwidth_Usage
 		Generate_Email daily
 		exit 0
 	;;
