@@ -348,6 +348,7 @@ function initial(){
 	var dateTime = date+' '+time;
 	document.getElementById("statstitle").innerHTML = "This page last refreshed: " + dateTime;
 	$j("#spandatausage").html(usagestring);
+	$j("#spanrealdatausage").html(realusagestring);
 	ShowHideDataUsageWarning(usagethreshold);
 }
 
@@ -417,6 +418,8 @@ function reload(){
 <th width="20%">Data usage for current month</th>
 <td>
 <span id="spandatausage" style="color:#FFFFFF;"></span>
+<br />
+<span id="spanrealdatausage" style="color:#FFFFFF;"></span>
 </td>
 </tr>
 </table>
@@ -462,7 +465,8 @@ function reload(){
 </td>
 </tr>
 <tr class="even" id="rowmonthrotate">
-<th width="40%">Start day of month for bandwidth allowance</th>
+<th width="40%">Start day of month for bandwidth allowance<br >
+<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#MonthRotate" target="_blank" style="color:#FFCC00;">More info</a></th>
 <td class="settingvalue">
 <input autocomplete="off" type="text" maxlength="2" class="input_3_table removespacing" name="dnvnstat_monthrotate" value="1" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_AllowanceStartDay(this)" onblur="Validate_AllowanceStartDay(this)" />
 <span style="color:#FFCC00;">(between 1 and 31, default: 1)</span>

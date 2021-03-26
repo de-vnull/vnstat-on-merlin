@@ -1035,13 +1035,8 @@ AllowanceUnit(){
 		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
 		;;
 		check)
-			UnitMode=$(grep "^UnitMode" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
 			ALLOWANCEUNIT=$(grep "ALLOWANCEUNIT" "$SCRIPT_CONF" | cut -f2 -d"=")
-			if [ "$UnitMode" = 0 ]; then
-				echo "${ALLOWANCEUNIT}iB"
-			elif [ "$UnitMode" = 1 ]; then
-				echo "${ALLOWANCEUNIT}B"
-			fi
+			echo "${ALLOWANCEUNIT}B"
 		;;
 	esac
 }
@@ -1064,20 +1059,20 @@ Check_Bandwidth_Usage(){
 	
 	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
-	bandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.months[0] | .rx + .tx')"
+	rawbandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.months[0] | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
 	
-	scalefactor=1
-	if ! echo "$(AllowanceUnit check)" | grep -q i ; then
-		scalefactor=1.024
-	fi
-	
-	unitfactor=1000000
+	scalefactor=$((1000*1000))
 	if echo "$(AllowanceUnit check)" | grep -q T; then
-		unitfactor=1000000000
+		scalefactor=$((1000*1000*1000))
 	fi
+	bandwidthused=$(echo "$rawbandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*1.024/$2);}')
 	
-	bandwidthused=$(echo "$bandwidthused $scalefactor $unitfactor" | awk '{printf("%.2f\n", $1*$2/$3);}')
+	realscalefactor=$((1024*1024))
+	realbandwidthusedg=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
+	realscalefactor=$(($realscalefactor*1024))
+	realbandwidthusedt=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
+	realusagestring="vnStat will show your monthly usage as ${realbandwidthusedg}GiB / ${realbandwidthusedt}TiB"
 	
 	bandwidthpercentage=""
 	usagestring=""
@@ -1086,10 +1081,11 @@ Check_Bandwidth_Usage(){
 		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this month"
 	else
 		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
-		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) monthly allowance"
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check) of your ${userLimit}$(AllowanceUnit check) monthly allowance"
 	fi
 	
 	[ -z "$1" ] && Print_Output false "$usagestring"
+	[ -z "$1" ] && Print_Output false "$realusagestring"
 	
 	if [ "$bandwidthpercentage" = "N/A" ] || [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
@@ -1132,6 +1128,7 @@ Check_Bandwidth_Usage(){
 		fi
 	fi
 	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_DIR/.vnstatusage"
+	printf "var realusagestring = \"%s\";\\n" "$realusagestring" >> "$SCRIPT_DIR/.vnstatusage"
 }
 
 vom_rio(){
@@ -1254,7 +1251,7 @@ MainMenu(){
 	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
 	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$(AllowanceUnit check)"
 	printf "6.    Set start day of month for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
-	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\e[0m\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\n      %s\\e[0m\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')" "$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
@@ -1265,7 +1262,7 @@ MainMenu(){
 	printf "\\n"
 	
 	while true; do
-		printf "Choose an option:    "
+		printf "Choose an option:  "
 		read -r menu
 		case "$menu" in
 			1)
@@ -1578,12 +1575,12 @@ Menu_AllowanceUnit(){
 		allowanceunit="$(AllowanceUnit check)"
 		if [ "$prevallowanceunit" != "$allowanceunit" ]; then
 			scalefactor=1000
-			if echo "$allowanceunit" | grep -q i ; then
-				scalefactor=1024
-			fi
+			#if echo "$allowanceunit" | grep -q i ; then
+			#	scalefactor=1024
+			#fi
 		
 			scaletype="none"
-			if [ "$(echo "$prevallowanceunit" | sed 's/i//')" != "$(AllowanceUnit check | sed 's/i//')" ]; then
+			if [ "$prevallowanceunit" != "$(AllowanceUnit check)" ]; then
 				if echo "$prevallowanceunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
 					scaletype="divide"
 				elif echo "$prevallowanceunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
@@ -1860,6 +1857,7 @@ case "$1" in
 		Shortcut_Script create
 		Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
+		Check_Bandwidth_Usage silent
 		exit 0
 	;;
 	postupdate)
@@ -1871,6 +1869,7 @@ case "$1" in
 		Auto_Cron create 2>/dev/null
 		Auto_ServiceEvent create 2>/dev/null
 		Shortcut_Script create
+		Check_Bandwidth_Usage silent
 		exit 0
 	;;
 	develop)
