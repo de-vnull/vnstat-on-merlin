@@ -546,7 +546,7 @@ function reload(){
 </td>
 </tr>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/dn-vnstat/images/vnstat_m.png" id="img_monthly" alt="Monthly"/></div>
+<div><img src="/ext/dn-vnstat/images/vnstat_m.png" id="img_monthly" alt="Monthly"/></div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
@@ -555,7 +555,7 @@ function reload(){
 <tr><td colspan="2">Daily usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/dn-vnstat/images/vnstat_d.png" id="img_daily" alt="Daily"/></div>
+<div><img src="/ext/dn-vnstat/images/vnstat_d.png" id="img_daily" alt="Daily"/></div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
@@ -564,7 +564,7 @@ function reload(){
 <tr><td colspan="2">Hourly usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/dn-vnstat/images/vnstat_h.png" id="img_hourly" alt="Hourly" /></div>
+<div><img src="/ext/dn-vnstat/images/vnstat_h.png" id="img_hourly" alt="Hourly" /></div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
@@ -573,7 +573,7 @@ function reload(){
 <tr><td colspan="2">Summary of all usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/dn-vnstat/images/vnstat_s.png" id="img_summary" alt="Summary" /></div>
+<div><img src="/ext/dn-vnstat/images/vnstat_s.png" id="img_summary" alt="Summary" /></div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
@@ -582,7 +582,7 @@ function reload(){
 <tr><td colspan="2">Top 10 usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div><img src="/user/dn-vnstat/images/vnstat_t.png" id="img_top10" alt="Top10" /></div>
+<div><img src="/ext/dn-vnstat/images/vnstat_t.png" id="img_top10" alt="Top10" /></div>
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
