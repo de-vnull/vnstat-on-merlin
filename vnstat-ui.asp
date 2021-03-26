@@ -324,6 +324,45 @@ function UpdateText(){
 	ShowHideDataUsageWarning(usagethreshold);
 }
 
+function UpdateStats(){
+	showhide("btnUpdateStats", false);
+	document.formScriptActions.action_script.value="start_dn-vnstat";
+	document.formScriptActions.submit();
+	document.getElementById("vnstatupdate_text").innerHTML = "Updating bandwidth usage and vnstat data...";
+	showhide("imgVnStatUpdate", true);
+	showhide("vnstatupdate_text", true);
+	setTimeout(update_vnstat, 2000);
+}
+
+function update_vnstat(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/detect_vnstat.js',
+		dataType: 'script',
+		timeout: 1000,
+		error: function(xhr){
+			setTimeout(update_vnstat, 1000);
+		},
+		success: function(){
+			if(vnstatstatus == "InProgress"){
+				setTimeout(update_vnstat, 1000);
+			}
+			else if(vnstatstatus == "Done"){
+				reload_js('/ext/dn-vnstat/vnstatusage.js');
+				UpdateText();
+				document.getElementById("vnstatupdate_text").innerHTML = "";
+				showhide("imgVnStatUpdate", false);
+				showhide("vnstatupdate_text", false);
+				showhide("btnUpdateStats", true);
+			}
+		}
+	});
+}
+
+function reload_js(src){
+	$j('script[src="' + src + '"]').remove();
+	$j('<script>').attr('src', src+'?cachebuster='+ new Date().getTime()).appendTo('head');
+}
+
 function AddEventHandlers(){
 	$j(".collapsible-jquery").off('click').on('click', function(){
 		$j(this).siblings().toggle("fast",function(){
@@ -425,14 +464,12 @@ function reload(){
 </td>
 </tr>
 <tr>
-<th width="20%">Data usage for current month
-<br />
-<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units" target="_blank" style="color:#FFCC00;">More info</a>
-</th>
+<th width="20%">Update stats</th>
 <td>
-<span id="spandatausage" style="color:#FFFFFF;"></span>
-<br />
-<span id="spanrealdatausage" style="color:#FFFFFF;"></span>
+<input type="button" onclick="UpdateStats();" value="Update stats" class="button_gen" name="btnUpdateStats" id="btnUpdateStats">
+<img id="imgVnStatUpdate" style="display:none;vertical-align:middle;" src="images/InternetScan.gif"/>
+&nbsp;&nbsp;&nbsp;
+<span id="vnstatupdate_text" style="display:none;"></span>
 </td>
 </tr>
 </table>
@@ -500,6 +537,14 @@ function reload(){
 <thead class="collapsible-jquery" id="thead_monthly">
 <tr><td colspan="2">Monthly usage (click to expand/collapse)</td></tr>
 </thead>
+<tr>
+<th width="20%">Data usage for current month</th>
+<td>
+<span id="spandatausage" style="color:#FFFFFF;"></span>
+<br />
+<span id="spanrealdatausage" style="color:#FFFFFF;font-style:italic;"></span>&nbsp;&nbsp;<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units" target="_blank" style="color:#FFCC00;">More info</a>
+</td>
+</tr>
 <tr><td colspan="2" align="center" style="padding: 0px;">
 <div><img src="/user/dn-vnstat/images/vnstat_m.png" id="img_monthly" alt="Monthly"/></div>
 </td></tr>
