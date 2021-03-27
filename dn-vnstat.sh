@@ -1827,9 +1827,11 @@ case "$1" in
 	generate)
 		NTP_Ready
 		Entware_Ready
+		Check_Lock
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
+		Clear_Lock
 		exit 0
 	;;
 	summary)
@@ -1844,11 +1846,13 @@ case "$1" in
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
+			Check_Lock webui
 			echo 'var vnstatstatus = "InProgress";' > /tmp/detect_vnstat.js
 			Generate_Images silent
 			Generate_Stats silent
 			Check_Bandwidth_Usage silent
 			echo 'var vnstatstatus = "Done";' > /tmp/detect_vnstat.js
+			Clear_Lock
 			exit 0
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
 			Conf_FromSettings
