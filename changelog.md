@@ -1,5 +1,17 @@
 # Changelog #
 
+## v 1.0.0 - TBD ###
+* R1
+* Many under the hood optimizations, including:
+  - Conversion code for unit change in CLI, scale data allowance when changing unit
+  - Updated defaults for vnstat.conf
+  - Programming improvements (using --json for monthly data calculation, grep improvements, jq filter for WAN)
+  - Make sure libjpeg-turbo is installed
+* Add current use % to HTML and plain-text email
+* General JY script enhancements (section headers, locks)
+* UI updates (re-ordering, remove requirement for hard refresh, javascript improvements)
+
+
 ### v 0.9.5 - 16-Mar-2021 ###
 * Beta 3/RC1
 * Many under the hood optimizations to improve reliability, accuracy and functionality based on Beta 2 feedback
