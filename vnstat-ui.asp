@@ -213,7 +213,7 @@ function CheckUpdate(){
 
 function DoUpdate(){
 	document.form.action_script.value = "start_dn-vnstatdoupdate";
-	document.form.action_wait.value = 10;
+	document.form.action_wait.value = 15;
 	showLoading();
 	document.form.submit();
 }
