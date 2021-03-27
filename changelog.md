@@ -1,15 +1,18 @@
 # Changelog #
 
 ## v 1.0.0 - TBD ###
-* R1
+* Release 1 (R1)
+* Fix calculation for data-limits to reflect GB/TB (base 1000) - vnStat measures in GiB/TiB (base 1024)
+  - More information: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units
+* Add current use % to HTML and plain-text daily email
+* General JY script enhancements (section headers, locks)
+* UI updates (re-ordering, remove requirement for hard refresh, javascript improvements)
 * Many under the hood optimizations, including:
   - Conversion code for unit change in CLI, scale data allowance when changing unit
   - Updated defaults for vnstat.conf
   - Programming improvements (using --json for monthly data calculation, grep improvements, jq filter for WAN)
   - Make sure libjpeg-turbo is installed
-* Add current use % to HTML and plain-text email
-* General JY script enhancements (section headers, locks)
-* UI updates (re-ordering, remove requirement for hard refresh, javascript improvements)
+
 
 
 ### v 0.9.5 - 16-Mar-2021 ###
