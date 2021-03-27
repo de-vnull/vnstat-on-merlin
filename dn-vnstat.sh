@@ -737,6 +737,7 @@ Generate_Images(){
 	
 	for output in $outputs; do
 		$VNSTATI_COMMAND -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
+		sleep 1
 		cp "$IMAGE_OUTPUT_DIR/vnstat_$output.png" "$IMAGE_OUTPUT_DIR/.vnstat_$output.htm"
 		rm -f "$IMAGE_OUTPUT_DIR/vnstat_$output.htm"
 	done
