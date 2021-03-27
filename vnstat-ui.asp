@@ -94,7 +94,7 @@ function Validate_AllowanceStartDay(forminput){
 	var inputname = forminput.name;
 	var inputvalue = forminput.value*1;
 	
-	if(inputvalue > 31 || inputvalue < 1){
+	if(inputvalue > 28 || inputvalue < 1){
 		$j(forminput).addClass("invalid");
 		return false;
 	}
@@ -539,7 +539,7 @@ function reload(){
 </th>
 <td class="settingvalue">Day&nbsp;
 <input autocomplete="off" type="text" maxlength="2" class="input_3_table removespacing" name="dnvnstat_monthrotate" value="1" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_AllowanceStartDay(this)" onblur="Validate_AllowanceStartDay(this)" />
-&nbsp;of month&nbsp;<span style="color:#FFCC00;">(between 1 and 31, default: 1)</span>
+&nbsp;of month&nbsp;<span style="color:#FFCC00;">(between 1 and 28, default: 1)</span>
 </td>
 </tr>
 <tr class="apply_gen" valign="top" height="35px">

@@ -1613,17 +1613,17 @@ Menu_AllowanceStartDay(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance\\nresets (1-31):\\e[0m  "
+		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance\\nresets (1-28):\\e[0m  "
 		read -r startday
 		
 		if [ "$startday" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Number "" "$startday" silent; then
-			printf "\\n\\e[31mPlease enter a valid number (1-31)\\e[0m\\n"
+			printf "\\n\\e[31mPlease enter a valid number (1-28)\\e[0m\\n"
 		else
-			if [ "$startday" -lt 1 ] || [ "$startday" -gt 31 ]; then
-				printf "\\n\\e[31mPlease enter a number between 1 and 31\\e[0m\\n"
+			if [ "$startday" -lt 1 ] || [ "$startday" -gt 28 ]; then
+				printf "\\n\\e[31mPlease enter a number between 1 and 28\\e[0m\\n"
 			else
 				allowancestartday="$startday"
 				printf "\\n"
