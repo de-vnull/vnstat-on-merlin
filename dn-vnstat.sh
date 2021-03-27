@@ -728,7 +728,8 @@ Generate_Images(){
 	fi
 	TZ=$(cat /etc/TZ)
 	export TZ
-	Print_Output false "vnstati updating stats for UI" "$PASS"
+	
+	[ -z "$1" ] && Print_Output false "vnstati updating stats for UI" "$PASS"
 	
 	outputs="s h d t m"   # what images to generate
 	
@@ -759,9 +760,9 @@ Generate_Stats(){
 		$VNSTAT_COMMAND -w;
 		$VNSTAT_COMMAND -d;
 	} >> "$VNSTAT_OUTPUT_FILE"
-	cat "$VNSTAT_OUTPUT_FILE"
-	printf "\\n"
-	Print_Output false "vnstat_totals summary generated" "$PASS"
+	[ -z "$1" ] && cat "$VNSTAT_OUTPUT_FILE"
+	[ -z "$1" ] && printf "\\n"
+	[ -z "$1" ] && Print_Output false "vnstat_totals summary generated" "$PASS"
 }
 
 Generate_Email(){
@@ -1810,27 +1811,27 @@ case "$1" in
 	generate)
 		NTP_Ready
 		Entware_Ready
-		Generate_Images
-		Generate_Stats
-		Check_Bandwidth_Usage
+		Generate_Images silent
+		Generate_Stats silent
+		Check_Bandwidth_Usage silent
 		exit 0
 	;;
 	summary)
 		NTP_Ready
 		Entware_Ready
 		Reset_Allowance_Warnings
-		Generate_Images
-		Generate_Stats
-		Check_Bandwidth_Usage
+		Generate_Images silent
+		Generate_Stats silent
+		Check_Bandwidth_Usage silent
 		Generate_Email daily
 		exit 0
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
 			echo 'var vnstatstatus = "InProgress";' > /tmp/detect_vnstat.js
-			Generate_Images
-			Generate_Stats
-			Check_Bandwidth_Usage
+			Generate_Images silent
+			Generate_Stats silent
+			Check_Bandwidth_Usage silent
 			echo 'var vnstatstatus = "Done";' > /tmp/detect_vnstat.js
 			exit 0
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
@@ -1864,6 +1865,8 @@ case "$1" in
 		Shortcut_Script create
 		Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
+		Generate_Images silent
+		Generate_Stats silent
 		Check_Bandwidth_Usage silent
 		exit 0
 	;;
@@ -1876,6 +1879,8 @@ case "$1" in
 		Auto_Cron create 2>/dev/null
 		Auto_ServiceEvent create 2>/dev/null
 		Shortcut_Script create
+		Generate_Images silent
+		Generate_Stats silent
 		Check_Bandwidth_Usage silent
 		exit 0
 	;;
