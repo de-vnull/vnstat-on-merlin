@@ -1468,8 +1468,8 @@ Menu_Install(){
 	Process_Upgrade
 	
 	if [ -n "$(pidof vnstatd)" ];then
-		Print_Output false "Sleeping for 30s before generating initial stats" "$WARN"
-		sleep 30
+		Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
+		sleep 60
 		Generate_Stats
 		Generate_Images
 	else
