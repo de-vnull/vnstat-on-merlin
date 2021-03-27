@@ -188,6 +188,7 @@ Update_Version(){
 					chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
 					Set_Version_Custom_Settings local "$serverver"
 					Set_Version_Custom_Settings server "$serverver"
+					Print_Output false "Refreshing vnstat stats..."
 					Generate_Images silent
 					Generate_Stats silent
 					Check_Bandwidth_Usage silent
@@ -221,6 +222,7 @@ Update_Version(){
 		Set_Version_Custom_Settings server "$serverver"
 		Clear_Lock
 		if [ -z "$2" ]; then
+			Print_Output false "Refreshing vnstat stats..."
 			Generate_Images silent
 			Generate_Stats silent
 			Check_Bandwidth_Usage silent
