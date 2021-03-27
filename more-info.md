@@ -2,7 +2,7 @@
 
 # MonthRotate
 
-* In a post, the author of vnStat provied more detail on the `MonthRotate` setting found in vnstat.conf:
+* In a post, the author of vnStat (Teemu Toivola) provied more detail on the `MonthRotate` setting found in vnstat.conf:
 
   "_If MonthRotate has a value of 1 then the month obviously changes on the first day of every month._ [Note: This is the default install setting, and is correct for Comcast customers.]
   
@@ -14,6 +14,7 @@
 * The example in paragraph 2, the "month" reported will be the month at the start of the cycle, _January_, and will continue to report usage as _January_ until the _10th of February_ (calendar date). It will then report usage as _February_ until the _10th of March_ (calendar date).
 * The example in paragraph 3, the "month" reported will be the February, but some usage may have already been accounted for as _January_ and therefore the totals for _February_ may not be accurate.
 * You should consider the usage as the __start of the cycle__ rather than __end of cycle__, which may be more familiar billing- and accountability-wise.
+* In the United States, Comcast/Xfinity begins measurement on the 1st of the month in all markets, so no adjustment from the default is required.
 
 # Data-limits
 
@@ -25,4 +26,3 @@ The units reported by vnstat 1.18, upon which vnStat-on-Merlin is based, calcula
 
 The calculations for `Data usage for current month` against the data limit is calculated in KB/MB as would typically be used by ISPs, by leveraging the underlying vnstat totals and multiplying accordingly. 
 
-Therefore a __divergence__ between the numbers reported in the `Data usage for current month` and those reported in the charts __is to be expected__. Newer versions of vnStat - not currently available in Entware, but requested - are expected to address this issue. 
