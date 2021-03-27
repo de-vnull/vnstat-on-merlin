@@ -1478,8 +1478,9 @@ Menu_Install(){
 	if [ -n "$(pidof vnstatd)" ];then
 		Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
 		sleep 60
-		Generate_Stats
 		Generate_Images
+		Generate_Stats
+		Check_Bandwidth_Usage silent
 	else
 		Print_Output false "vnstatd not running, please check system log" "$ERR"
 	fi
@@ -1802,6 +1803,13 @@ if [ -z "$1" ]; then
 	Shortcut_Script create
 	Process_Upgrade
 	ScriptHeader
+	if [ ! -f "$IMAGE_OUTPUT_DIR/.vnstat_m.htm" ]; then
+		Print_Output false "Refreshing vnstat stats..."
+		Generate_Images silent
+		Generate_Stats silent
+		Check_Bandwidth_Usage silent
+		ScriptHeader
+	fi
 	MainMenu
 	exit 0
 fi
