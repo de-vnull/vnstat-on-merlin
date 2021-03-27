@@ -4,6 +4,8 @@
 
 The information that is reported by vnStat (and therefore vnStat-on-Merlin) regarding data use should be considered a guide - an approximation of actual use. The application vnStat reports totals that may or may not be equivalent to those recorded by your provider, may start and/or stop on a different date, and/or be affected by variables such as hardware acceleration, router settings that bypass the TCP/IP stack, or even by scheduled reboots. The user must conduct proper due diligence to determine if the usage reported by vnStat aligns with your provider. The user assumes all responsibility for the use of the information provided by vnStat and vnStat-on-Merlin.
 
+* This number should be entered in gigabytes (GB) or TB (terabytes) - base 1000. See `Units` below.
+
 # Units
 
 The units reported by vnstat 1.18, upon which vnStat-on-Merlin (beta 2 through R1) is based, calculate using IEC standards (MiB/GiB) - base 1024 -, which differs slightly from GB/TB typically used by ISPs, which is base 1000. There is a setting in `vnstat.conf` ("UnitMode") which allows the user to change the preferred unit, __but no recalculation is performed__. This has been confirmed verified by the author of vnStat (Teemu Toivola).
