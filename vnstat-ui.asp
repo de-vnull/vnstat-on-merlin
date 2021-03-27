@@ -363,6 +363,7 @@ function update_vnstat(){
 				reload_js('/ext/dn-vnstat/vnstatusage.js');
 				UpdateText();
 				UpdateImages();
+				loadVnStatOutput();
 				document.getElementById("vnstatupdate_text").innerHTML = "";
 				showhide("imgVnStatUpdate", false);
 				showhide("vnstatupdate_text", false);
@@ -409,11 +410,11 @@ function initial(){
 	LoadCustomSettings();
 	ScriptUpdateLayout();
 	show_menu();
-	loadVnStatOutput();
 	get_conf_file();
 	AddEventHandlers();
 	UpdateText();
 	UpdateImages();
+	loadVnStatOutput();
 }
 
 function reload(){
