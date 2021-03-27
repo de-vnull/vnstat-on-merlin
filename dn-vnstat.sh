@@ -728,7 +728,6 @@ Generate_Images(){
 	fi
 	TZ=$(cat /etc/TZ)
 	export TZ
-	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
 	Print_Output false "vnstati updating stats for UI" "$PASS"
 	
 	outputs="s h d t m"   # what images to generate
