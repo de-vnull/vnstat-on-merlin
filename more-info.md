@@ -6,9 +6,9 @@ The information that is reported by vnStat (and therefore vnStat-on-Merlin) rega
 
 # Units
 
-The units reported by vnstat 1.18, upon which vnStat-on-Merlin is based, calculate using IEC standards (KiB/MiB), which differs slightly from KB/MB typically used by ISPs (1.049 actually). There is a setting in `vnstat.conf` ("UnitMode") which allows the user to change the preferred unit, __but no recalculation is performed__. This has been confirmed verified by the author of vnStat (Teemu Toivola).
+The units reported by vnstat 1.18, upon which vnStat-on-Merlin (beta 2 through R1) is based, calculate using IEC standards (MiB/GiB) - base 1024 -, which differs slightly from GB/TB typically used by ISPs, which is base 1000. There is a setting in `vnstat.conf` ("UnitMode") which allows the user to change the preferred unit, __but no recalculation is performed__. This has been confirmed verified by the author of vnStat (Teemu Toivola).
 
-The calculations for `Data usage for current month` against the data limit is calculated in KB/MB as would typically be used by ISPs, by leveraging the underlying vnstat totals and multiplying accordingly. 
+The `Bandwidth allowance` should be entered as __GB/TB__, and the calculations for `Data usage for current month` against the data limit is calculated in GB/TB (base 1000), by leveraging the underlying vnstat totals and multiplying accordingly. 
 
 # MonthRotate
 
