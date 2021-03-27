@@ -4,7 +4,7 @@
 
 The information that is reported by vnStat (and therefore vnStat-on-Merlin) regarding data use should be considered a guide - an approximation of actual use. The application vnStat reports totals that may or may not be equivalent to those recorded by your provider, may start and/or stop on a different date, and/or be affected by variables such as hardware acceleration, router settings that bypass the TCP/IP stack, or even by scheduled reboots. The user must conduct proper due diligence to determine if the usage reported by vnStat aligns with your provider. The user assumes all responsibility for the use of the information provided by vnStat and vnStat-on-Merlin.
 
-* This number should be entered in gigabytes (GB) or TB (terabytes) - base 1000. See `Units` below.
+* This number should be entered in gigabytes (GB) or terabytes (TB) - base 1000. See `Units` below.
 
 # Units
 
