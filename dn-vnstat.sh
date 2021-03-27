@@ -188,6 +188,9 @@ Update_Version(){
 					chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
 					Set_Version_Custom_Settings local "$serverver"
 					Set_Version_Custom_Settings server "$serverver"
+					Generate_Images silent
+					Generate_Stats silent
+					Check_Bandwidth_Usage silent
 					Clear_Lock
 					PressEnter
 					exec "$0"
@@ -218,6 +221,9 @@ Update_Version(){
 		Set_Version_Custom_Settings server "$serverver"
 		Clear_Lock
 		if [ -z "$2" ]; then
+			Generate_Images silent
+			Generate_Stats silent
+			Check_Bandwidth_Usage silent
 			PressEnter
 			exec "$0"
 		elif [ "$2" = "unattended" ]; then
