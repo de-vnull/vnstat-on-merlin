@@ -282,7 +282,7 @@ Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 </td>
 </tr>
 </table>
-<p align="right"><small><i>dev_null - https://github.com/de-vnull/vnstat-on-merlin</i></small></td>
+<p align="right"><small><i>dev_null & Jack Yaz - https://github.com/de-vnull/vnstat-on-merlin</i></small></td>
 </tr>
 </tbody>
 </table>
