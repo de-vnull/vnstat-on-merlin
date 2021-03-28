@@ -881,7 +881,8 @@ Generate_Email(){
 				echo "Date: $(date -R)";
 				echo "";
 			} > /tmp/mail.txt
-			printf "%s" "$usagestring" >>/tmp/mail.txt
+			printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')" >> /tmp/mail.txt
+			printf "%s\\n\\n" "$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')" >> /tmp/mail.txt
 		fi
 		
 		#Send Email
