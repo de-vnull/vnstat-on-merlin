@@ -762,7 +762,7 @@ Generate_Stats(){
 	Process_Upgrade
 	TZ=$(cat /etc/TZ)
 	export TZ
-	printf "vnstats as of: %s\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
+	printf "vnstats as of: %s\\n\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	{
 		$VNSTAT_COMMAND -m;
 		$VNSTAT_COMMAND -w;
