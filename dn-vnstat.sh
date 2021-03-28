@@ -702,7 +702,7 @@ Check_Requirements(){
 		opkg update
 		opkg install vnstat
 		opkg install vnstati
-		opkg install libjpeg-turbo
+		opkg install libjpeg-turbo >/dev/null 2>&1
 		opkg install jq
 		rm -f /opt/etc/vnstat.conf
 		return 0
@@ -731,8 +731,8 @@ Generate_Images(){
 	Shortcut_Script create
 	Process_Upgrade
 	if [ ! -f /opt/lib/libjpeg.so ]; then
-		opkg update
-		opkg install libjpeg-turbo
+		opkg update >/dev/null 2>&1
+		opkg install libjpeg-turbo >/dev/null 2>&1
 	fi
 	TZ=$(cat /etc/TZ)
 	export TZ
@@ -1214,8 +1214,8 @@ Process_Upgrade(){
 		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
 	fi
 	if [ ! -f /opt/lib/libjpeg.so ]; then
-		opkg update
-		opkg install libjpeg-turbo
+		opkg update >/dev/null 2>&1
+		opkg install libjpeg-turbo >/dev/null 2>&1
 	fi
 	if [ ! -f /opt/bin/jq ]; then
 		opkg update
