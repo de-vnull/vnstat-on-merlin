@@ -2,8 +2,8 @@
 
 #################################################
 ##                                             ##
-##  vnstat and vnstati data usage statistics   ##
-##            for AsusWRT-Merlin               ##
+##             vnStat on Merlin                ##
+##        for AsusWRT-Merlin routers           ##
 ##                                             ##
 ##            Concept by dev_null              ##
 ##          Implemented by Jack Yaz            ##
@@ -20,7 +20,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v0.9.5"
+readonly SCRIPT_VERSION="v1.0.0"
 SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -179,6 +179,7 @@ Update_Version(){
 			read -r confirm
 			case "$confirm" in
 				y|Y)
+					printf "\\n"
 					Update_File shared-jy.tar.gz
 					Update_File vnstat-ui.asp
 					Update_File vnstat.conf
@@ -187,6 +188,10 @@ Update_Version(){
 					chmod 0755 "/jffs/scripts/$SCRIPT_NAME"
 					Set_Version_Custom_Settings local "$serverver"
 					Set_Version_Custom_Settings server "$serverver"
+					Print_Output false "Refreshing vnstat stats..."
+					Generate_Images silent
+					Generate_Stats silent
+					Check_Bandwidth_Usage silent
 					Clear_Lock
 					PressEnter
 					exec "$0"
@@ -217,6 +222,10 @@ Update_Version(){
 		Set_Version_Custom_Settings server "$serverver"
 		Clear_Lock
 		if [ -z "$2" ]; then
+			Print_Output false "Refreshing vnstat stats..."
+			Generate_Images silent
+			Generate_Stats silent
+			Check_Bandwidth_Usage silent
 			PressEnter
 			exec "$0"
 		elif [ "$2" = "unattended" ]; then
@@ -354,7 +363,6 @@ Conf_FromSettings(){
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
-			$VNSTAT_COMMAND -u
 			
 			if [ "$warningresetrequired" = "true" ]; then
 				Reset_Allowance_Warnings force
@@ -408,6 +416,38 @@ Create_Symlinks(){
 }
 
 Conf_Exists(){
+	if [ -f "$SCRIPT_DIR/vnstat.conf" ]; then
+		restartvnstat="false"
+		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
+		fi
+		if ! grep -q "^TimeSyncWait 10" "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
+		fi
+		if ! grep -q "^UpdateInterval 30" "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
+		fi
+		if ! grep -q "^UnitMode 0" "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^UnitMode.*$/UnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
+		fi
+		if ! grep -q "^RateUnitMode 0" "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^RateUnitMode.*$/RateUnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
+		fi
+		if [ "$restartvnstat" = "true" ]; then
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			Generate_Images
+			Generate_Stats
+			Check_Bandwidth_Usage
+		fi
+	else
+		Update_File vnstat.conf
+	fi
+	
 	if [ -f "$SCRIPT_CONF" ]; then
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
@@ -662,6 +702,8 @@ Check_Requirements(){
 		opkg update
 		opkg install vnstat
 		opkg install vnstati
+		opkg install libjpeg-turbo >/dev/null 2>&1
+		opkg install jq
 		rm -f /opt/etc/vnstat.conf
 		return 0
 	else
@@ -680,34 +722,55 @@ Get_WAN_IFace(){
 }
 
 Generate_Images(){
+	Create_Dirs
+	Conf_Exists
+	Create_Symlinks
+	Auto_Startup create 2>/dev/null
+	Auto_Cron create 2>/dev/null
+	Auto_ServiceEvent create 2>/dev/null
+	Shortcut_Script create
+	Process_Upgrade
+	if [ ! -f /opt/lib/libjpeg.so ]; then
+		opkg update >/dev/null 2>&1
+		opkg install libjpeg-turbo >/dev/null 2>&1
+	fi
 	TZ=$(cat /etc/TZ)
 	export TZ
-	# Adapted from http://code.google.com/p/x-wrt/source/browse/trunk/package/webif/files/www/cgi-bin/webif/graphs-vnstat.sh
-	Print_Output false "vnstati updating stats for UI" "$PASS"
-	$VNSTAT_COMMAND -u
 	
-	outputs="s h d t m hs"   # what images to generate
+	[ -z "$1" ] && Print_Output false "vnstati updating stats for UI" "$PASS"
 	
-	interface="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	outputs="s h d t m"   # what images to generate
+	
+	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
 	for output in $outputs; do
 		$VNSTATI_COMMAND -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
+		sleep 1
+		cp "$IMAGE_OUTPUT_DIR/vnstat_$output.png" "$IMAGE_OUTPUT_DIR/.vnstat_$output.htm"
+		rm -f "$IMAGE_OUTPUT_DIR/vnstat_$output.htm"
 	done
 }
 
 Generate_Stats(){
+	Create_Dirs
+	Conf_Exists
+	Create_Symlinks
+	Auto_Startup create 2>/dev/null
+	Auto_Cron create 2>/dev/null
+	Auto_ServiceEvent create 2>/dev/null
+	Shortcut_Script create
+	Process_Upgrade
 	TZ=$(cat /etc/TZ)
 	export TZ
 	printf "vnstats as of:\\n%s" "$(date)" > "$VNSTAT_OUTPUT_FILE"
-	$VNSTAT_COMMAND -u
 	{
 		$VNSTAT_COMMAND -m;
 		$VNSTAT_COMMAND -w;
 		$VNSTAT_COMMAND -d;
 	} >> "$VNSTAT_OUTPUT_FILE"
-	cat "$VNSTAT_OUTPUT_FILE"
-	printf "\\n"
-	Print_Output false "vnstat_totals summary generated" "$PASS"
+	[ -z "$1" ] && cat "$VNSTAT_OUTPUT_FILE"
+	[ -z "$1" ] && printf "\\n"
+	[ -z "$1" ] && Print_Output false "vnstat_totals summary generated" "$PASS"
 }
 
 Generate_Email(){
@@ -748,6 +811,7 @@ Generate_Email(){
 					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "";
+					printf "%s\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')";
 				} > /tmp/mail.txt
 				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
 			elif [ "$(DailyEmail check)" = "html" ]; then
@@ -768,8 +832,9 @@ Generate_Email(){
 					echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\"";
 				} > /tmp/mail.txt
 				
-				outputs="s h d t m hs"
+				outputs="s h d t m"
 				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
+				echo "<p>$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
 				for output in $outputs; do
 					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
 				done
@@ -965,12 +1030,11 @@ AllowanceStartDay(){
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
-			$VNSTAT_COMMAND -u
 			Reset_Allowance_Warnings force
 			Check_Bandwidth_Usage
 		;;
 		check)
-			MonthRotate=$(grep "MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			MonthRotate=$(grep "^MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
 			echo "$MonthRotate"
 		;;
 	esac
@@ -982,13 +1046,8 @@ AllowanceUnit(){
 		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
 		;;
 		check)
-			UnitMode=$(grep "^UnitMode" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
 			ALLOWANCEUNIT=$(grep "ALLOWANCEUNIT" "$SCRIPT_CONF" | cut -f2 -d"=")
-			if [ "$UnitMode" = 0 ]; then
-				echo "${ALLOWANCEUNIT}iB"
-			elif [ "$UnitMode" = 1 ]; then
-				echo "${ALLOWANCEUNIT}B"
-			fi
+			echo "${ALLOWANCEUNIT}B"
 		;;
 	esac
 }
@@ -1002,53 +1061,42 @@ Reset_Allowance_Warnings(){
 }
 
 Check_Bandwidth_Usage(){
+	if [ ! -f /opt/bin/jq ]; then
+		opkg update
+		opkg install jq
+	fi
 	TZ=$(cat /etc/TZ)
 	export TZ
-	$VNSTAT_COMMAND -u
-	bandwidthused="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $1}')"
-	bandwidthunit="$($VNSTAT_COMMAND -m | tail -n 3 | head -n 1 | cut -d "|" -f3 | awk '{print $2}')"
+	
+	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	
+	rawbandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.months[0] | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
-	if [ "$bandwidthunit" != "GiB" ] && [ "$bandwidthunit" != "GB" ] && [ "$bandwidthunit" != "TiB" ] && [ "$bandwidthunit" != "TB" ]; then
-		[ -z "$1" ] && Print_Output false "Not enough data gathered by vnstat" "$WARN"
-		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
-		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
-		return 1
-	fi
 	
-	scalefactor=1000
-	if echo "$bandwidthunit" | grep -q i ; then
-		scalefactor=1024
+	scalefactor=$((1000*1000))
+	if echo "$(AllowanceUnit check)" | grep -q T; then
+		scalefactor=$((1000*1000*1000))
 	fi
+	bandwidthused=$(echo "$rawbandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*1.024/$2);}')
 	
-	scaletype="none"
-	if [ "$(echo "$bandwidthunit" | sed 's/i//')" != "$(AllowanceUnit check | sed 's/i//')" ]; then
-		if echo "$bandwidthunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
-			scaletype="divide"
-		elif echo "$bandwidthunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
-			scaletype="multiply"
-		fi
-	fi
-	
-	if [ "$scaletype" != "none" ]; then
-		if [ "$scaletype" = "multiply" ]; then
-			bandwidthused=$(echo "$bandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
-		elif [ "$scaletype" = "divide" ]; then
-			bandwidthused=$(echo "$bandwidthused $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
-		fi
-	fi
+	realscalefactor=$((1024*1024))
+	realbandwidthusedg=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
+	realscalefactor=$(($realscalefactor*1024))
+	realbandwidthusedt=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
+	realusagestring="vnStat will show your usage as ${realbandwidthusedg}GiB / ${realbandwidthusedt}TiB"
 	
 	bandwidthpercentage=""
 	usagestring=""
 	if [ "$(echo "$userLimit 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
 		bandwidthpercentage="N/A"
-		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this month"
+		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this cycle"
 	else
 		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
-		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) monthly allowance"
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check) of your ${userLimit}$(AllowanceUnit check) cycle allowance"
 	fi
 	
 	[ -z "$1" ] && Print_Output false "$usagestring"
+	[ -z "$1" ] && Print_Output false "$realusagestring"
 	
 	if [ "$bandwidthpercentage" = "N/A" ] || [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
@@ -1091,6 +1139,8 @@ Check_Bandwidth_Usage(){
 		fi
 	fi
 	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_DIR/.vnstatusage"
+	printf "var realusagestring = \"%s\";\\n" "$realusagestring" >> "$SCRIPT_DIR/.vnstatusage"
+	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_DIR/.vnstatusage"
 }
 
 vom_rio(){
@@ -1163,6 +1213,15 @@ Process_Upgrade(){
 	if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
 		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
 	fi
+	if [ ! -f /opt/lib/libjpeg.so ]; then
+		opkg update >/dev/null 2>&1
+		opkg install libjpeg-turbo >/dev/null 2>&1
+	fi
+	if [ ! -f /opt/bin/jq ]; then
+		opkg update
+		opkg install jq
+	fi
+	rm -f "$SCRIPT_DIR/.znewdefaults"
 }
 
 ScriptHeader(){
@@ -1170,8 +1229,8 @@ ScriptHeader(){
 	printf "\\n"
 	printf "\\e[1m################################################\\e[0m\\n"
 	printf "\\e[1m##                                            ##\\e[0m\\n"
-	printf "\\e[1m##  vnstat and vnstati data usage statistics  ##\\e[0m\\n"
-	printf "\\e[1m##            for AsusWRT-Merlin              ##\\e[0m\\n"
+	printf "\\e[1m##            vnStat on Merlin                ##\\e[0m\\n"
+	printf "\\e[1m##       for AsusWRT-Merlin routers           ##\\e[0m\\n"
 	printf "\\e[1m##                                            ##\\e[0m\\n"
 	printf "\\e[1m##            %s on %-11s           ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
 	printf "\\e[1m##                                            ## \\e[0m\\n"
@@ -1203,8 +1262,8 @@ MainMenu(){
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m$MENU_USAGE_ENABLED\\e[0m\\n\\n"
 	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
 	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$(AllowanceUnit check)"
-	printf "6.    Set start day of month for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
-	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\e[0m\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "6.    Set start day of cycle for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
+	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\n      %s\\e[0m\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')" "$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
@@ -1215,7 +1274,7 @@ MainMenu(){
 	printf "\\n"
 	
 	while true; do
-		printf "Choose an option:    "
+		printf "Choose an option:  "
 		read -r menu
 		case "$menu" in
 			1)
@@ -1417,10 +1476,11 @@ Menu_Install(){
 	Process_Upgrade
 	
 	if [ -n "$(pidof vnstatd)" ];then
-		Print_Output false "Sleeping for 5s before generating initial stats" "$WARN"
-		sleep 5
-		Generate_Stats
+		Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
+		sleep 60
 		Generate_Images
+		Generate_Stats
+		Check_Bandwidth_Usage silent
 	else
 		Print_Output false "vnstatd not running, please check system log" "$ERR"
 	fi
@@ -1525,32 +1585,32 @@ Menu_AllowanceUnit(){
 	if [ "$exitmenu" != "exit" ]; then
 		AllowanceUnit update "$allowanceunit"
 		
-		#allowanceunit="$(AllowanceUnit check)"
-		#if [ "$prevallowanceunit" != "$allowanceunit" ]; then
-		#	scalefactor=1000
-		#	if echo "$allowanceunit" | grep -q i ; then
-		#		scalefactor=1024
-		#	fi
-		#
-		#	scaletype="none"
-		#	if [ "$(echo "$prevallowanceunit" | sed 's/i//')" != "$(AllowanceUnit check | sed 's/i//')" ]; then
-		#		if echo "$prevallowanceunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
-		#			scaletype="divide"
-		#		elif echo "$prevallowanceunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
-		#			scaletype="multiply"
-		#		fi
-		#	fi
-		#
-		#	if [ "$scaletype" != "none" ]; then
-		#		bandwidthallowance="$(BandwidthAllowance check)"
-		#		if [ "$scaletype" = "multiply" ]; then
-		#			bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
-		#		elif [ "$scaletype" = "divide" ]; then
-		#			bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
-		#		fi
-		#		BandwidthAllowance update "$(echo "$bandwidthallowance")" noreset
-		#	fi
-		#fi
+		allowanceunit="$(AllowanceUnit check)"
+		if [ "$prevallowanceunit" != "$allowanceunit" ]; then
+			scalefactor=1000
+			#if echo "$allowanceunit" | grep -q i ; then
+			#	scalefactor=1024
+			#fi
+		
+			scaletype="none"
+			if [ "$prevallowanceunit" != "$(AllowanceUnit check)" ]; then
+				if echo "$prevallowanceunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
+					scaletype="divide"
+				elif echo "$prevallowanceunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
+					scaletype="multiply"
+				fi
+			fi
+		
+			if [ "$scaletype" != "none" ]; then
+				bandwidthallowance="$(BandwidthAllowance check)"
+				if [ "$scaletype" = "multiply" ]; then
+					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
+				elif [ "$scaletype" = "divide" ]; then
+					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
+				fi
+				BandwidthAllowance update "$(echo "$bandwidthallowance")" noreset
+			fi
+		fi
 	fi
 	
 	Clear_Lock
@@ -1562,17 +1622,17 @@ Menu_AllowanceStartDay(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance\\nresets (1-31):\\e[0m  "
+		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance\\nresets (1-28):\\e[0m  "
 		read -r startday
 		
 		if [ "$startday" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Number "" "$startday" silent; then
-			printf "\\n\\e[31mPlease enter a valid number (1-31)\\e[0m\\n"
+			printf "\\n\\e[31mPlease enter a valid number (1-28)\\e[0m\\n"
 		else
-			if [ "$startday" -lt 1 ] || [ "$startday" -gt 31 ]; then
-				printf "\\n\\e[31mPlease enter a number between 1 and 31\\e[0m\\n"
+			if [ "$startday" -lt 1 ] || [ "$startday" -gt 28 ]; then
+				printf "\\n\\e[31mPlease enter a number between 1 and 28\\e[0m\\n"
 			else
 				allowancestartday="$startday"
 				printf "\\n"
@@ -1628,9 +1688,9 @@ Menu_Edit(){
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
-			$VNSTAT_COMMAND -u
 			Check_Bandwidth_Usage silent
 			Clear_Lock
+			printf "\\n"
 			PressEnter
 		fi
 	fi
@@ -1658,7 +1718,6 @@ Menu_Uninstall(){
 	touch /opt/etc/vnstat.conf
 	opkg remove --autoremove vnstati
 	opkg remove --autoremove vnstat
-	opkg remove --autoremove imagemagick
 	
 	rm -f /opt/etc/init.d/S33vnstat
 	rm -f /opt/etc/vnstat.conf
@@ -1744,6 +1803,13 @@ if [ -z "$1" ]; then
 	Shortcut_Script create
 	Process_Upgrade
 	ScriptHeader
+	if [ ! -f "$IMAGE_OUTPUT_DIR/.vnstat_m.htm" ]; then
+		Print_Output false "Refreshing vnstat stats..."
+		Generate_Images silent
+		Generate_Stats silent
+		Check_Bandwidth_Usage silent
+		ScriptHeader
+	fi
 	MainMenu
 	exit 0
 fi
@@ -1761,24 +1827,32 @@ case "$1" in
 	generate)
 		NTP_Ready
 		Entware_Ready
-		Generate_Images
-		Generate_Stats
-		Check_Bandwidth_Usage
+		Check_Lock
+		Generate_Images silent
+		Generate_Stats silent
+		Check_Bandwidth_Usage silent
+		Clear_Lock
 		exit 0
 	;;
 	summary)
 		NTP_Ready
 		Entware_Ready
 		Reset_Allowance_Warnings
-		Generate_Images
-		Generate_Stats
+		Generate_Images silent
+		Generate_Stats silent
+		Check_Bandwidth_Usage silent
 		Generate_Email daily
 		exit 0
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
-			Generate_Images
-			Generate_Stats
+			Check_Lock webui
+			echo 'var vnstatstatus = "InProgress";' > /tmp/detect_vnstat.js
+			Generate_Images silent
+			Generate_Stats silent
+			Check_Bandwidth_Usage silent
+			echo 'var vnstatstatus = "Done";' > /tmp/detect_vnstat.js
+			Clear_Lock
 			exit 0
 		elif [ "$2" = "start" ] && echo "$3" | grep "${SCRIPT_NAME}config"; then
 			Conf_FromSettings
@@ -1811,6 +1885,9 @@ case "$1" in
 		Shortcut_Script create
 		Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
+		Generate_Images silent
+		Generate_Stats silent
+		Check_Bandwidth_Usage silent
 		exit 0
 	;;
 	postupdate)
@@ -1822,6 +1899,9 @@ case "$1" in
 		Auto_Cron create 2>/dev/null
 		Auto_ServiceEvent create 2>/dev/null
 		Shortcut_Script create
+		Generate_Images silent
+		Generate_Stats silent
+		Check_Bandwidth_Usage silent
 		exit 0
 	;;
 	develop)
