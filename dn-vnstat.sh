@@ -870,9 +870,10 @@ Generate_Email(){
 				} >> /tmp/mail.txt
 			fi
 		elif [ "$emailtype" = "usage" ]; then
-			[ -z "$4" ] && Print_Output true "Attempting to send bandwidth usage email"
+			[ -z "$5" ] && Print_Output true "Attempting to send bandwidth usage email"
 			usagepercentage="$2"
 			usagestring="$3"
+			realusagestring="$4"
 			# plain text email to send #
 			{
 				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -881,8 +882,8 @@ Generate_Email(){
 				echo "Date: $(date -R)";
 				echo "";
 			} > /tmp/mail.txt
-			printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')" >> /tmp/mail.txt
-			printf "%s\\n\\n" "$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')" >> /tmp/mail.txt
+			printf "%s\\n\\n" "$usagestring" >> /tmp/mail.txt
+			printf "%s" "$realusagestring" >> /tmp/mail.txt
 		fi
 		
 		#Send Email
@@ -893,12 +894,12 @@ Generate_Email(){
 		--user "$USERNAME:$PASSWORD" $SSL_FLAG
 		# shellcheck disable=SC2181
 		if [ $? -eq 0 ]; then
-			[ -z "$4" ] && Print_Output true "Email sent successfully" "$PASS"
+			[ -z "$5" ] && Print_Output true "Email sent successfully" "$PASS"
 			rm -f /tmp/mail.txt
 			return 0
 		else
 			echo ""
-			[ -z "$4" ] && Print_Output true "Email failed to send" "$ERR"
+			[ -z "$5" ] && Print_Output true "Email failed to send" "$ERR"
 			rm -f /tmp/mail.txt
 			return 1
 		fi
@@ -1111,9 +1112,9 @@ Check_Bandwidth_Usage(){
 		echo 'var thresholdstring = "Data use is at or above 75%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
 			if [ -n "$1" ]; then
-				Generate_Email usage "75%" "$usagestring" silent
+				Generate_Email usage "75%" "$usagestring" "$realusagestring" silent
 			else
-				Generate_Email usage "75%" "$usagestring"
+				Generate_Email usage "75%" "$usagestring" "$realusagestring"
 			fi
 			touch "$SCRIPT_DIR/.warning75"
 		fi
@@ -1123,9 +1124,9 @@ Check_Bandwidth_Usage(){
 		echo 'var thresholdstring = "Data use is at or above 90%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
 			if [ -n "$1" ]; then
-				Generate_Email usage "90%" "$usagestring" silent
+				Generate_Email usage "90%" "$usagestring" "$realusagestring" silent
 			else
-				Generate_Email usage "90%" "$usagestring"
+				Generate_Email usage "90%" "$usagestring" "$realusagestring"
 			fi
 			touch "$SCRIPT_DIR/.warning90"
 		fi
@@ -1135,9 +1136,9 @@ Check_Bandwidth_Usage(){
 		echo 'var thresholdstring = "Data use is at or above 100%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
 			if [ -n "$1" ]; then
-				Generate_Email usage "100%" "$usagestring" silent
+				Generate_Email usage "100%" "$usagestring" "$realusagestring" silent
 			else
-				Generate_Email usage "100%" "$usagestring"
+				Generate_Email usage "100%" "$usagestring" "$realusagestring"
 			fi
 			touch "$SCRIPT_DIR/.warning100"
 		fi
