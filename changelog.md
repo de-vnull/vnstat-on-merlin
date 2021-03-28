@@ -1,29 +1,27 @@
 # Changelog #
 
-## v 1.0.0 - TBD ###
+## v 1.0.0 - 28-Mar-2021 ###
 * Release 1 (R1)
 * Fix calculation for data-limits to reflect GB/TB (base 1000) - vnStat measures in GiB/TiB (base 1024)
   - More information: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units
-* Add current use % to HTML and plain-text daily email
+* Add current use % to HTML and plain-text daily email; promote this information into the monthly use section
 * General JY script enhancements (section headers, locks)
-* UI updates (re-ordering, remove requirement for hard refresh, javascript improvements)
-* Many under the hood optimizations, including:
+* UI updates (re-ordering, remove requirement for hard refresh, javascript improvements); additional UI options
+* Additional under-the-hood optimizations, including:
   - Conversion code for unit change in CLI, scale data allowance when changing unit
-  - Updated defaults for vnstat.conf
+  - Updated defaults for vnstat.conf (please check against any existing vnstat.conf)
   - Programming improvements (using --json for monthly data calculation, grep improvements, jq filter for WAN)
-  - Make sure libjpeg-turbo is installed
-
-
+  - Make sure libjpeg-turbo is installed (note: library not available for MIPS, ignore any messages on MIPS)
 
 ### v 0.9.5 - 16-Mar-2021 ###
 * Beta 3/RC1
-* Many under the hood optimizations to improve reliability, accuracy and functionality based on Beta 2 feedback
+* Many under-the-hood optimizations to improve reliability, accuracy and functionality based on Beta 2 feedback
 * Added user-specified data limits: check vnstat-reported data use against a user-set limit
   - __Of particular interest to those with data caps__, e.g., Comcast, Cox, others
-  - Data limit monitoring with:
-    - Optional email notification when reach 75%, 90% and 100% of data limit
+  - Data-limit monitoring with:
+    - Optional email notification when reach 75%, 90% and 100% of data -limit
     - Data use warning message on UI page (75% and higher)
-  - Data limit calculations - UI and CLI menu (% data limit used)
+  - Data-limit calculations - UI and CLI menu (% data limit used)
   - CLI menu- and UI-updatable
   - Selectable GB or TB limits
 * Expanded UI settings options
@@ -45,7 +43,7 @@
 * Introduces CLI menu (`/jffs/scripts/dn-vnstat`) with configuration options (limited number of options, but includes removal)
 
 ### v 0.9.2 - Date not applicable ###
-* Internal development version, not distrubuted publicly; collaboration with _JackYaz_
+* Internal development version, not distrubuted publicly; collaboration initiated with _JackYaz_
 
 ### v 0.9.1 - 15-Feb-2021 ###
 * Addition of div-email option (script from _elorimer_), which leverages Diversion's encrypted email functionality (with permission of _thelonelycoder_)
@@ -56,7 +54,7 @@
 
 ### v 0.9.0 - 08-Feb-2021 ###
 * Beta 1 version, public deployment
-* With partial install script; preliminary support script by _Martineau_
+* With partial install script support script by _Martineau_
 
 ### v 0.0.1 - 06-Feb-2021 ###
 * Alpha/"how-to" manual install
