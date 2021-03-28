@@ -811,7 +811,9 @@ Generate_Email(){
 					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "";
-					printf "%s\\n\\n" "$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')";
+					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+					printf "%s\\n\\n" "$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+					
 				} > /tmp/mail.txt
 				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
 			elif [ "$(DailyEmail check)" = "html" ]; then
@@ -834,7 +836,9 @@ Generate_Email(){
 				
 				outputs="s h d t m"
 				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
-				echo "<p>$(grep usagestring "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
+				echo "<p>$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
+				echo "<p>$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
+				
 				for output in $outputs; do
 					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
 				done
