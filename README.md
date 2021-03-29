@@ -25,9 +25,9 @@
 ### Notes about data use, units and monitoring ###
 
 * vnStat-on-Merlin uses the Entware version of vnStat, currently version 1.18. This is an older version of the application. Jack and I have been in correspondence with the author of the program and have been working to get the Entware version updated. This version has certain limitations, some described here: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md .
-	- Primarily you should be aware that vnStat collects data in GiB/TiB, which is base-1024, whereas most ISPs track usage in GB/TB, which is base-1000.
-        - The data-limit monitoring offered by vnStat-on-Merlin will do the calculation in GB/TB (base 1000), so you will notice a difference in the numbers reported in the charts vs the data-limit calculations.
-* vnStat-on-Merlin data-use and data-limit reporting should be considered a guide, an approximation of actual use. vnStat-reported totals may or may not match that reported by your provider, your cycle may start and stop on a different day of the month, a partial month (especially the first month) or the data use reported could be affected by variables such as hardware acceleration, settings that bypass the TCP/IP stack or as mundane as scheduled reboots. __You must conduct proper due diligence to determine if the usage reported by vnStat aligns with your provider.__
+	- Primarily you should be aware that vnStat 1.18 collects data in GiB/TiB, which is base-1024, whereas most ISPs track usage in GB/TB, which is base-1000.
+        - The data-limit monitoring offered by vnStat-on-Merlin (R1 and later) will do the calculation in GB/TB (base 1000), so you will notice a difference in the numbers reported in the charts vs the data-limit calculations.
+* vnStat-on-Merlin data-use and data-limit reporting __should be considered a guide__, an approximation of actual use. __vnStat-reported totals may or may not match that reported by your provider__, your cycle may start and stop on a different day of the month, a partial month (especially the first month) or the data use reported could be affected by variables such as hardware acceleration, settings that bypass the TCP/IP stack or as mundane as scheduled reboots. __You must conduct proper due diligence to determine if the usage reported by vnStat aligns with your provider.__
 
 
 ### Version ###
@@ -71,7 +71,7 @@
 		b. `vnstat --importdb /path/to/vnstat-export-db.txt -i eth0 --force` (enter the correct interface for your setup), followed by 
 		c. `/opt/etc/init.d/S33vnstat start`
 
-### Install script - UI version - beta 2 and later ###
+### Install script - full (UI-enabled) version ###
 
 * Install of Vnstat on Merlin is available in the `amtm` menu (from amtm version 3.1.9 and later). That is currently the best way to install and manage.
 * Alternative install: from the CLI, issue the following command (triple click to select all):
@@ -85,35 +85,39 @@
 
 * The dn-vnstat menu
 
-![Menu](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/dn-vnstat-menu.png)
+![Menu](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/CLI-vR1.PNG)
 
-* A sample of the email message output - sent as plain text.
+* A sample of the email message output - sent as html or plain text.
 
-![Email_sample](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-email-xp.png)
+![Email_html](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/HTML-daily.PNG)
+
+![Email_text](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Txt-daily.PNG)
 
 
 ### Upgrade from a manual install or alpha or beta 1 ###
-* The __beta2__ version was re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
-* The installer for later versions (beta 3 and later) also performs this uninstall.
-* The updated install script will detect any previously installed scripts and will inform you that these will be removed. __Database files will be left intact on the device.__
-* If you don't want to migrate to the new version, you can abort the install.
+
+* The beta 3 version and later was re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
+* The installer for later versions (beta 3 and later) automatically performs this uninstall. __Database files will be left intact on the device.__
+* If you don't want to migrate to the new version, you can abort the install (but extensive testing has demonstrated this update to be be straightforward).
 
 
 ### Miscellaneous notes ###
-* The vnstats UI page may require a hard refresh (`CTRL+F5` or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse.
+
+* The vnstats UI page may require a hard refresh (`CTRL+F5` or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse. This refresh issue has been mostly addressed in R1 and later.
 * Export and import of data usage tracking is possible, even across architectures (tested ARM <-> MIPS and ARM <-> AARCH). See instructions below. 
 * There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). 
 * It has been reported that with _hardware acceleration_ implemented, the data counts provided by vnstat are no more accurate than the built-in tools (which is to say, not accurate).
-* For the __day of month reset__ attribute in the menu (0.9.5 and later) and vnstat.conf: the count does not reset until the following month (see: https://ubuntuforums.org/showthread.php?t=2324673&s=70286d0c6612020a14bf2b38c9d8d1cc&p=13490762#post13490762). This is a current limitation of vnstat, and there is no known work-around.
+* For the __day of month reset__ attribute in the menu (0.9.5 and later) and vnstat.conf: the count does not reset until the following month; described here: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#MonthRotate .
 
 
 
 ### Non-UI configuration steps ###
 
-* Install instructions for the __non-UI__ (CLI via SSH) version
-	- No additional steps are required. Usage should be recorded automatically circa every 30 seconds to the db file.
+* Install instructions for the __non-UI__ (CLI via SSH) version of vnStat - for vnStat Entware-hosted version 1.18 only
+	- No additional steps are required. Usage should be recorded automatically circa every 300 seconds to the db file.
 	- To view current status, issue the `vnstat` command from the CLI. There are several additional CLI options (view days, top ten, hourly, monthly, etc) - see image below.
 	- This type of deployment can support daily summary email (but require additional downloads and manual steps).
+	- This type of deployment is __not supported__ but is published in the community interest.
 
 * Configuration
 	- The Enware application `vnstat` can be run without any UI, 100% from the CLI via ssh.
@@ -191,7 +195,7 @@ See here for default view: https://imgur.com/a/ufMQgeA
 
 ### Legal and licensing ###
 	
-* This process is unlicensed, but certain components, while all are publically available, may have different licensing requirements. To the best of my knowledge, the methods contained in the script and described above do not violate any existing licensing terms.
+* This process is licensed under GPL 3, but certain components, while all are publically available, may have different licensing requirements. To the best of my knowledge, the methods contained in the script and described above do not violate any existing licensing terms.
 * If you port, improve, extend or otherwise modify the concepts included in this process, I only ask for a courtesy attribution, a reference back to this work.
 * Please publish any modifications or improvements back for the general community to benefit.
 
@@ -199,7 +203,7 @@ See here for default view: https://imgur.com/a/ufMQgeA
 ### Who do I contact with comments or questions? ###
 
 * Repo owner or admin - dev_null @ snbforums
-* Other community or team contact - dev_null @ snbforums
+* Other community or team contact - dev_null or Jack Yaz @ snbforums
 
 
 #
