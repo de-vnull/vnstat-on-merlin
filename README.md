@@ -1,61 +1,67 @@
-# vnstat-on-merlin - _BETA 3/RC1_
+# vnstat-on-merlin - _Release - R1_
 
 # README #
 
 ### See changelog for details ###
-* This is beta 3/RC 1 - feature locked
+* This is the first release - R1
 
 ### What is this repository for? ###
 
-* This is an implementation of vnstat/vnstati for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use in a local database, to supplement the internal monitoring tool, `Traffic Analyzer > Traffic Monitor`, which will peridically record false “17GB” usage bursts. This only occurs on some routers on some firmware (e.g., RT-AC68U and RT-AC66U_B1 on 386.1). 
-
-* This became a particular concern when Xfinity began implementing 1.2TB caps nationwide in January 2021 (note: postponed in the Northeast until 2022).
+* This is an implementation of vnStat for use on AsusWRT-Merlin routers. This effort was started to enable accurate measurement of data use in a local database (for privacy reasons), and as an alternative the internal monitoring tool, Traffic Analyzer > Traffic Monitor, which will periodically record false “17GB” usage bursts. This "false spike", as some have called it, only occurs on some routers on some firmware (I personally experienced it with RT-AC68U firmware on RT-AC66U_B1).
+	- Accurate tracking of data usage became a particular concern when Comcast/Xfinity stated their intention to implement 1.2TB caps nationwide.
+        - The totals are consistent with the firmware "Traffic Monitor/Traffic Analyzer".
+       	- The totals reported by vnStat are slightly higher than those currently being reported by Comcast (about 10-12%), but you should validate your use-case.
 
 ### Acknowledgements ###
 
-- This project was created with an incredible amount of support from @JackYaz, who provided support to create the “AddOn” vnstat-ui scaffold and scripting.
-
-    - Words cannot adequetly describe my gratefulness - Jack literally spent hours scripting, consolidating, testing, providing feedback, and patiently responding to feedback and answering my every question, no matter how mundane (or inane). The install, menu and functioning integrated removal of old installs and email is 100% credit to @JackYaz.
+- I'd like to acknowledge @Jack Yaz who is responsible for the programming behind the concept - Jack is a true partner in every sense of the word!
 
    - My thanks to @thelonelycoder, for allowing this script to leverage Diversion's email process.
  
    - My thanks to @Martineau for the initial scripts that got the ball rolling.
  
-    - And this wouldn't be possible without the vnstat and vnstati applications, so my thanks to Teemu Toivola too.
+    - And this wouldn't be possible without the vnstat and vnstati applications, so my thanks to Teemu Toivola (and who has provided feedback to Jack and I during development of R1 and beyond).
 
-### Original intent ###
-* This was created for personal use, but is being published for the potential benefit to the community of users. Improvement and enhancement suggestions are welcomed (I already have a few in mind).
-	
-	- The vnstat application and accompanying UI have been tested on Merlin 384.19, 386.1 beta 1-5 and 386.1 and 1_2 release, on RT-AC66U_B1 (on AC68U firmware) and RT-AX86U 386.1 beta 1-5 and 386.1 release. 
-	- Preliminary testing on John's fork on MIPs demostrates functionality, though the "CLI" image on the UI is not created (it appears to be an issue with Imagemagick). A potential fix is included in future enhancements.
-	- The totals are consistent with the firmware "Traffic Monitor/Traffic Analyzer". The totals reported by vnstat are slightly higher than those currently being reported by Comcast (about 10-15%).
+### Notes about data use, units and monitoring ###
 
-	- Feedback and comments are welcomed. PM to @dev_null @ snbforums
-	- Any errors or omissions will be corrected upon notice, but the user assumes all risk.
+* vnStat-on-Merlin uses the Entware version of vnStat, currently version 1.18. This is an older version of the application. Jack and I have been in correspondence with the author of the program and have been working to get the Entware version updated. This version has certain limitations, some described here: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md .
+	- Primarily you should be aware that vnStat collects data in GiB/TiB, which is base-1024, whereas most ISPs track usage in GB/TB, which is base-1000.
+        - The data-limit monitoring offered by vnStat-on-Merlin will do the calculation in GB/TB (base 1000), so you will notice a difference in the numbers reported in the charts vs the data-limit calculations.
+* vnStat-on-Merlin data-use and data-limit reporting should be considered a guide, an approximation of actual use. vnStat-reported totals may or may not match that reported by your provider, your cycle may start and stop on a different day of the month, a partial month (especially the first month) or the data use reported could be affected by variables such as hardware acceleration, settings that bypass the TCP/IP stack or as mundane as scheduled reboots. __You must conduct proper due diligence to determine if the usage reported by vnStat aligns with your provider.__
+
 
 ### Version ###
-* Version: 0.9.4
-* This is "beta 2"
+* Version: 1.0.0
+* Also known as R1
 
 ### How do I get set up? ###
 
-* Prior versions (alpha, beta 1, and manual) required a series of steps to be taken for full install. This __beta 2__ implementation is nearly completely automated, with several additional options available through the `dn-vnstat` command menu, post install. __A manual reboot may be required to purge duplicate vnstat-UI pages.__
+* Initial installation and update from Beta 3
 
-* Minimum requirements:
-	- AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release versions. 
-		- Earlier versions (384 only) may likewise function; kindly report any further experiences (include router model and firmware version).
-		- Initial testing on John's fork appears to demonstrate expected functionality, except that the "CLI report" image isn't working. Kindly report any further experiences (include router model and firmware version).
-	- Hardware tested RT-AC66U_B1, RT-AC68U, RT-AC86U, RT-AX86U and RT-N66U.
-	- Diversion and it's corresponding install of Entware. Diversion does not need to be running, as long as Entware is installed.
-    - Properly setup email (`Diversion` "communications" option) to use the encrypted username/password to email vnstat reports.
-		- Please run an Entware update to ensure the most current repository lists are available.
-		- Please test Diversion email (`amtm > 1 - Diversion > c - Communication > 5 - Edit email settings, send testmail` > follow steps to set up and test) before enabling the Vnstat on Merlin usage email.
+	- A full, scripted install is available through `amtm`, the Asuswrt-Merlin Terminal Menu, version 3.1.9 or later.
+        - You may need to update amtm (`amtm` > `uu`)
+        - A CLI command is available on the vnStat-on-Merlin github portal below, but should not be required.
+    	- If you are coming from beta 3, run a u(update) or uf(forced update).
+        - See below if coming from an earlier version.
+    		- During an update, custom settings in `vnstat.conf` are retained. However you are encouraged to compare the default version (copied into the install folder) against your current configuration.
 
-* Dependencies for the UI version
-	- Hardware and firmware described above.
+### Minimum requirements ###
+
+* AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release versions. 
+	- Earlier versions (384 only) may likewise function; kindly report any further experiences (include router model and firmware version).
+	- Initial testing on John's fork appears to demonstrate expected functionality, except that the "CLI report" image isn't working. Kindly report any further experiences (include router model and firmware version).
+	- Hardware tested during development includes RT-AC66U_B1, RT-AC68U, RT-AC86U, RT-AX86U and RT-N66U.
+* Dependencies:
+	- Diversion and Entware.
+	- Properly setup email via Diversion "communications" option is required. vnStat-on-Merlin uses the encrypted username/password from Diversion to email reports.
+	- Please run an Entware update to ensure the most current repository lists are available.
+		- Please test Diversion email (`amtm > 1 - Diversion > c - Communication > 5 - Edit email settings, send testmail` > follow steps to set up and test) before enabling the vnStat on Merlin usage email.
+		- Once email is set up, Diversion does not need to be running if you don't use it (`amtm > 1 - Diversion > d - Diversion > 1 - disable`), but should remain installed.
 
 * Database configuration
-	- Unlike in the alpha/beta1/manual installations, there is no separate database configuration required for the UI-installed version. This is now part of the automation.
+	- Unlike in the alpha/beta1/manual installations, there is no separate database configuration required. Existing database files will not be deleted.
+		- If you have a custom location for your database files (legacy of the manual and alpha builds), you will need to either update vnstat.conf with those locations, or re-initialize the database in the standard location (losing history), or copy your database files to the standard location. See below for detailed steps on backing up and restoring your database files.
+
 	- _Note: if you have a custom location for your database files, you will need to either update `vnstat.conf` with those locations, re-initialize the database in the standard location (losing history), or export and re-import as described below._
 
 	* Export/import: if you'd like to take a "belt and suspenders" (or "belt and braces" for those on the Continent), you can
@@ -67,8 +73,8 @@
 
 ### Install script - UI version - beta 2 and later ###
 
-* Install of Vnstat on Merlin is available in the amtm menu (from amtm version 3.1.9 and later). That is currently the best way to install and manage.
-* From the CLI, issue the following command (triple click to select all):
+* Install of Vnstat on Merlin is available in the `amtm` menu (from amtm version 3.1.9 and later). That is currently the best way to install and manage.
+* Alternative install: from the CLI, issue the following command (triple click to select all):
 ```
 /usr/sbin/curl --retry 3 "https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/main/dn-vnstat.sh" -o "/jffs/scripts/dn-vnstat" && chmod 0755 /jffs/scripts/dn-vnstat && /jffs/scripts/dn-vnstat install
 ```
