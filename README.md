@@ -41,15 +41,16 @@
 	- A full, scripted install is available through `amtm`, the Asuswrt-Merlin Terminal Menu, version 3.1.9 or later.
         - You may need to update amtm (`amtm` > `uu`)
         - A CLI command is available on the vnStat-on-Merlin github portal below, but should not be required.
-    	- If you are coming from beta 3, run a u(update) or uf(forced update).
+    	- If you are coming from beta 3, run a `u` (update) or `uf` (forced update).
         - See below if coming from an earlier version.
     		- During an update, custom settings in `vnstat.conf` are retained. However you are encouraged to compare the default version (copied into the install folder) against your current configuration.
 
 ### Minimum requirements ###
 
-* AsusWRT Merlin version 384.19 or later. Tested on 386.1 beta 1-5 and 386.1 release versions. 
-	- Earlier versions (384 only) may likewise function; kindly report any further experiences (include router model and firmware version).
-	- Initial testing on John's fork appears to demonstrate expected functionality, except that the "CLI report" image isn't working. Kindly report any further experiences (include router model and firmware version).
+* AsusWRT Merlin version 384.19 or later. 
+	- Tested on 386.1 beta 1-5 and 386.1 and 1_2 release versions. 
+	- Earlier versions (384-series only) may likewise function; kindly report any further experiences (include router model and firmware version).
+	- Initial testing on John's fork appears to demonstrate expected functionality. Kindly report any further experiences (include router model and firmware version).
 	- Hardware tested during development includes RT-AC66U_B1, RT-AC68U, RT-AC86U, RT-AX86U and RT-N66U.
 * Dependencies:
 	- Diversion and Entware.
