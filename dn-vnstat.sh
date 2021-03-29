@@ -438,6 +438,10 @@ Conf_Exists(){
 			sed -i 's/^RateUnitMode.*$/RateUnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
+		if ! grep -q "^OutputStyle 0" "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^OutputStyle.*$/OutputStyle 0/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
+		fi
 		if [ "$restartvnstat" = "true" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			Generate_Images
