@@ -289,7 +289,7 @@ function get_vnstatconf_file(){
 			var configdata=data.split("\n");
 			configdata = configdata.filter(Boolean);
 			for (var i = 0; i < configdata.length; i++){
-				if(configdata[i].startsWith("MonthRotate")){
+				if(configdata[i].startsWith("MonthRotate ")){
 					eval("document.form.dnvnstat_"+configdata[i].split(" ")[0].toLowerCase()).value = configdata[i].split(" ")[1].replace(/(\r\n|\n|\r)/gm,"");
 				}
 			}
