@@ -350,7 +350,7 @@ Conf_FromSettings(){
 					if [ "$SETTINGVALUE" != "$(AllowanceStartDay check)" ]; then
 						warningresetrequired="true"
 					fi
-					sed -i 's/^MonthRotate.*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_DIR/vnstat.conf"
+					sed -i 's/^MonthRotate .*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_DIR/vnstat.conf"
 				fi
 			done < "$TMPFILE"
 			grep 'dnvnstat_version' "$SETTINGSFILE" > "$TMPFILE"
@@ -1045,7 +1045,7 @@ BandwidthAllowance(){
 AllowanceStartDay(){
 	case "$1" in
 		update)
-			sed -i 's/^MonthRotate.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
+			sed -i 's/^MonthRotate .*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
@@ -1053,7 +1053,7 @@ AllowanceStartDay(){
 			Check_Bandwidth_Usage
 		;;
 		check)
-			MonthRotate=$(grep "^MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			MonthRotate=$(grep "^MonthRotate " "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
 			echo "$MonthRotate"
 		;;
 	esac
