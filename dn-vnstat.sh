@@ -28,6 +28,7 @@ readonly SCRIPT_CONF="$SCRIPT_DIR/config"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
 readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
 readonly IMAGE_OUTPUT_DIR="$SCRIPT_DIR/images"
+readonly CSV_OUTPUT_DIR="$SCRIPT_DIR/csv"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
@@ -35,6 +36,7 @@ readonly VNSTAT_COMMAND="vnstat --config $SCRIPT_DIR/vnstat.conf"
 readonly VNSTATI_COMMAND="vnstati --config $SCRIPT_DIR/vnstat.conf"
 readonly VNSTAT_OUTPUT_FILE=/tmp/vnstat.txt
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
+[ -f /opt/bin/sqlite3 ] && SQLITE3_PATH=/opt/bin/sqlite3 || SQLITE3_PATH=/usr/sbin/sqlite3
 ### End of script variables ###
 
 ### Start of output format variables ###
@@ -386,6 +388,10 @@ Create_Dirs(){
 		mkdir -p "$IMAGE_OUTPUT_DIR"
 	fi
 	
+	if [ ! -d "$CSV_OUTPUT_DIR" ]; then
+		mkdir -p "$CSV_OUTPUT_DIR"
+	fi
+	
 	if [ ! -d "$SHARED_DIR" ]; then
 		mkdir -p "$SHARED_DIR"
 	fi
@@ -409,6 +415,7 @@ Create_Symlinks(){
 	ln -s "$SCRIPT_CONF" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
 	ln -s "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
 	ln -s "$IMAGE_OUTPUT_DIR" "$SCRIPT_WEB_DIR/images" 2>/dev/null
+	ln -s "$CSV_OUTPUT_DIR" "$SCRIPT_WEB_DIR/csv" 2>/dev/null
 	
 	if [ ! -d "$SHARED_WEB_DIR" ]; then
 		ln -s "$SHARED_DIR" "$SHARED_WEB_DIR" 2>/dev/null
@@ -717,6 +724,7 @@ Check_Requirements(){
 		opkg install libjpeg-turbo >/dev/null 2>&1
 		opkg install jq
 		opkg install sqlite3-cli
+		opkg install p7zip
 		rm -f /opt/etc/vnstat.conf
 		return 0
 	else
@@ -732,6 +740,111 @@ Get_WAN_IFace(){
 		IFACE_WAN="$(nvram get wan0_ifname)"
 	fi
 	echo "$IFACE_WAN"
+}
+
+Generate_CSVs(){
+	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	dbdir="$(grep "^DatabaseDir " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	TZ=$(cat /etc/TZ)
+	export TZ
+	
+	timenow=$(date +"%s")
+	timenowfriendly=$(date +"%c")
+	
+	{
+		echo ".headers off"
+		echo ".output /tmp/dn-vnstatiface"
+		echo "SELECT id FROM [interface] WHERE [name] = '$interface';"
+	} > /tmp/dn-vnstat.sql
+	while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
+		sleep 1
+	done
+	interfaceid="$(cat /tmp/dn-vnstatiface)"
+	rm -f /tmp/dn-vnstatiface
+	
+	metriclist="rx tx"
+	
+	for metric in $metriclist; do
+		{
+			echo ".mode csv"
+			echo ".headers off"
+			echo ".output $CSV_OUTPUT_DIR/${metric}daily.tmp"
+			echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM fiveminute WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400);"
+		} > /tmp/dn-vnstat.sql
+		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
+			sleep 1
+		done
+		
+		{
+			echo ".mode csv"
+			echo ".headers off"
+			echo ".output $CSV_OUTPUT_DIR/${metric}weekly.tmp"
+			echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM fiveminute WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400*7);"
+		} > /tmp/dn-vnstat.sql
+		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
+			sleep 1
+		done
+		
+		{
+			echo ".mode csv"
+			echo ".headers off"
+			echo ".output $CSV_OUTPUT_DIR/${metric}monthly.tmp"
+			echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM fiveminute WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400*30);"
+		} > /tmp/dn-vnstat.sql
+		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
+			sleep 1
+		done
+		
+		rm -f /tmp/dn-vnstat.sql
+	done
+	
+	cat "$CSV_OUTPUT_DIR/rxdaily.tmp" "$CSV_OUTPUT_DIR/txdaily.tmp" > "$CSV_OUTPUT_DIR/Combineddaily.htm" 2> /dev/null
+	cat "$CSV_OUTPUT_DIR/rxweekly.tmp" "$CSV_OUTPUT_DIR/txweekly.tmp" > "$CSV_OUTPUT_DIR/Combinedweekly.htm" 2> /dev/null
+	cat "$CSV_OUTPUT_DIR/rxmonthly.tmp" "$CSV_OUTPUT_DIR/txmonthly.tmp" > "$CSV_OUTPUT_DIR/Combinedmonthly.htm" 2> /dev/null
+	
+	sed -i '1i Metric,Time,Value' "$CSV_OUTPUT_DIR/Combineddaily.htm"
+	sed -i '1i Metric,Time,Value' "$CSV_OUTPUT_DIR/Combinedweekly.htm"
+	sed -i '1i Metric,Time,Value' "$CSV_OUTPUT_DIR/Combinedmonthly.htm"
+	
+	rm -f "$CSV_OUTPUT_DIR/rx"*
+	rm -f "$CSV_OUTPUT_DIR/tx"*
+	
+	{
+		echo ".mode csv"
+		echo ".headers on"
+		echo ".output $CSV_OUTPUT_DIR/CompleteResults.htm"
+	} > /tmp/dn-vnstat-complete.sql
+	echo "SELECT CAST(strftime('%s', [date], 'utc') as INT) Time,[rx],[tx] FROM fiveminute WHERE CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400*30) ORDER BY CAST(strftime('%s', [date], 'utc') as INT) DESC;" >> /tmp/dn-vnstat-complete.sql
+	while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat-complete.sql >/dev/null 2>&1; do
+		sleep 1
+	done
+	rm -f /tmp/dn-vnstat-complete.sql
+	
+	dos2unix "$CSV_OUTPUT_DIR/"*.htm
+	
+	tmpoutputdir="/tmp/${SCRIPT_NAME_LOWER}results"
+	mkdir -p "$tmpoutputdir"
+	mv "$CSV_OUTPUT_DIR/CompleteResults"*.htm "$tmpoutputdir/."
+	
+	OUTPUTTIMEMODE="non-unix"
+	if [ "$OUTPUTTIMEMODE" = "unix" ]; then
+		find "$tmpoutputdir/" -name '*.htm' -exec sh -c 'i="$1"; mv -- "$i" "${i%.htm}.csv"' _ {} \;
+	elif [ "$OUTPUTTIMEMODE" = "non-unix" ]; then
+		for i in "$tmpoutputdir/"*".htm"; do
+			awk -F"," 'NR==1 {OFS=","; print} NR>1 {OFS=","; $1=strftime("%Y-%m-%d %H:%M:%S", $1); print }' "$i" > "$i.out"
+		done
+		
+		find "$tmpoutputdir/" -name '*.htm.out' -exec sh -c 'i="$1"; mv -- "$i" "${i%.htm.out}.csv"' _ {} \;
+		rm -f "$tmpoutputdir/"*.htm
+	fi
+	
+	if [ ! -f /opt/bin/7za ]; then
+		opkg update
+		opkg install p7zip
+	fi
+	/opt/bin/7za a -y -bsp0 -bso0 -tzip "/tmp/${SCRIPT_NAME}data.zip" "$tmpoutputdir/*"
+	mv "/tmp/${SCRIPT_NAME}data.zip" "$CSV_OUTPUT_DIR"
+	rm -rf "$tmpoutputdir"
 }
 
 Generate_Images(){
@@ -1766,6 +1879,11 @@ case "$1" in
 		Check_Bandwidth_Usage silent
 		Generate_Email daily
 		exit 0
+	;;
+	csv)
+		NTP_Ready
+		Entware_Ready
+		Generate_CSVs
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
