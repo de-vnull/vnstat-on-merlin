@@ -712,10 +712,11 @@ Check_Requirements(){
 	if [ "$CHECKSFAILED" = "false" ]; then
 		Print_Output false "Installing required packages from Entware" "$PASS"
 		opkg update
-		opkg install vnstat
-		opkg install vnstati
+		opkg install vnstat2
+		opkg install vnstati2
 		opkg install libjpeg-turbo >/dev/null 2>&1
 		opkg install jq
+		opkg install sqlite3-cli
 		rm -f /opt/etc/vnstat.conf
 		return 0
 	else
