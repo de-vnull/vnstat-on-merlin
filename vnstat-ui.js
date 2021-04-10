@@ -244,7 +244,6 @@ function ShowHideDataUsageWarning(showusage){
 function UpdateText(){
 	$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: " + daterefeshed);
 	$j("#spandatausage").html(usagestring);
-	$j("#spanrealdatausage").html(realusagestring);
 	ShowHideDataUsageWarning(usagethreshold);
 }
 

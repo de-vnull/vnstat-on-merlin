@@ -78,7 +78,346 @@ function LoadCustomSettings(){
 		}
 	}
 }
-var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsByTagName("a"),b=0;b<a.length;b++)a[b].onmouseout=nd;return hinttext=thresholdstring,overlib(hinttext,0,0)}function Validate_AllowanceStartDay(a){var b=a.name,c=1*a.value;return 28<c||1>c?($j(a).addClass("invalid"),!1):($j(a).removeClass("invalid"),!0)}function Validate_DataAllowance(a){var b=a.name,c=1*a.value;return 0>c||0==a.value.length||c==NaN||"."==a.value?($j(a).addClass("invalid"),!1):($j(a).removeClass("invalid"),!0)}function Format_DataAllowance(a){var b=a.name,c=1*a.value;return!(0>c||0==a.value.length||c==NaN||"."==a.value)&&(a.value=parseFloat(a.value).toFixed(2),!0)}function ScaleDataAllowance(){"T"==document.form.dnvnstat_allowanceunit.value?document.form.dnvnstat_dataallowance.value=1*document.form.dnvnstat_dataallowance.value/1e3:"G"==document.form.dnvnstat_allowanceunit.value&&(document.form.dnvnstat_dataallowance.value=1e3*(1*document.form.dnvnstat_dataallowance.value)),Format_DataAllowance(document.form.dnvnstat_dataallowance)}function GetCookie(a,b){var c;if(null!=(c=cookie.get("cookie_"+a)))return cookie.get("cookie_"+a);return"string"==b?"":"number"==b?0:void 0}function SetCookie(a,b){cookie.set("cookie_"+a,b,3650)}function ScriptUpdateLayout(){var a=GetVersionNumber("local"),b=GetVersionNumber("server");$j("#dnvnstat_version_local").text(a),a!=b&&"N/A"!=b&&($j("#dnvnstat_version_server").text("Updated version available: "+b),showhide("btnChkUpdate",!1),showhide("dnvnstat_version_server",!0),showhide("btnDoUpdate",!0))}function update_status(){$j.ajax({url:"/ext/dn-vnstat/detect_update.js",dataType:"script",timeout:3e3,error:function(){setTimeout(update_status,1e3)},success:function(){"InProgress"==updatestatus?setTimeout(update_status,1e3):(document.getElementById("imgChkUpdate").style.display="none",showhide("dnvnstat_version_server",!0),"None"==updatestatus?($j("#dnvnstat_version_server").text("No update available"),showhide("btnChkUpdate",!0),showhide("btnDoUpdate",!1)):($j("#dnvnstat_version_server").text("Updated version available: "+updatestatus),showhide("btnChkUpdate",!1),showhide("btnDoUpdate",!0)))}})}function CheckUpdate(){showhide("btnChkUpdate",!1),document.formScriptActions.action_script.value="start_dn-vnstatcheckupdate",document.formScriptActions.submit(),document.getElementById("imgChkUpdate").style.display="",setTimeout(update_status,2e3)}function DoUpdate(){document.form.action_script.value="start_dn-vnstatdoupdate",document.form.action_wait.value=15,showLoading(),document.form.submit()}function GetVersionNumber(a){var b;return"local"==a?b=custom_settings.dnvnstat_version_local:"server"==a&&(b=custom_settings.dnvnstat_version_server),"undefined"==typeof b||null==b?"N/A":b}$j.fn.serializeObject=function(){var b=custom_settings,c=this.serializeArray();return $j.each(c,function(){void 0!==b[this.name]&&-1!=this.name.indexOf("dnvnstat")&&-1==this.name.indexOf("version")?(!b[this.name].push&&(b[this.name]=[b[this.name]]),b[this.name].push(this.value||"")):-1!=this.name.indexOf("dnvnstat")&&-1==this.name.indexOf("version")&&(b[this.name]=this.value||"")}),b};function SaveConfig(){document.getElementById("amng_custom").value=JSON.stringify($j("form").serializeObject()),document.form.action_script.value="start_dn-vnstatconfig",document.form.action_wait.value=15,showLoading(),document.form.submit()}function get_conf_file(){$j.ajax({url:"/ext/dn-vnstat/config.htm",dataType:"text",timeout:1e3,error:function(){setTimeout(get_conf_file,1e3)},success:function(data){var configdata=data.split("\n");configdata=configdata.filter(Boolean);for(var i=0;i<configdata.length;i++)eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value=configdata[i].split("=")[1].replace(/(\r\n|\n|\r)/gm,"");get_vnstatconf_file()}})}function get_vnstatconf_file(){$j.ajax({url:"/ext/dn-vnstat/vnstatconf.htm",dataType:"text",timeout:1e3,error:function(){setTimeout(get_vnstatconf_file,1e3)},success:function(data){var configdata=data.split("\n");configdata=configdata.filter(Boolean);for(var i=0;i<configdata.length;i++)configdata[i].startsWith("MonthRotate")&&(eval("document.form.dnvnstat_"+configdata[i].split(" ")[0].toLowerCase()).value=configdata[i].split(" ")[1].replace(/(\r\n|\n|\r)/gm,""))}})}function loadVnStatOutput(){$j.ajax({url:"/ext/dn-vnstat/vnstatoutput.htm",dataType:"text",error:function(){setTimeout(loadVnStatOutput,5e3)},success:function(a){document.getElementById("VnStatOuput").innerHTML=a}})}function ShowHideDataUsageWarning(a){a?(document.getElementById("datausagewarning").style.display="",document.getElementById("scripttitle").style.marginLeft="166px"):(document.getElementById("datausagewarning").style.display="none",document.getElementById("scripttitle").style.marginLeft="0px")}function UpdateText(){$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: "+daterefeshed),$j("#spandatausage").html(usagestring),$j("#spanrealdatausage").html(realusagestring),ShowHideDataUsageWarning(usagethreshold)}function UpdateImages(){for(var a=["s","h","d","t","m"],b=new Date().getTime(),c=0;c<a.length;c++)document.getElementById("img_"+a[c]).style.backgroundImage="url(/ext/dn-vnstat/images/.vnstat_"+a[c]+".htm?cachebuster="+b+")"}function UpdateStats(){showhide("btnUpdateStats",!1),document.formScriptActions.action_script.value="start_dn-vnstat",document.formScriptActions.submit(),document.getElementById("vnstatupdate_text").innerHTML="Updating bandwidth usage and vnstat data...",showhide("imgVnStatUpdate",!0),showhide("vnstatupdate_text",!0),setTimeout(update_vnstat,2e3)}function update_vnstat(){$j.ajax({url:"/ext/dn-vnstat/detect_vnstat.js",dataType:"script",timeout:1e3,error:function(){setTimeout(update_vnstat,1e3)},success:function(){"InProgress"==vnstatstatus?setTimeout(update_vnstat,1e3):"Done"==vnstatstatus&&(reload_js("/ext/dn-vnstat/vnstatusage.js"),UpdateText(),UpdateImages(),loadVnStatOutput(),document.getElementById("vnstatupdate_text").innerHTML="",showhide("imgVnStatUpdate",!1),showhide("vnstatupdate_text",!1),showhide("btnUpdateStats",!0))}})}function reload_js(a){$j("script[src=\""+a+"\"]").remove(),$j("<script>").attr("src",a+"?cachebuster="+new Date().getTime()).appendTo("head")}function AddEventHandlers(){$j(".collapsible-jquery").off("click").on("click",function(){$j(this).siblings().toggle("fast",function(){"none"==$j(this).css("display")?SetCookie($j(this).siblings()[0].id,"collapsed"):SetCookie($j(this).siblings()[0].id,"expanded")})}),$j(".collapsible-jquery").each(function(){"collapsed"==GetCookie($j(this)[0].id,"string")?$j(this).siblings().toggle(!1):$j(this).siblings().toggle(!0)})}function SetCurrentPage(){document.form.next_page.value=window.location.pathname.substring(1),document.form.current_page.value=window.location.pathname.substring(1)}function initial(){SetCurrentPage(),LoadCustomSettings(),ScriptUpdateLayout(),show_menu(),get_conf_file(),AddEventHandlers(),UpdateText(),UpdateImages(),loadVnStatOutput()}function reload(){location.reload(!0)}
+var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
+
+function UsageHint(){
+	var tag_name= document.getElementsByTagName('a');
+	for(var i=0;i<tag_name.length;i++){
+		tag_name[i].onmouseout=nd;
+	}
+	hinttext=thresholdstring;
+	return overlib(hinttext, 0, 0);
+}
+
+function Validate_AllowanceStartDay(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue > 28 || inputvalue < 1){
+		$j(forminput).addClass("invalid");
+		return false;
+	}
+	else{
+		$j(forminput).removeClass("invalid");
+		return true;
+	}
+}
+
+function Validate_DataAllowance(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue < 0 || forminput.value.length == 0 || inputvalue == NaN || forminput.value == "."){
+		$j(forminput).addClass("invalid");
+		return false;
+	}
+	else{
+		$j(forminput).removeClass("invalid");
+		return true;
+	}
+}
+
+function Format_DataAllowance(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue < 0 || forminput.value.length == 0 || inputvalue == NaN || forminput.value == "."){
+		return false;
+	}
+	else{
+		forminput.value=parseFloat(forminput.value).toFixed(2);
+		return true;
+	}
+}
+
+function ScaleDataAllowance(){
+	if(document.form.dnvnstat_allowanceunit.value == "T"){
+		document.form.dnvnstat_dataallowance.value = document.form.dnvnstat_dataallowance.value*1 / 1000;
+	}
+	else if(document.form.dnvnstat_allowanceunit.value == "G"){
+		document.form.dnvnstat_dataallowance.value = document.form.dnvnstat_dataallowance.value*1 * 1000;
+	}
+	Format_DataAllowance(document.form.dnvnstat_dataallowance);
+}
+
+function GetCookie(cookiename,returntype){
+	var s;
+	if ((s = cookie.get("cookie_"+cookiename)) != null){
+		return cookie.get("cookie_"+cookiename);
+	}
+	else{
+		if(returntype == "string"){
+			return "";
+		}
+		else if(returntype == "number"){
+			return 0;
+		}
+	}
+}
+
+function SetCookie(cookiename,cookievalue){
+	cookie.set("cookie_"+cookiename, cookievalue, 10 * 365);
+}
+
+function ScriptUpdateLayout(){
+	var localver = GetVersionNumber("local");
+	var serverver = GetVersionNumber("server");
+	$j("#dnvnstat_version_local").text(localver);
+	
+	if(localver != serverver && serverver != "N/A"){
+		$j("#dnvnstat_version_server").text("Updated version available: "+serverver);
+		showhide("btnChkUpdate", false);
+		showhide("dnvnstat_version_server", true);
+		showhide("btnDoUpdate", true);
+	}
+}
+
+function update_status(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/detect_update.js',
+		dataType: 'script',
+		timeout: 3000,
+		error: function(xhr){
+			setTimeout(update_status, 1000);
+		},
+		success: function(){
+			if(updatestatus == "InProgress"){
+				setTimeout(update_status, 1000);
+			}
+			else{
+				document.getElementById("imgChkUpdate").style.display = "none";
+				showhide("dnvnstat_version_server", true);
+				if(updatestatus != "None"){
+					$j("#dnvnstat_version_server").text("Updated version available: "+updatestatus);
+					showhide("btnChkUpdate", false);
+					showhide("btnDoUpdate", true);
+				}
+				else{
+					$j("#dnvnstat_version_server").text("No update available");
+					showhide("btnChkUpdate", true);
+					showhide("btnDoUpdate", false);
+				}
+			}
+		}
+	});
+}
+
+function CheckUpdate(){
+	showhide("btnChkUpdate", false);
+	document.formScriptActions.action_script.value = "start_dn-vnstatcheckupdate";
+	document.formScriptActions.submit();
+	document.getElementById("imgChkUpdate").style.display = "";
+	setTimeout(update_status, 2000);
+}
+
+function DoUpdate(){
+	document.form.action_script.value = "start_dn-vnstatdoupdate";
+	document.form.action_wait.value = 15;
+	showLoading();
+	document.form.submit();
+}
+
+function GetVersionNumber(versiontype){
+	var versionprop;
+	if(versiontype == "local"){
+		versionprop = custom_settings.dnvnstat_version_local;
+	}
+	else if(versiontype == "server"){
+		versionprop = custom_settings.dnvnstat_version_server;
+	}
+	
+	if(typeof versionprop == 'undefined' || versionprop == null){
+		return "N/A";
+	}
+	else{
+		return versionprop;
+	}
+}
+
+$j.fn.serializeObject = function(){
+	var o = custom_settings;
+	var a = this.serializeArray();
+	$j.each(a, function(){
+		if (o[this.name] !== undefined && this.name.indexOf("dnvnstat") != -1 && this.name.indexOf("version") == -1){
+			if (!o[this.name].push){
+				o[this.name] = [o[this.name]];
+			}
+			o[this.name].push(this.value || '');
+		} else if (this.name.indexOf("dnvnstat") != -1 && this.name.indexOf("version") == -1){
+			o[this.name] = this.value || '';
+		}
+	});
+	return o;
+};
+
+function SaveConfig(){
+	document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
+	document.form.action_script.value = "start_dn-vnstatconfig";
+	document.form.action_wait.value = 15;
+	showLoading();
+	document.form.submit();
+}
+
+function get_conf_file(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/config.htm',
+		dataType: 'text',
+		timeout: 1000,
+		error: function(xhr){
+			setTimeout(get_conf_file, 1000);
+		},
+		success: function(data){
+			var configdata=data.split("\n");
+			configdata = configdata.filter(Boolean);
+			for (var i = 0; i < configdata.length; i++){
+				eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value = configdata[i].split("=")[1].replace(/(\r\n|\n|\r)/gm,"");
+			}
+			get_vnstatconf_file();
+		}
+	});
+}
+
+function get_vnstatconf_file(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/vnstatconf.htm',
+		dataType: 'text',
+		timeout: 1000,
+		error: function(xhr){
+			setTimeout(get_vnstatconf_file, 1000);
+		},
+		success: function(data){
+			var configdata=data.split("\n");
+			configdata = configdata.filter(Boolean);
+			for (var i = 0; i < configdata.length; i++){
+				if(configdata[i].startsWith("MonthRotate")){
+					eval("document.form.dnvnstat_"+configdata[i].split(" ")[0].toLowerCase()).value = configdata[i].split(" ")[1].replace(/(\r\n|\n|\r)/gm,"");
+				}
+			}
+		}
+	});
+}
+
+function loadVnStatOutput(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/vnstatoutput.htm',
+		dataType: 'text',
+		error: function(xhr){
+			setTimeout(loadVnStatOutput, 5000);
+		},
+		success: function(data){
+			document.getElementById("VnStatOuput").innerHTML=data;
+		}
+	});
+}
+
+function ShowHideDataUsageWarning(showusage){
+	if(showusage){
+		document.getElementById("datausagewarning").style.display = "";
+		document.getElementById("scripttitle").style.marginLeft = "166px";
+	}
+	else{
+		document.getElementById("datausagewarning").style.display = "none";
+		document.getElementById("scripttitle").style.marginLeft = "0px";
+	}
+}
+
+function UpdateText(){
+	$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: " + daterefeshed);
+	$j("#spandatausage").html(usagestring);
+	ShowHideDataUsageWarning(usagethreshold);
+}
+
+function UpdateImages(){
+	var images=["s","h","d","t","m"];
+	var datestring = new Date().getTime();
+	for(var index = 0; index < images.length; index++){
+		document.getElementById("img_"+images[index]).style.backgroundImage="url(/ext/dn-vnstat/images/.vnstat_"+images[index]+".htm?cachebuster="+datestring+")";
+	}
+}
+
+function UpdateStats(){
+	showhide("btnUpdateStats", false);
+	document.formScriptActions.action_script.value="start_dn-vnstat";
+	document.formScriptActions.submit();
+	document.getElementById("vnstatupdate_text").innerHTML = "Updating bandwidth usage and vnstat data...";
+	showhide("imgVnStatUpdate", true);
+	showhide("vnstatupdate_text", true);
+	setTimeout(update_vnstat, 2000);
+}
+
+function update_vnstat(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/detect_vnstat.js',
+		dataType: 'script',
+		timeout: 1000,
+		error: function(xhr){
+			setTimeout(update_vnstat, 1000);
+		},
+		success: function(){
+			if(vnstatstatus == "InProgress"){
+				setTimeout(update_vnstat, 1000);
+			}
+			else if(vnstatstatus == "Done"){
+				reload_js('/ext/dn-vnstat/vnstatusage.js');
+				UpdateText();
+				UpdateImages();
+				loadVnStatOutput();
+				document.getElementById("vnstatupdate_text").innerHTML = "";
+				showhide("imgVnStatUpdate", false);
+				showhide("vnstatupdate_text", false);
+				showhide("btnUpdateStats", true);
+			}
+		}
+	});
+}
+
+function reload_js(src){
+	$j('script[src="' + src + '"]').remove();
+	$j('<script>').attr('src', src+'?cachebuster='+ new Date().getTime()).appendTo('head');
+}
+
+function AddEventHandlers(){
+	$j(".collapsible-jquery").off('click').on('click', function(){
+		$j(this).siblings().toggle("fast",function(){
+			if($j(this).css("display") == "none"){
+				SetCookie($j(this).siblings()[0].id,"collapsed");
+			}
+			else{
+				SetCookie($j(this).siblings()[0].id,"expanded");
+			}
+		})
+	});
+	
+	$j(".collapsible-jquery").each(function(index,element){
+		if(GetCookie($j(this)[0].id,"string") == "collapsed"){
+			$j(this).siblings().toggle(false);
+		}
+		else{
+			$j(this).siblings().toggle(true);
+		}
+	});
+}
+
+function SetCurrentPage(){
+	document.form.next_page.value = window.location.pathname.substring(1);
+	document.form.current_page.value = window.location.pathname.substring(1);
+}
+
+function initial(){
+	SetCurrentPage();
+	LoadCustomSettings();
+	ScriptUpdateLayout();
+	show_menu();
+	get_conf_file();
+	AddEventHandlers();
+	UpdateText();
+	UpdateImages();
+	loadVnStatOutput();
+}
+
+function reload(){
+	location.reload(true);
+}
 </script>
 </head>
 <body onload="initial();" onunload="return unload_body();">
@@ -216,8 +555,6 @@ var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsBy
 <th width="20%">Data usage for current cycle</th>
 <td>
 <span id="spandatausage" style="color:#FFFFFF;"></span>
-<br />
-<span id="spanrealdatausage" style="color:#FFFFFF;font-style:italic;"></span>&nbsp;&nbsp;<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units" target="_blank" style="color:#FFCC00;">More info</a>
 </td>
 </tr>
 <tr><td colspan="2" align="center" style="padding: 0px;">
