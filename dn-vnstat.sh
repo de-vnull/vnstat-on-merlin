@@ -1162,85 +1162,12 @@ Check_Bandwidth_Usage(){
 	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_DIR/.vnstatusage"
 }
 
-vom_rio(){
-	ScriptHeader
-	printf "\\n\\nPrevious alpha/beta1/self-install version of Vnstat on Merlin has been detected on your router.\\n"
-	printf "\\n\\e[1m%s needs to remove this version to install a newer version.\\e[0m\\n" "$SCRIPT_NAME"
-	printf "\\nNote that %s will NOT delete any existing vnstat database files.\\n" "$SCRIPT_NAME"
-	printf "\\n\\e[33mPress y to continue or any other key to quit this installation and keep the existing version:\\e[0m  "
-	read -r CONDITION
-	
-	if [ "$CONDITION" = "y" ]; then
-		Print_Output false "Uninstalling 'VoM alpha/beta1/manual version'..."
-		# Kill vnstat - probably not necessary, but better safe
-		Print_Output false "Stopping vnstatd..."
-		/opt/etc/init.d/S32vnstat stop
-		killall vnstatd 2>/dev/null
-		
-		# Delete cron jobs
-		Print_Output false "Removing cron jobs..."
-		cru d vnstat_daily
-		cru d vnstat_update
-		# Delete vnstat activities from the various startup scripts
-		Print_Output false "Removing vnstat hooks from user scripts..."
-		grep "vnstat_daily" /jffs/scripts/service-event && sed -i '/vnstat_daily/d' /jffs/scripts/service-event 2>/dev/null
-		grep "vnstat_update" /jffs/scripts/service-event && sed -i '/vnstat_update/d' /jffs/scripts/service-event 2>/dev/null
-		grep "vnstat_daily" /jffs/scripts/services-start && sed -i '/vnstat_daily/d' /jffs/scripts/services-start 2>/dev/null
-		grep "vnstat_update" /jffs/scripts/services-start && sed -i '/vnstat_update/d' /jffs/scripts/services-start 2>/dev/null
-		grep "vnstat-ui" /jffs/scripts/post-mount && sed -i '/vnstat-ui/d' /jffs/scripts/post-mount 2>/dev/null
-		# Now remove the directories and files associated with the alpha/beta1/manual installations
-		Print_Output false "Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed."
-		Get_WebUI_Page "/jffs/addons/vnstat-ui.d/vnstat-ui.asp"
-		if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
-			sed -i "\\~$MyPage~d" /tmp/menuTree.js
-			umount /www/require/modules/menuTree.js
-			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
-		fi
-		rm -rf /jffs/addons/vnstat-ui.d
-		rm -rf /jffs/addons/vnstat.d
-		rm -f /jffs/scripts/send-vnstat.sh
-		rm -f /jffs/scripts/vnstat-stats
-		rm -f /jffs/scripts/vnstat-ui
-		rm -f /jffs/scripts/vnstat-ww.sh
-		rm -f /jffs/scripts/vnstat-install.sh
-		Print_Output false "Renaming /opt/etc/vnstat.conf to /opt/etc/vnstat.conf.old"
-		mv /opt/etc/vnstat.conf /opt/etc/vnstat.conf.old
-		# Wrap up
-		Print_Output false "Removal of old script files completed. Installation of $SCRIPT_NAME will continue." "$PASS"
-		printf "\\n\\e[1m\\e[33mNote, if you made any manual edits to /opt/etc/vnstat.conf (such as customizing the location of the database files)\\n"
-		printf "you will need to re-apply them to %s/vnstat.conf once installation is complete.\\e[0m\\n" "$SCRIPT_DIR"
-		PressEnter
-		ScriptHeader
-	else
-		Print_Output false "Exiting, previous version of vnstat script must be removed to install $SCRIPT_NAME"
-		PressEnter
-		Clear_Lock
-		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
-		exit 1
-	fi
-}
-
 Process_Upgrade(){
 	if [ ! -f "$SCRIPT_DIR/.vnstatusage" ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
 		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
 	fi
-	if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
-		rm -f "$SCRIPT_DIR/.emailenabled"
-	fi
-	if [ -f "$IMAGE_OUTPUT_DIR/vnstat.png" ]; then
-		rm -f "$IMAGE_OUTPUT_DIR/vnstat.png"
-	fi
-	if [ ! -f /opt/lib/libjpeg.so ]; then
-		opkg update >/dev/null 2>&1
-		opkg install libjpeg-turbo >/dev/null 2>&1
-	fi
-	if [ ! -f /opt/bin/jq ]; then
-		opkg update
-		opkg install jq
-	fi
-	rm -f "$SCRIPT_DIR/.znewdefaults"
 }
 
 ScriptHeader(){
@@ -1417,17 +1344,6 @@ MainMenu(){
 Menu_Install(){
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz"
 	sleep 1
-	
-	if [ -d /jffs/addons/vnstat.d ] || [ -f /opt/etc/vnstat.conf ] || [ -f /jffs/scripts/vnstat-install.sh ]; then
-		vom_rio
-	fi
-	
-	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
-		if [ ! -d "$SCRIPT_DIR" ]; then
-			mkdir -p "$SCRIPT_DIR"
-		fi
-		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
-	fi
 	
 	Print_Output false "Checking your router meets the requirements for $SCRIPT_NAME"
 	
