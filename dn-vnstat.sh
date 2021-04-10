@@ -800,7 +800,6 @@ Generate_CSVs(){
 	export TZ
 	
 	timenow=$(date +"%s")
-	timenowfriendly=$(date +"%c")
 	
 	{
 		echo ".headers off"
