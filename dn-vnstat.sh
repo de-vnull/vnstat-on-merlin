@@ -24,16 +24,11 @@ readonly SCRIPT_VERSION="v2.0.0"
 SCRIPT_BRANCH="vnstat2"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
-readonly SCRIPT_CONF="$SCRIPT_DIR/config"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
 readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
-readonly IMAGE_OUTPUT_DIR="$SCRIPT_DIR/images"
-readonly CSV_OUTPUT_DIR="$SCRIPT_DIR/csv"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
-readonly VNSTAT_COMMAND="vnstat --config $SCRIPT_DIR/vnstat.conf"
-readonly VNSTATI_COMMAND="vnstati --config $SCRIPT_DIR/vnstat.conf"
 readonly VNSTAT_OUTPUT_FILE=/tmp/vnstat.txt
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 [ -f /opt/bin/sqlite3 ] && SQLITE3_PATH=/opt/bin/sqlite3 || SQLITE3_PATH=/usr/sbin/sqlite3
@@ -308,18 +303,18 @@ Update_File(){
 	elif [ "$1" = "vnstat.conf" ]; then ### vnstat config file
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
-		if [ ! -f "$SCRIPT_DIR/$1" ]; then
-			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_DIR/$1.default"
-			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_DIR/$1"
-			Print_Output true "$SCRIPT_DIR/$1 does not exist, downloading now." "$PASS"
-		elif [ -f "$SCRIPT_DIR/$1.default" ]; then
-			if ! diff -q "$tmpfile" "$SCRIPT_DIR/$1.default" >/dev/null 2>&1; then
-				Download_File "$SCRIPT_REPO/$1" "$SCRIPT_DIR/$1.default"
-				Print_Output true "New default version of $1 downloaded to $SCRIPT_DIR/$1.default, please compare against your $SCRIPT_DIR/$1" "$PASS"
+		if [ ! -f "$SCRIPT_STORAGE_DIR/$1" ]; then
+			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_STORAGE_DIR/$1.default"
+			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_STORAGE_DIR/$1"
+			Print_Output true "$SCRIPT_STORAGE_DIR/$1 does not exist, downloading now." "$PASS"
+		elif [ -f "$SCRIPT_STORAGE_DIR/$1.default" ]; then
+			if ! diff -q "$tmpfile" "$SCRIPT_STORAGE_DIR/$1.default" >/dev/null 2>&1; then
+				Download_File "$SCRIPT_REPO/$1" "$SCRIPT_STORAGE_DIR/$1.default"
+				Print_Output true "New default version of $1 downloaded to $SCRIPT_STORAGE_DIR/$1.default, please compare against your $SCRIPT_STORAGE_DIR/$1" "$PASS"
 			fi
 		else
-			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_DIR/$1.default"
-			Print_Output true "$SCRIPT_DIR/$1.default does not exist, downloading now. Please compare against your $SCRIPT_DIR/$1" "$PASS"
+			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_STORAGE_DIR/$1.default"
+			Print_Output true "$SCRIPT_STORAGE_DIR/$1.default does not exist, downloading now. Please compare against your $SCRIPT_STORAGE_DIR/$1" "$PASS"
 		fi
 		rm -f "$tmpfile"
 	else
@@ -334,7 +329,7 @@ Conf_FromSettings(){
 		if [ "$(grep "dnvnstat_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
 			Print_Output true "Updated settings from WebUI found, merging..." "$PASS"
 			cp -a "$SCRIPT_CONF" "$SCRIPT_CONF.bak"
-			cp -a "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_DIR/vnstat.conf.bak"
+			cp -a "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/vnstat.conf.bak"
 			grep "dnvnstat_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
 			sed -i "s/dnvnstat_//g;s/ /=/g" "$TMPFILE"
 			warningresetrequired="false"
@@ -352,7 +347,7 @@ Conf_FromSettings(){
 					if [ "$SETTINGVALUE" != "$(AllowanceStartDay check)" ]; then
 						warningresetrequired="true"
 					fi
-					sed -i 's/^MonthRotate .*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_DIR/vnstat.conf"
+					sed -i 's/^MonthRotate .*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 				fi
 			done < "$TMPFILE"
 			grep 'dnvnstat_version' "$SETTINGSFILE" > "$TMPFILE"
@@ -384,6 +379,10 @@ Create_Dirs(){
 		mkdir -p "$SCRIPT_DIR"
 	fi
 	
+	if [ ! -d "$SCRIPT_STORAGE_DIR" ]; then
+		mkdir -p "$SCRIPT_STORAGE_DIR"
+	fi
+	
 	if [ ! -d "$IMAGE_OUTPUT_DIR" ]; then
 		mkdir -p "$IMAGE_OUTPUT_DIR"
 	fi
@@ -410,10 +409,10 @@ Create_Symlinks(){
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
-	ln -s "$SCRIPT_DIR/.vnstatusage" "$SCRIPT_WEB_DIR/vnstatusage.js" 2>/dev/null
+	ln -s "$SCRIPT_STORAGE_DIR/.vnstatusage" "$SCRIPT_WEB_DIR/vnstatusage.js" 2>/dev/null
 	ln -s "$VNSTAT_OUTPUT_FILE" "$SCRIPT_WEB_DIR/vnstatoutput.htm" 2>/dev/null
-	ln -s "$SCRIPT_CONF" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
-	ln -s "$SCRIPT_DIR/vnstat.conf" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
+	ln -s "$SCRIPT_STORAGE_DIR" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
+	ln -s "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
 	ln -s "$IMAGE_OUTPUT_DIR" "$SCRIPT_WEB_DIR/images" 2>/dev/null
 	ln -s "$CSV_OUTPUT_DIR" "$SCRIPT_WEB_DIR/csv" 2>/dev/null
 	
@@ -423,34 +422,34 @@ Create_Symlinks(){
 }
 
 Conf_Exists(){
-	if [ -f "$SCRIPT_DIR/vnstat.conf" ]; then
+	if [ -f "$SCRIPT_STORAGE_DIR/vnstat.conf" ]; then
 		restartvnstat="false"
-		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q "^TimeSyncWait 10" "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q "^TimeSyncWait 10" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q "^UpdateInterval 30" "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q "^UpdateInterval 30" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q "^UnitMode 2" "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^UnitMode.*$/UnitMode 2/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q "^UnitMode 2" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+			sed -i 's/^UnitMode.*$/UnitMode 2/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q "^RateUnitMode 1" "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^RateUnitMode.*$/RateUnitMode 1/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q "^RateUnitMode 1" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+			sed -i 's/^RateUnitMode.*$/RateUnitMode 1/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q "^OutputStyle 0" "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^OutputStyle.*$/OutputStyle 0/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q "^OutputStyle 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+			sed -i 's/^OutputStyle.*$/OutputStyle 0/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q '^MonthFormat "%Y-%m (%d)"' "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m (%d)"/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q '^MonthFormat "%Y-%m (%d)"' "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m (%d)"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
 		
@@ -467,13 +466,13 @@ Conf_Exists(){
 	if [ -f "$SCRIPT_CONF" ]; then
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
-		sed -i -e 's/WARNINGEMAIL/USAGEEMAIL/;s/"//g' "$SCRIPT_CONF"
-		if [ "$(wc -l < "$SCRIPT_CONF")" -eq 3 ]; then
-			echo "ALLOWANCEUNIT=G" >> "$SCRIPT_CONF"
+		sed -i -e 's/"//g' "$SCRIPT_CONF"
+		if ! grep -q "STORAGELOCATION" "$SCRIPT_CONF"; then
+			echo "STORAGELOCATION=jffs" >> "$SCRIPT_CONF"
 		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }
@@ -742,9 +741,61 @@ Get_WAN_IFace(){
 	echo "$IFACE_WAN"
 }
 
+ScriptStorageLocation(){
+	case "$1" in
+		usb)
+			sed -i 's/^STORAGELOCATION.*$/STORAGELOCATION=usb/' "$SCRIPT_CONF"
+			mkdir -p "/opt/share/$SCRIPT_NAME.d/"
+			mv "/jffs/addons/$SCRIPT_NAME.d/csv" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/images" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/config" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/config.bak" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf.bak" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf.default" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/.vnstatusage" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			SCRIPT_CONF="/opt/share/$SCRIPT_NAME.d/config"
+			ScriptStorageLocation load
+		;;
+		jffs)
+			sed -i 's/^STORAGELOCATION.*$/STORAGELOCATION=jffs/' "$SCRIPT_CONF"
+			mkdir -p "/jffs/addons/$SCRIPT_NAME.d/"
+			mv "/opt/share/$SCRIPT_NAME.d/csv" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/images" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/config" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/config.bak" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/vnstat.conf" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/vnstat.conf.bak" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/vnstat.conf.default" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/.vnstatusage" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			SCRIPT_CONF="/jffs/addons/$SCRIPT_NAME.d/config"
+			ScriptStorageLocation load
+		;;
+		check)
+			STORAGELOCATION=$(grep "STORAGELOCATION" "$SCRIPT_CONF" | cut -f2 -d"=")
+			echo "$STORAGELOCATION"
+		;;
+		load)
+			STORAGELOCATION=$(grep "STORAGELOCATION" "$SCRIPT_CONF" | cut -f2 -d"=")
+			if [ "$STORAGELOCATION" = "usb" ]; then
+				SCRIPT_STORAGE_DIR="/opt/share/$SCRIPT_NAME.d"
+			elif [ "$STORAGELOCATION" = "jffs" ]; then
+				SCRIPT_STORAGE_DIR="/jffs/addons/$SCRIPT_NAME.d"
+			fi
+			
+			CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
+			IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
+			VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+			VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+		;;
+	esac
+}
+
 Generate_CSVs(){
-	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-	dbdir="$(grep "^DatabaseDir " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	dbdir="$(grep "^DatabaseDir " "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	TZ=$(cat /etc/TZ)
 	export TZ
 	
@@ -850,6 +901,7 @@ Generate_CSVs(){
 Generate_Images(){
 	Create_Dirs
 	Conf_Exists
+	ScriptStorageLocation load
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -867,7 +919,7 @@ Generate_Images(){
 	
 	outputs="s h d t m"   # what images to generate
 	
-	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
 	for output in $outputs; do
 		$VNSTATI_COMMAND -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
@@ -884,13 +936,14 @@ Generate_Images(){
 Generate_Stats(){
 	Create_Dirs
 	Conf_Exists
+	ScriptStorageLocation load
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
 	Process_Upgrade
-	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	TZ=$(cat /etc/TZ)
 	export TZ
 	printf "vnstats as of: %s\\n\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
@@ -941,7 +994,7 @@ Generate_Email(){
 					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "";
-					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')";
+					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')";
 				} > /tmp/mail.txt
 				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
 			elif [ "$(DailyEmail check)" = "html" ]; then
@@ -964,7 +1017,7 @@ Generate_Email(){
 				
 				outputs="s h d t m"
 				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
-				echo "<p>$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
+				echo "<p>$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
 				
 				for output in $outputs; do
 					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
@@ -1157,7 +1210,7 @@ BandwidthAllowance(){
 AllowanceStartDay(){
 	case "$1" in
 		update)
-			sed -i 's/^MonthRotate .*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
+			sed -i 's/^MonthRotate .*$/MonthRotate '"$2"'/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
@@ -1165,7 +1218,7 @@ AllowanceStartDay(){
 			Check_Bandwidth_Usage
 		;;
 		check)
-			MonthRotate=$(grep "^MonthRotate " "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			MonthRotate=$(grep "^MonthRotate " "$SCRIPT_STORAGE_DIR/vnstat.conf" | cut -f2 -d" ")
 			echo "$MonthRotate"
 		;;
 	esac
@@ -1185,9 +1238,9 @@ AllowanceUnit(){
 
 Reset_Allowance_Warnings(){
 	if [ "$(($(date +%d) + 1))" -eq "$(AllowanceStartDay check)" ] || [ "$1" = "force" ]; then
-		rm -f "$SCRIPT_DIR/.warning75"
-		rm -f "$SCRIPT_DIR/.warning90"
-		rm -f "$SCRIPT_DIR/.warning100"
+		rm -f "$SCRIPT_STORAGE_DIR/.warning75"
+		rm -f "$SCRIPT_STORAGE_DIR/.warning90"
+		rm -f "$SCRIPT_STORAGE_DIR/.warning100"
 	fi
 }
 
@@ -1199,7 +1252,7 @@ Check_Bandwidth_Usage(){
 	TZ=$(cat /etc/TZ)
 	export TZ
 	
-	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
 	rawbandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.months[0] | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
@@ -1223,54 +1276,54 @@ Check_Bandwidth_Usage(){
 	[ -z "$1" ] && Print_Output false "$usagestring"
 	
 	if [ "$bandwidthpercentage" = "N/A" ] || [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 < $2)}')" -eq 1 ]; then
-		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
+		echo "var usagethreshold = false;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	elif [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 >= $2)}')" -eq 1 ] && [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		[ -z "$1" ] && Print_Output false "Data use is at or above 75%" "$WARN"
-		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "Data use is at or above 75%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
+		echo "var usagethreshold = true;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 75%";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		if UsageEmail check && [ ! -f "$SCRIPT_STORAGE_DIR/.warning75" ]; then
 			if [ -n "$1" ]; then
 				Generate_Email usage "75%" "$usagestring" silent
 			else
 				Generate_Email usage "75%" "$usagestring"
 			fi
-			touch "$SCRIPT_DIR/.warning75"
+			touch "$SCRIPT_STORAGE_DIR/.warning75"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 90" | awk '{print ($1 >= $2)}')" -eq 1 ]  && [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		[ -z "$1" ] && Print_Output false "Data use is at or above 90%" "$ERR"
-		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "Data use is at or above 90%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
+		echo "var usagethreshold = true;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 90%";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		if UsageEmail check && [ ! -f "$SCRIPT_STORAGE_DIR/.warning90" ]; then
 			if [ -n "$1" ]; then
 				Generate_Email usage "90%" "$usagestring" silent
 			else
 				Generate_Email usage "90%" "$usagestring"
 			fi
-			touch "$SCRIPT_DIR/.warning90"
+			touch "$SCRIPT_STORAGE_DIR/.warning90"
 		fi
 	elif [ "$(echo "$bandwidthpercentage 100" | awk '{print ($1 >= $2)}')" -eq 1 ]; then
 		[ -z "$1" ] && Print_Output false "Data use is at or above 100%" "$CRIT"
-		echo "var usagethreshold = true;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "Data use is at or above 100%";' >> "$SCRIPT_DIR/.vnstatusage"
-		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
+		echo "var usagethreshold = true;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		echo 'var thresholdstring = "Data use is at or above 100%";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		if UsageEmail check && [ ! -f "$SCRIPT_STORAGE_DIR/.warning100" ]; then
 			if [ -n "$1" ]; then
 				Generate_Email usage "100%" "$usagestring" silent
 			else
 				Generate_Email usage "100%" "$usagestring"
 			fi
-			touch "$SCRIPT_DIR/.warning100"
+			touch "$SCRIPT_STORAGE_DIR/.warning100"
 		fi
 	fi
-	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_DIR/.vnstatusage"
-	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_DIR/.vnstatusage"
+	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
+	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 }
 
 Process_Upgrade(){
-	if [ ! -f "$SCRIPT_DIR/.vnstatusage" ]; then
-		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
-		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
+	if [ ! -f "$SCRIPT_STORAGE_DIR/.vnstatusage" ]; then
+		echo "var usagethreshold = false;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	fi
 }
 
@@ -1313,8 +1366,9 @@ MainMenu(){
 	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
 	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$(AllowanceUnit check)"
 	printf "6.    Set start day of cycle for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
-	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\e[0m\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\e[0m\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
+	printf "s.    Toggle storage location for stats and config\\n      Current location is ${SETTING}%s\\e[0m \\n\\n" "$(ScriptStorageLocation check)"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
@@ -1394,6 +1448,17 @@ MainMenu(){
 				printf "\\n"
 				if Check_Lock menu; then
 					Menu_Edit
+				fi
+				break
+			;;
+			s)
+				printf "\\n"
+				if [ "$(ScriptStorageLocation check)" = "jffs" ]; then
+					ScriptStorageLocation usb
+					Create_Symlinks
+				elif [ "$(ScriptStorageLocation check)" = "usb" ]; then
+					ScriptStorageLocation jffs
+					Create_Symlinks
 				fi
 				break
 			;;
@@ -1498,10 +1563,11 @@ Menu_Install(){
 	Conf_Exists
 	Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 	Set_Version_Custom_Settings server "$SCRIPT_VERSION"
+	ScriptStorageLocation load
 	Create_Symlinks
 	
 	Update_File vnstat.conf
-	sed -i 's/^Interface .*$/Interface "'"$IFACE"'"/' "$SCRIPT_DIR/vnstat.conf"
+	sed -i 's/^Interface .*$/Interface "'"$IFACE"'"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 	
 	Update_File vnstat-ui.asp
 	Update_File S33vnstat
@@ -1551,6 +1617,7 @@ Menu_Startup(){
 	fi
 	Create_Dirs
 	Conf_Exists
+	ScriptStorageLocation load
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -1716,7 +1783,7 @@ Menu_Edit(){
 	done
 	
 	if [ "$exitmenu" != "true" ]; then
-		CONFFILE="$SCRIPT_DIR/vnstat.conf"
+		CONFFILE="$SCRIPT_STORAGE_DIR/vnstat.conf"
 		oldmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
 		$texteditor "$CONFFILE"
 		newmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
@@ -1759,7 +1826,7 @@ Menu_Uninstall(){
 	rm -f /opt/etc/vnstat.conf
 	
 	Reset_Allowance_Warnings force
-	rm -f "$SCRIPT_DIR/.vnstatusage"
+	rm -f "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	rm -rf "$IMAGE_OUTPUT_DIR"
 	
 	SETTINGSFILE=/jffs/addons/custom_settings.txt
@@ -1773,7 +1840,7 @@ Menu_Uninstall(){
 			:
 		;;
 		*)
-			rm -rf "$SCRIPT_DIR"
+			rm -rf "$SCRIPT_STORAGE_DIR"
 			rm -rf /opt/var/lib/vnstat
 			rm -f /opt/etc/vnstat.conf
 		;;
@@ -1827,11 +1894,25 @@ Entware_Ready(){
 }
 ### ###
 
+if [ -f "/opt/share/$SCRIPT_NAME.d/config" ]; then
+	SCRIPT_CONF="/opt/share/$SCRIPT_NAME.d/config"
+	SCRIPT_STORAGE_DIR="/opt/share/$SCRIPT_NAME.d"
+else
+	SCRIPT_CONF="/jffs/addons/$SCRIPT_NAME.d/config"
+	SCRIPT_STORAGE_DIR="/jffs/addons/$SCRIPT_NAME.d"
+fi
+
+CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
+IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
+VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+
 if [ -z "$1" ]; then
 	NTP_Ready
 	Entware_Ready
 	Create_Dirs
 	Conf_Exists
+	ScriptStorageLocation load
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -1919,6 +2000,7 @@ case "$1" in
 		Process_Upgrade
 		Create_Dirs
 		Conf_Exists
+		ScriptStorageLocation load
 		Create_Symlinks
 		Auto_Startup create 2>/dev/null
 		Auto_Cron create 2>/dev/null
@@ -1935,6 +2017,7 @@ case "$1" in
 		Process_Upgrade
 		Create_Dirs
 		Conf_Exists
+		ScriptStorageLocation load
 		Create_Symlinks
 		Auto_Startup create 2>/dev/null
 		Auto_Cron create 2>/dev/null
