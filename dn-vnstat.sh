@@ -830,7 +830,6 @@ Generate_Email(){
 					echo "Date: $(date -R)";
 					echo "";
 					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')";
-					printf "%s\\n\\n" "$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')";
 				} > /tmp/mail.txt
 				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
 			elif [ "$(DailyEmail check)" = "html" ]; then
@@ -854,7 +853,6 @@ Generate_Email(){
 				outputs="s h d t m"
 				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
 				echo "<p>$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
-				echo "<p>$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
 				
 				for output in $outputs; do
 					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
@@ -891,7 +889,6 @@ Generate_Email(){
 			[ -z "$5" ] && Print_Output true "Attempting to send bandwidth usage email"
 			usagepercentage="$2"
 			usagestring="$3"
-			realusagestring="$4"
 			# plain text email to send #
 			{
 				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
@@ -900,8 +897,7 @@ Generate_Email(){
 				echo "Date: $(date -R)";
 				echo "";
 			} > /tmp/mail.txt
-			printf "%s\\n\\n" "$usagestring" >> /tmp/mail.txt
-			printf "%s" "$realusagestring" >> /tmp/mail.txt
+			printf "%s" "$usagestring" >> /tmp/mail.txt
 		fi
 		
 		#Send Email
@@ -1100,13 +1096,7 @@ Check_Bandwidth_Usage(){
 	if echo "$(AllowanceUnit check)" | grep -q T; then
 		scalefactor=$((1000*1000*1000))
 	fi
-	bandwidthused=$(echo "$rawbandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*1.024/$2);}')
-	
-	realscalefactor=$((1024*1024))
-	realbandwidthusedg=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
-	realscalefactor=$(($realscalefactor*1024))
-	realbandwidthusedt=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
-	realusagestring="vnStat will show your usage as ${realbandwidthusedg}GiB / ${realbandwidthusedt}TiB"
+	bandwidthused=$(echo "$rawbandwidthused $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 	
 	bandwidthpercentage=""
 	usagestring=""
@@ -1119,7 +1109,6 @@ Check_Bandwidth_Usage(){
 	fi
 	
 	[ -z "$1" ] && Print_Output false "$usagestring"
-	[ -z "$1" ] && Print_Output false "$realusagestring"
 	
 	if [ "$bandwidthpercentage" = "N/A" ] || [ "$(echo "$bandwidthpercentage 75" | awk '{print ($1 < $2)}')" -eq 1 ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
@@ -1130,9 +1119,9 @@ Check_Bandwidth_Usage(){
 		echo 'var thresholdstring = "Data use is at or above 75%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning75" ]; then
 			if [ -n "$1" ]; then
-				Generate_Email usage "75%" "$usagestring" "$realusagestring" silent
+				Generate_Email usage "75%" "$usagestring" silent
 			else
-				Generate_Email usage "75%" "$usagestring" "$realusagestring"
+				Generate_Email usage "75%" "$usagestring"
 			fi
 			touch "$SCRIPT_DIR/.warning75"
 		fi
@@ -1142,9 +1131,9 @@ Check_Bandwidth_Usage(){
 		echo 'var thresholdstring = "Data use is at or above 90%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning90" ]; then
 			if [ -n "$1" ]; then
-				Generate_Email usage "90%" "$usagestring" "$realusagestring" silent
+				Generate_Email usage "90%" "$usagestring" silent
 			else
-				Generate_Email usage "90%" "$usagestring" "$realusagestring"
+				Generate_Email usage "90%" "$usagestring"
 			fi
 			touch "$SCRIPT_DIR/.warning90"
 		fi
@@ -1154,15 +1143,14 @@ Check_Bandwidth_Usage(){
 		echo 'var thresholdstring = "Data use is at or above 100%";' >> "$SCRIPT_DIR/.vnstatusage"
 		if UsageEmail check && [ ! -f "$SCRIPT_DIR/.warning100" ]; then
 			if [ -n "$1" ]; then
-				Generate_Email usage "100%" "$usagestring" "$realusagestring" silent
+				Generate_Email usage "100%" "$usagestring" silent
 			else
-				Generate_Email usage "100%" "$usagestring" "$realusagestring"
+				Generate_Email usage "100%" "$usagestring"
 			fi
 			touch "$SCRIPT_DIR/.warning100"
 		fi
 	fi
 	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_DIR/.vnstatusage"
-	printf "var realusagestring = \"%s\";\\n" "$realusagestring" >> "$SCRIPT_DIR/.vnstatusage"
 	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_DIR/.vnstatusage"
 }
 
@@ -1213,7 +1201,7 @@ MainMenu(){
 	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
 	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$(AllowanceUnit check)"
 	printf "6.    Set start day of cycle for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
-	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\n      %s\\e[0m\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')" "$(grep " realusagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\e[0m\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
@@ -1527,10 +1515,7 @@ Menu_AllowanceUnit(){
 		allowanceunit="$(AllowanceUnit check)"
 		if [ "$prevallowanceunit" != "$allowanceunit" ]; then
 			scalefactor=1000
-			#if echo "$allowanceunit" | grep -q i ; then
-			#	scalefactor=1024
-			#fi
-		
+			
 			scaletype="none"
 			if [ "$prevallowanceunit" != "$(AllowanceUnit check)" ]; then
 				if echo "$prevallowanceunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
