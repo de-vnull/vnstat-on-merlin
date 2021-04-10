@@ -430,12 +430,12 @@ Conf_Exists(){
 			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q "^UnitMode 0" "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^UnitMode.*$/UnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q "^UnitMode 2" "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^UnitMode.*$/UnitMode 2/' "$SCRIPT_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q "^RateUnitMode 0" "$SCRIPT_DIR/vnstat.conf"; then
-			sed -i 's/^RateUnitMode.*$/RateUnitMode 0/' "$SCRIPT_DIR/vnstat.conf"
+		if ! grep -q "^RateUnitMode 1" "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^RateUnitMode.*$/RateUnitMode 1/' "$SCRIPT_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
 		if ! grep -q "^OutputStyle 0" "$SCRIPT_DIR/vnstat.conf"; then
