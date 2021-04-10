@@ -1253,7 +1253,7 @@ Check_Bandwidth_Usage(){
 	
 	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	
-	rawbandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.months[0] | .rx + .tx')"
+	rawbandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.month[0] | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
 	
 	scalefactor=$((1000*1000))
