@@ -783,7 +783,6 @@ Generate_Stats(){
 	printf "vnstats as of: %s\\n\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	{
 		$VNSTAT_COMMAND -i "$interface" -m;
-		$VNSTAT_COMMAND -i "$interface" -w;
 		$VNSTAT_COMMAND -i "$interface" -d;
 	} >> "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && cat "$VNSTAT_OUTPUT_FILE"
