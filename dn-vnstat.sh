@@ -773,13 +773,14 @@ Generate_Stats(){
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
 	Process_Upgrade
+	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	TZ=$(cat /etc/TZ)
 	export TZ
 	printf "vnstats as of: %s\\n\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	{
-		$VNSTAT_COMMAND -m;
-		$VNSTAT_COMMAND -w;
-		$VNSTAT_COMMAND -d;
+		$VNSTAT_COMMAND -i "$interface" -m;
+		$VNSTAT_COMMAND -i "$interface" -w;
+		$VNSTAT_COMMAND -i "$interface" -d;
 	} >> "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && cat "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && printf "\\n"
