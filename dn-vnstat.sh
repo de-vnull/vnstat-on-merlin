@@ -812,52 +812,56 @@ Generate_CSVs(){
 	interfaceid="$(cat /tmp/dn-vnstatiface)"
 	rm -f /tmp/dn-vnstatiface
 	
-	metriclist="rx tx"
+	intervallist="fiveminute hour day"
 	
-	for metric in $metriclist; do
-		{
-			echo ".mode csv"
-			echo ".headers off"
-			echo ".output $CSV_OUTPUT_DIR/${metric}daily.tmp"
-			echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM fiveminute WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400);"
-		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
+	for interval in $intervallist; do
+		metriclist="rx tx"
+		
+		for metric in $metriclist; do
+			{
+				echo ".mode csv"
+				echo ".headers off"
+				echo ".output $CSV_OUTPUT_DIR/${metric}daily.tmp"
+				echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400);"
+			} > /tmp/dn-vnstat.sql
+			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
+				sleep 1
+			done
+			
+			{
+				echo ".mode csv"
+				echo ".headers off"
+				echo ".output $CSV_OUTPUT_DIR/${metric}weekly.tmp"
+				echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400*7);"
+			} > /tmp/dn-vnstat.sql
+			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
+				sleep 1
+			done
+			
+			{
+				echo ".mode csv"
+				echo ".headers off"
+				echo ".output $CSV_OUTPUT_DIR/${metric}monthly.tmp"
+				echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400*30);"
+			} > /tmp/dn-vnstat.sql
+			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
+				sleep 1
+			done
+			
+			rm -f /tmp/dn-vnstat.sql
 		done
 		
-		{
-			echo ".mode csv"
-			echo ".headers off"
-			echo ".output $CSV_OUTPUT_DIR/${metric}weekly.tmp"
-			echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM fiveminute WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400*7);"
-		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		cat "$CSV_OUTPUT_DIR/rxdaily.tmp" "$CSV_OUTPUT_DIR/txdaily.tmp" > "$CSV_OUTPUT_DIR/DataUsage_${interval}_daily.htm" 2> /dev/null
+		cat "$CSV_OUTPUT_DIR/rxweekly.tmp" "$CSV_OUTPUT_DIR/txweekly.tmp" > "$CSV_OUTPUT_DIR/DataUsage_${interval}_weekly.htm" 2> /dev/null
+		cat "$CSV_OUTPUT_DIR/rxmonthly.tmp" "$CSV_OUTPUT_DIR/txmonthly.tmp" > "$CSV_OUTPUT_DIR/DataUsage_${interval}_monthly.htm" 2> /dev/null
 		
-		{
-			echo ".mode csv"
-			echo ".headers off"
-			echo ".output $CSV_OUTPUT_DIR/${metric}monthly.tmp"
-			echo "SELECT '$metric' Metric,CAST(strftime('%s', [date], 'utc') as INT) Time,[$metric] Value FROM fiveminute WHERE [interface] = '$interfaceid' AND CAST(strftime('%s', [date], 'utc') as INT) >= ($timenow - 86400*30);"
-		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		sed -i 's/rx/Received/g;s/tx/Sent/g;1i Metric,Time,Value' "$CSV_OUTPUT_DIR/DataUsage_${interval}_daily.htm"
+		sed -i 's/rx/Received/g;s/tx/Sent/g;1i Metric,Time,Value' "$CSV_OUTPUT_DIR/DataUsage_${interval}_weekly.htm"
+		sed -i 's/rx/Received/g;s/tx/Sent/g;1i Metric,Time,Value' "$CSV_OUTPUT_DIR/DataUsage_${interval}_monthly.htm"
 		
-		rm -f /tmp/dn-vnstat.sql
+		rm -f "$CSV_OUTPUT_DIR/rx"*
+		rm -f "$CSV_OUTPUT_DIR/tx"*
 	done
-	
-	cat "$CSV_OUTPUT_DIR/rxdaily.tmp" "$CSV_OUTPUT_DIR/txdaily.tmp" > "$CSV_OUTPUT_DIR/Combineddaily.htm" 2> /dev/null
-	cat "$CSV_OUTPUT_DIR/rxweekly.tmp" "$CSV_OUTPUT_DIR/txweekly.tmp" > "$CSV_OUTPUT_DIR/Combinedweekly.htm" 2> /dev/null
-	cat "$CSV_OUTPUT_DIR/rxmonthly.tmp" "$CSV_OUTPUT_DIR/txmonthly.tmp" > "$CSV_OUTPUT_DIR/Combinedmonthly.htm" 2> /dev/null
-	
-	sed -i '1i Metric,Time,Value' "$CSV_OUTPUT_DIR/Combineddaily.htm"
-	sed -i '1i Metric,Time,Value' "$CSV_OUTPUT_DIR/Combinedweekly.htm"
-	sed -i '1i Metric,Time,Value' "$CSV_OUTPUT_DIR/Combinedmonthly.htm"
-	
-	rm -f "$CSV_OUTPUT_DIR/rx"*
-	rm -f "$CSV_OUTPUT_DIR/tx"*
 	
 	{
 		echo ".mode csv"
