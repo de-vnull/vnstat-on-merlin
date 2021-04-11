@@ -20,7 +20,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v1.0.0"
+readonly SCRIPT_VERSION="v1.0.1"
 SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -442,6 +442,11 @@ Conf_Exists(){
 			sed -i 's/^OutputStyle.*$/OutputStyle 0/' "$SCRIPT_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
+		if ! grep -q '^MonthFormat "%Y-%m (%d)"' "$SCRIPT_DIR/vnstat.conf"; then
+			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m (%d)"/' "$SCRIPT_DIR/vnstat.conf"
+			restartvnstat="true"
+		fi
+		
 		if [ "$restartvnstat" = "true" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			Generate_Images
@@ -752,7 +757,11 @@ Generate_Images(){
 	
 	for output in $outputs; do
 		$VNSTATI_COMMAND -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
-		sleep 1
+	done
+	
+	sleep 1
+	
+	for output in $outputs; do
 		cp "$IMAGE_OUTPUT_DIR/vnstat_$output.png" "$IMAGE_OUTPUT_DIR/.vnstat_$output.htm"
 		rm -f "$IMAGE_OUTPUT_DIR/vnstat_$output.htm"
 	done
@@ -769,11 +778,12 @@ Generate_Stats(){
 	Process_Upgrade
 	TZ=$(cat /etc/TZ)
 	export TZ
+	interface="$(grep "^Interface" "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	printf "vnstats as of: %s\\n\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	{
-		$VNSTAT_COMMAND -m;
-		$VNSTAT_COMMAND -w;
-		$VNSTAT_COMMAND -d;
+		$VNSTAT_COMMAND -i "$interface" -m;
+		$VNSTAT_COMMAND -i "$interface" -w;
+		$VNSTAT_COMMAND -i "$interface" -d;
 	} >> "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && cat "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && printf "\\n"
@@ -815,7 +825,7 @@ Generate_Email(){
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
+					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "";
 					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')";
@@ -827,7 +837,7 @@ Generate_Email(){
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
+					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "MIME-Version: 1.0";
 					echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\"";
@@ -1101,10 +1111,10 @@ Check_Bandwidth_Usage(){
 	usagestring=""
 	if [ "$(echo "$userLimit 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
 		bandwidthpercentage="N/A"
-		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this cycle"
+		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this cycle, the cycle starts on day $(AllowanceStartDay check) of the month"
 	else
 		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
-		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) cycle allowance"
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) cycle allowance, the cycle starts on day $(AllowanceStartDay check) of the month"
 	fi
 	
 	[ -z "$1" ] && Print_Output false "$usagestring"
