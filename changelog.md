@@ -1,6 +1,12 @@
 # Changelog #
 
-## v 1.0.0 - 28-Mar-2021 ###
+### v 1.0.1 - 11-Apr-2021 ###
+* New format for monthly total in output listing: i.e., `yyyy-mm (dd)` where dd is the start of the cycle in a given period
+* Add "Router Friendly Name" to email subject line (can be modified in Diversion email set-up)
+* Add cycle restart day to usage string: i.e., "You have used XX % (YY GB) of your ZZ GB cycle allowance, __the cycle starts on day 1 of the month__"
+* Back-end: Always specify interface (-i) with vnstat commands in case database has multiple interfaces tracked
+
+### v 1.0.0 - 28-Mar-2021 ###
 * Release 1 (R1)
 * Fix calculation for data-limits to reflect GB/TB (base 1000) - vnStat measures in GiB/TiB (base 1024)
   - More information: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units
