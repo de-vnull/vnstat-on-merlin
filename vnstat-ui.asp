@@ -174,7 +174,7 @@ function LoadCustomSettings(){
 	}
 }
 var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
-var maxNoCharts = 3;
+var maxNoCharts = 9;
 var currentNoCharts = 0;
 
 var ShowLines = GetCookie("ShowLines","string");
@@ -191,6 +191,7 @@ Chart.Tooltip.positioners.cursor = function(chartElements, coordinates){
 	return coordinates;
 };
 
+var dataintervallist = ["fiveminute","hour","day"];
 var chartlist = ["daily","weekly","monthly"];
 var timeunitlist = ["hour","day","day"];
 var intervallist = [24,7,30];
@@ -567,7 +568,7 @@ function Draw_Chart_NoData(txtchartname){
 	ctx.restore();
 }
 
-function Draw_Chart(txtchartname,txtcharttype){
+function Draw_Chart(txtchartname){
 	var txtunity = $j("#" + txtchartname + "_Unit option:selected").text();
 	var txttitle = "Data Usage";
 	var metric0 = "Received";
@@ -579,10 +580,14 @@ function Draw_Chart(txtchartname,txtcharttype){
 	}
 	
 	var chartperiod = getChartPeriod($j("#" + txtchartname + "_Period option:selected").val());
+	var chartinterval = getChartInterval($j("#" + txtchartname + "_Interval option:selected").val());
 	var chartunitmultiplier = getChartUnitMultiplier($j("#" + txtchartname + "_Unit option:selected").val());
 	var txtunitx = timeunitlist[$j("#" + txtchartname + "_Period option:selected").val()];
 	var numunitx = intervallist[$j("#" + txtchartname + "_Period option:selected").val()];
-	var dataobject = window[txtchartname+"_"+chartperiod];
+	var chartxaxistype = "time";
+	var chartxaxismax = null;
+	var charttype = "line";
+	var dataobject = window[txtchartname+"_"+chartinterval+"_"+chartperiod];
 	if(typeof dataobject === 'undefined' || dataobject === null){ Draw_Chart_NoData(txtchartname); return; }
 	if(dataobject.length == 0){ Draw_Chart_NoData(txtchartname); return; }
 	
@@ -607,6 +612,17 @@ function Draw_Chart(txtchartname,txtcharttype){
 	
 	var timeaxisformat = getTimeFormat($j("#Time_Format option:selected").val(),"axis");
 	var timetooltipformat = getTimeFormat($j("#Time_Format option:selected").val(),"tooltip");
+	
+	if(chartperiod == "daily" && chartinterval == "day"){
+		txtunitx = "day";
+		numunitx = 1;
+		chartxaxistype = "category";
+	}
+	
+	if(chartinterval == "day"){
+		charttype = "bar";
+		chartxaxismax = moment().add(12, "hours");
+	}
 	
 	factor=0;
 	if(txtunitx=="hour"){
@@ -660,8 +676,15 @@ function Draw_Chart(txtchartname,txtcharttype){
 		title: { display: true, text: txttitle },
 		tooltips: {
 			callbacks: {
-					title: function (tooltipItem, data){ return (moment(tooltipItem[0].xLabel,"X").format(timetooltipformat)); },
-					label: function (tooltipItem, data){ var txtunitytip=txtunity; return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals) + ' ' + txtunitytip;}
+					title: function (tooltipItem, data){
+						if(chartinterval == "day"){
+							return moment().format('YYYY-MM-DD');
+						}
+						else{
+							return moment(tooltipItem[0].xLabel,"X").format(timetooltipformat);
+						}
+					},
+					label: function (tooltipItem, data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals) + ' ' + txtunitytip;}
 				},
 			itemSort: function(a, b){
 				return b.datasetIndex - a.datasetIndex;
@@ -672,10 +695,11 @@ function Draw_Chart(txtchartname,txtcharttype){
 		},
 		scales: {
 			xAxes: [{
-				type: "time",
+				type: chartxaxistype,
 				gridLines: { display: true, color: "#282828" },
 				ticks: {
 					min: moment().subtract(numunitx, txtunitx+"s"),
+					max: chartxaxismax,
 					display: true
 				},
 				time: {
@@ -888,7 +912,7 @@ function Draw_Chart(txtchartname,txtcharttype){
 		datasets: getDataSets(dataobject, chartTrafficTypes, chartunitmultiplier)
 	};
 	objchartname = new Chart(ctx, {
-		type: 'line',
+		type: charttype,
 		options: lineOptions,
 		data: lineDataset
 	});
@@ -998,7 +1022,7 @@ function ToggleLines(){
 		SetCookie("ShowLines","");
 	}
 	
-	var chartobj = window["LineChart_DataUsage_fiveminute"];
+	var chartobj = window["LineChart_DataUsage"];
 	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 	var maxlines = 6;
 	for(var i = 0; i < maxlines; i++){
@@ -1017,7 +1041,7 @@ function ToggleFill(){
 		SetCookie("ShowFill","origin");
 	}
 	
-	var chartobj = window["LineChart_DataUsage_fiveminute"];
+	var chartobj = window["LineChart_DataUsage"];
 	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 	chartobj.data.datasets[0].fill=ShowFill;
 	chartobj.data.datasets[1].fill=ShowFill;
@@ -1025,10 +1049,14 @@ function ToggleFill(){
 }
 
 function RedrawAllCharts(){
+	$j("#DataUsage_Interval").val(GetCookie("DataUsage_Interval","number"));
+	$j("#DataUsage_Period").val(GetCookie("DataUsage_Period","number"));
+	$j("#DataUsage_Unit").val(GetCookie("DataUsage_Unit","number"));
+	$j("#DataUsage_Scale").val(GetCookie("DataUsage_Scale","number"));
 	for(var i = 0; i < chartlist.length; i++){
-		$j("#DataUsage_fiveminute_Period").val(GetCookie("DataUsage_fiveminute_Period","number"));
-		$j("#DataUsage_fiveminute_Scale").val(GetCookie("DataUsage_fiveminute_Scale","number"));
-		d3.csv('/ext/dn-vnstat/csv/DataUsage_fiveminute_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,"DataUsage_fiveminute_"+chartlist[i]));
+		for(var i2 = 0; i2 < dataintervallist.length; i2++){
+			d3.csv('/ext/dn-vnstat/csv/DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,"DataUsage_"+dataintervallist[i2]+"_"+chartlist[i]));
+		}
 	}
 }
 
@@ -1036,7 +1064,7 @@ function SetGlobalDataset(txtchartname,dataobject){
 	window[txtchartname] = dataobject;
 	currentNoCharts++;
 	if(currentNoCharts == maxNoCharts){
-		Draw_Chart("DataUsage_fiveminute");
+		Draw_Chart("DataUsage");
 	}
 }
 
@@ -1096,7 +1124,7 @@ function getChartScale(scale){
 	return chartscale;
 }
 
-function getChartType(layout){
+function getChartInterval(layout){
 	var charttype = "fiveminute";
 	if(layout == 0) charttype = "fiveminute";
 	else if(layout == 1) charttype = "hour";
@@ -1105,7 +1133,7 @@ function getChartType(layout){
 }
 
 function ResetZoom(){
-	var chartobj = window["LineChart_DataUsage_fiveminute"];
+	var chartobj = window["LineChart_DataUsage"];
 	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 	chartobj.resetZoom();
 }
@@ -1129,7 +1157,7 @@ function ToggleDragZoom(button){
 		buttonvalue = "Drag Zoom On";
 	}
 	
-	var chartobj = window["LineChart_DataUsage_fiveminute"];
+	var chartobj = window["LineChart_DataUsage"];
 	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 	chartobj.options.plugins.zoom.zoom.drag = drag;
 	chartobj.options.plugins.zoom.pan.enabled = pan;
@@ -1139,9 +1167,8 @@ function ToggleDragZoom(button){
 
 function changeAllCharts(e){
 	value = e.value * 1;
-	name = e.id.substring(0, e.id.lastIndexOf("_"));
 	SetCookie(e.id,value);
-	Draw_Chart(name);
+	Draw_Chart("DataUsage");
 }
 
 function changeChart(e){
@@ -1397,15 +1424,25 @@ Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="chart_DataUsage_fiveminute">
+<thead class="collapsible-jquery" id="chart_DataUsage">
 <tr>
 <td colspan="2">Data Usage (click to expand/collapse)</td>
 </tr>
 </thead>
 <tr class="even">
+<th width="40%">Data interval</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_Interval">
+<option value="0">5 minutes</option>
+<option value="1">Hours</option>
+<option value="2">Days</option>
+</select>
+</td>
+</tr>
+<tr class="even">
 <th width="40%">Period to display</th>
 <td>
-<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_fiveminute_Period">
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_Period">
 <option value="0">Last 24 hours</option>
 <option value="1">Last 7 days</option>
 <option value="2">Last 30 days</option>
@@ -1415,7 +1452,7 @@ Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 <tr class="even">
 <th width="40%">Unit for data usage</th>
 <td>
-<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_fiveminute_Unit">
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_Unit">
 <option value="0">B</option>
 <option value="1">KB</option>
 <option value="2">MB</option>
@@ -1427,7 +1464,7 @@ Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 <tr class="even">
 <th width="40%">Scale type</th>
 <td>
-<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_fiveminute_Scale">
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_Scale">
 <option value="0">Linear</option>
 <option value="1">Logarithmic</option>
 </select>
@@ -1435,7 +1472,7 @@ Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 </tr>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divLineChart_DataUsage_fiveminute" height="500" /></div>
+<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divLineChart_DataUsage" height="500" /></div>
 </td>
 </tr>
 </table>
