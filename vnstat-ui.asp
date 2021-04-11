@@ -577,12 +577,12 @@ function reload(){
 </tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
-<table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_config">
+<table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable SettingsTable" style="border:0px;" id="table_config">
 <thead class="collapsible-jquery" id="scriptconfig">
 <tr><td colspan="2">Configuration (click to expand/collapse)</td></tr>
 </thead>
 <tr class="even" id="rowenabledailyemail">
-<th width="40%">Enable daily summary emails</th>
+<td class="settingname">Enable daily summary emails</td>
 <td class="settingvalue">
 <input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_html" class="input" value="html">
 <label for="dnvnstat_dailyemail_html" class="settingvalue">HTML</label>
@@ -593,7 +593,7 @@ function reload(){
 </td>
 </tr>
 <tr class="even" id="rowenableusageemail">
-<th width="40%">Enable data usage warning emails</th>
+<td class="settingname">Enable data usage warning emails</td>
 <td class="settingvalue">
 <input type="radio" name="dnvnstat_usageemail" id="dnvnstat_usageemail_true" class="input" value="true">
 <label for="dnvnstat_usageemail_true" class="settingvalue">Enabled</label>
@@ -602,36 +602,45 @@ function reload(){
 </td>
 </tr>
 <tr class="even" id="rowdataallowance">
-<th width="40%">Bandwidth allowance for data usage warnings
+<td class="settingname">Bandwidth allowance for data usage warnings
 <br />
 <a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Data-limits" target="_blank" style="color:#FFCC00;">More info</a>
-</th>
+</td>
 <td class="settingvalue">
 <input autocomplete="off" type="text" maxlength="8" class="input_12_table removespacing" name="dnvnstat_dataallowance" value="1200.00" onkeypress="return validator.isNumberFloat(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this);Format_DataAllowance(this)" />
 &nbsp;<span id="spandefaultallowance" style="color:#FFCC00;">(0: unlimited)</span>
 </td>
 </tr>
 <tr class="even" id="rowallowanceunit">
-<th width="40%">Unit for bandwidth allowance</th>
+<td class="settingname">Unit for bandwidth allowance</td>
 <td class="settingvalue">
 <input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_g" class="input" value="G" onchange="ScaleDataAllowance();" checked>
-<label for="dnvnstat_allowanceunit_g" id="label_allowanceunit_g" class="settingvalue">GB</label>
+<label for="dnvnstat_allowanceunit_g" id="label_allowanceunit_g">GB</label>
 <input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_t" class="input" value="T" onchange="ScaleDataAllowance();">
-<label for="dnvnstat_allowanceunit_t" id="label_allowanceunit_t" class="settingvalue">TB</label>
+<label for="dnvnstat_allowanceunit_t" id="label_allowanceunit_t">TB</label>
 </td>
 </tr>
 <tr class="even" id="rowmonthrotate">
-<th width="40%">Start day for bandwidth allowance cycle<br />
+<td class="settingname">Start day for bandwidth allowance cycle<br />
 <a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#MonthRotate" target="_blank" style="color:#FFCC00;">More info</a>
-</th>
+</td>
 <td class="settingvalue">Day&nbsp;
 <input autocomplete="off" type="text" maxlength="2" class="input_3_table removespacing" name="dnvnstat_monthrotate" value="1" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_AllowanceStartDay(this)" onblur="Validate_AllowanceStartDay(this)" />
 &nbsp;of month&nbsp;<span style="color:#FFCC00;">(between 1 and 28, default: 1)</span>
 </td>
 </tr>
+<tr class="even" id="rowstorageloc">
+<td class="settingname">Data Storage Location</td>
+<td class="settingvalue">
+<input type="radio" name="dnvnstat_storagelocation" id="dnvnstat_storageloc_jffs" class="input" value="jffs" checked>
+<label for="dnvnstat_storageloc_jffs">JFFS</label>
+<input type="radio" name="dnvnstat_storagelocation" id="dnvnstat_storageloc_usb" class="input" value="usb">
+<label for="dnvnstat_storageloc_usb">USB</label>
+</td>
+</tr>
 <tr class="apply_gen" valign="top" height="35px">
-<td colspan="2" style="background-color:rgb(77, 89, 93);">
-<input type="button" onclick="SaveConfig();" value="Save" class="button_gen" name="button">
+<td class="savebutton" colspan="2" style="background-color:rgb(77, 89, 93);">
+<input type="button" onclick="SaveConfig();" value="Save" class="button_gen savebutton" name="button">
 </td>
 </tr>
 </table>
@@ -642,15 +651,15 @@ function reload(){
 </thead>
 <tr>
 <th width="20%">Data usage for current cycle</th>
-<td>
-<span id="spandatausage" style="color:#FFFFFF;"></span>
-</td>
+<td><span id="spandatausage" style="color:#FFFFFF;"></span></td>
 </tr>
-<tr><td colspan="2" align="center" style="padding: 0px;">
+<tr>
+<td colspan="2" align="center" style="padding: 0px;">
 <div id="img_m" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_m.htm');">
 <img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_m.png" alt="Monthly"/>
 </div>
-</td></tr>
+</td>
+</tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
