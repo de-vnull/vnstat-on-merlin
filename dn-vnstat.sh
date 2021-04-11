@@ -994,7 +994,7 @@ Generate_Email(){
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
+					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "";
 					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')";
@@ -1005,7 +1005,7 @@ Generate_Email(){
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
+					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "MIME-Version: 1.0";
 					echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\"";
@@ -1270,10 +1270,10 @@ Check_Bandwidth_Usage(){
 	usagestring=""
 	if [ "$(echo "$userLimit 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
 		bandwidthpercentage="N/A"
-		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this cycle"
+		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this cycle, the cycle starts on day $(AllowanceStartDay check) of the month"
 	else
 		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
-		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) cycle allowance"
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) cycle allowance, the cycle starts on day $(AllowanceStartDay check) of the month"
 	fi
 	
 	[ -z "$1" ] && Print_Output false "$usagestring"
