@@ -573,6 +573,11 @@ function Draw_Chart(txtchartname,txtcharttype){
 	var metric0 = "Received";
 	var metric1 = "Sent";
 	
+	var decimals = 2;
+	if(txtunity == "B" || txtunity == "KB"){
+		decimals = 0;
+	}
+	
 	var chartperiod = getChartPeriod($j("#" + txtchartname + "_Period option:selected").val());
 	var chartunitmultiplier = getChartUnitMultiplier($j("#" + txtchartname + "_Unit option:selected").val());
 	var txtunitx = timeunitlist[$j("#" + txtchartname + "_Period option:selected").val()];
@@ -656,7 +661,7 @@ function Draw_Chart(txtchartname,txtcharttype){
 		tooltips: {
 			callbacks: {
 					title: function (tooltipItem, data){ return (moment(tooltipItem[0].xLabel,"X").format(timetooltipformat)); },
-					label: function (tooltipItem, data){ var txtunitytip=txtunity; return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,2).toFixed(2) + ' ' + txtunitytip;}
+					label: function (tooltipItem, data){ var txtunitytip=txtunity; return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals) + ' ' + txtunitytip;}
 				},
 			itemSort: function(a, b){
 				return b.datasetIndex - a.datasetIndex;
@@ -749,7 +754,7 @@ function Draw_Chart(txtchartname,txtcharttype){
 					enabled: true,
 					xAdjust: 0,
 					yAdjust: 0,
-					content: "Avg. "+metric0+"=" + round(getAverage(chartData0),2).toFixed(2)+txtunity,
+					content: "Avg. "+metric0+"=" + round(getAverage(chartData0),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -774,7 +779,7 @@ function Draw_Chart(txtchartname,txtcharttype){
 					enabled: true,
 					xAdjust: 15,
 					yAdjust: 0,
-					content: "Max. "+metric0+"=" + round(getLimit(chartData0,"y","max",true),2).toFixed(2)+txtunity,
+					content: "Max. "+metric0+"=" + round(getLimit(chartData0,"y","max",true),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -799,7 +804,7 @@ function Draw_Chart(txtchartname,txtcharttype){
 					enabled: true,
 					xAdjust: 15,
 					yAdjust: 0,
-					content: "Min. "+metric0+"=" + round(getLimit(chartData0,"y","min",true),2).toFixed(2)+txtunity,
+					content: "Min. "+metric0+"=" + round(getLimit(chartData0,"y","min",true),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -824,7 +829,7 @@ function Draw_Chart(txtchartname,txtcharttype){
 					enabled: true,
 					xAdjust: 0,
 					yAdjust: 0,
-					content: "Avg. "+metric1+"=" + round(getAverage(chartData1),2).toFixed(2)+txtunity,
+					content: "Avg. "+metric1+"=" + round(getAverage(chartData1),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -849,7 +854,7 @@ function Draw_Chart(txtchartname,txtcharttype){
 					enabled: true,
 					xAdjust: 15,
 					yAdjust: 0,
-					content: "Max. "+metric1+"=" + round(getLimit(chartData1,"y","max",true),2).toFixed(2)+txtunity,
+					content: "Max. "+metric1+"=" + round(getLimit(chartData1,"y","max",true),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -874,7 +879,7 @@ function Draw_Chart(txtchartname,txtcharttype){
 					enabled: true,
 					xAdjust: 15,
 					yAdjust: 0,
-					content: "Min. "+metric1+"=" + round(getLimit(chartData1,"y","min",true),2).toFixed(2)+txtunity,
+					content: "Min. "+metric1+"=" + round(getLimit(chartData1,"y","min",true),decimals).toFixed(decimals)+txtunity,
 				}
 			}
 		]}
@@ -892,9 +897,13 @@ function Draw_Chart(txtchartname,txtcharttype){
 
 function LogarithmicFormatter(tickValue, index, ticks){
 	var unit = this.options.scaleLabel.labelString;
+	var decimals = 2;
+	if(unit == "B" || unit == "KB"){
+		decimals = 0;
+	}
 	if(this.type != "logarithmic"){
 		if(! isNaN(tickValue)){
-			return round(tickValue,2).toFixed(2) + ' ' + unit;
+			return round(tickValue,decimals).toFixed(decimals) + ' ' + unit;
 		}
 		else{
 			return tickValue + ' ' + unit;
@@ -919,7 +928,7 @@ function LogarithmicFormatter(tickValue, index, ticks){
 			}
 			else{
 				if(! isNaN(tickValue)){
-					return round(tickValue,2).toFixed(2) + ' ' + unit;
+					return round(tickValue,decimals).toFixed(decimals) + ' ' + unit;
 				}
 				else{
 					return tickValue + ' ' + unit;
