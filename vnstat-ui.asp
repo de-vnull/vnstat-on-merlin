@@ -26,17 +26,106 @@ thead.collapsible-jquery {
   cursor: pointer;
 }
 
-input.settingvalue {
+.SettingsTable {
+  text-align: left;
+}
+
+.SettingsTable input {
+  text-align: left;
   margin-left: 3px !important;
 }
 
-label.settingvalue {
+.SettingsTable input.savebutton {
+  text-align: center;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  border-right: solid 1px black;
+  border-left: solid 1px black;
+  border-bottom: solid 1px black;
+}
+
+.SettingsTable td.savebutton {
+  border-right: solid 1px black;
+  border-left: solid 1px black;
+  border-bottom: solid 1px black;
+  background-color:rgb(77, 89, 93);
+}
+
+.SettingsTable .cronbutton {
+  text-align: center;
+  min-width: 50px;
+  width: 50px;
+  height: 23px;
+  vertical-align: middle;
+}
+
+.SettingsTable select {
+  margin-left: 3px !important;
+}
+
+.SettingsTable label {
   margin-right: 10px !important;
   vertical-align: top !important;
 }
 
-.invalid {
+.SettingsTable th {
+  background-color: #1F2D35 !important;
+  background: #2F3A3E !important;
+  border-bottom: none !important;
+  border-top: none !important;
+  font-size: 12px !important;
+  color: white !important;
+  padding: 4px !important;
+  font-weight: bolder !important;
+  padding: 0px !important;
+}
+
+.SettingsTable th.sectionheader {
+  padding-left: 10px !important;
+  border-right: solid 1px black !important;
+  border-left: solid 1px black !important;
+}
+
+.SettingsTable td {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  border-right: none;
+  border-left: none;
+}
+
+.SettingsTable span.settingname {
+  background-color: #1F2D35 !important;
+  background: #2F3A3E !important;
+}
+
+.SettingsTable td.settingname {
+  border-right: solid 1px black;
+  border-left: solid 1px black;
+  background-color: #1F2D35 !important;
+  background: #2F3A3E !important;
+  width: 35% !important;
+}
+
+.SettingsTable td.settingvalue {
+  text-align: left !important;
+  border-right: solid 1px black;
+}
+
+.SettingsTable th:first-child{
+  border-left: none;
+}
+
+.SettingsTable th:last-child {
+  border-right: none;
+}
+
+.SettingsTable .invalid {
   background-color: darkred !important;
+}
+
+.SettingsTable .disabled {
+  background-color: #CCCCCC !important;
+  color: #888888 !important;
 }
 
 .removespacing {
