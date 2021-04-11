@@ -825,7 +825,7 @@ Generate_Email(){
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
+					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "";
 					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_DIR/.vnstatusage" | cut -f2 -d'"')";
@@ -837,7 +837,7 @@ Generate_Email(){
 				{
 					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-					echo "Subject: vnstat-stats as of $(date +"%H.%M on %F")";
+					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")";
 					echo "Date: $(date -R)";
 					echo "MIME-Version: 1.0";
 					echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\"";
