@@ -1263,6 +1263,15 @@ function changeChart(e){
 &nbsp;of month&nbsp;<span style="color:#FFCC00;">(between 1 and 28, default: 1)</span>
 </td>
 </tr>
+<tr class="even" id="rowtimeoutput">
+<td class="settingname">Time Output Mode<br/><span style="color:#FFCC00;background:#2F3A3E;">(for CSV export)</span></td>
+<td class="settingvalue">
+<input type="radio" name="dnvnstat_outputtimemode" id="dnvnstat_timeoutput_non-unix" class="input" value="non-unix" checked>
+<label for="dnvnstat_timeoutput_non-unix">Non-Unix</label>
+<input type="radio" name="dnvnstat_outputtimemode" id="dnvnstat_timeoutput_unix" class="input" value="unix">
+<label for="dnvnstat_timeoutput_unix">Unix</label>
+</td>
+</tr>
 <tr class="even" id="rowstorageloc">
 <td class="settingname">Data Storage Location</td>
 <td class="settingvalue">
