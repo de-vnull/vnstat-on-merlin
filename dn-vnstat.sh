@@ -920,13 +920,14 @@ Generate_Images(){
 	
 	[ -z "$1" ] && Print_Output false "vnstati updating stats for UI" "$PASS"
 	
+	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	outputs="s h d t m"   # what images to generate
 	
-	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-	
-	for output in $outputs; do
-		$VNSTATI_COMMAND -"$output" -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_$output.png"
-	done
+	$VNSTATI_COMMAND -s -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_s.png"
+	$VNSTATI_COMMAND -h 24 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_h.png"
+	$VNSTATI_COMMAND -d 30 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_d.png"
+	$VNSTATI_COMMAND -t 10 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_t.png"
+	$VNSTATI_COMMAND -m 12 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_m.png"
 	
 	sleep 1
 	
@@ -951,8 +952,8 @@ Generate_Stats(){
 	export TZ
 	printf "vnstats as of: %s\\n\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	{
-		$VNSTAT_COMMAND -i "$interface" -m;
-		$VNSTAT_COMMAND -i "$interface" -d;
+		$VNSTAT_COMMAND -m 12 -i "$interface";
+		$VNSTAT_COMMAND -d 30 -i "$interface";
 	} >> "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && cat "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && printf "\\n"
