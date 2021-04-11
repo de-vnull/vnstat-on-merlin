@@ -644,7 +644,7 @@ function Draw_Chart(txtchartname){
 		legend: {
 			display: true,
 			position: "top",
-			reverse: true,
+			reverse: false,
 			onClick: function (e, legendItem){
 				var index = legendItem.datasetIndex;
 				var ci = this.chart;
@@ -973,7 +973,7 @@ function getDataSets(objdata, objTrafficTypes, chartunitmultiplier){
 		
 		datasets.push({ label: objTrafficTypes[i], data: traffictypedata, yAxisID: "left-y-axis", borderWidth: 1, pointRadius: 1, lineTension: 0, fill: ShowFill, backgroundColor: backgroundcolourlist[i], borderColor: bordercolourlist[i]});
 	}
-	datasets.reverse();
+	//datasets.reverse();
 	return datasets;
 }
 
