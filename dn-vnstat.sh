@@ -29,7 +29,6 @@ readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
-readonly VNSTAT_OUTPUT_FILE=/tmp/vnstat.txt
 [ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
 [ -f /opt/bin/sqlite3 ] && SQLITE3_PATH=/opt/bin/sqlite3 || SQLITE3_PATH=/usr/sbin/sqlite3
 ### End of script variables ###
@@ -789,6 +788,7 @@ ScriptStorageLocation(){
 			IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
 			VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
 			VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+			VNSTAT_OUTPUT_FILE="$SCRIPT_STORAGE_DIR/vnstat.txt"
 		;;
 	esac
 }
@@ -1916,6 +1916,7 @@ CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
 IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
 VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
 VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+VNSTAT_OUTPUT_FILE="$SCRIPT_STORAGE_DIR/vnstat.txt"
 
 if [ -z "$1" ]; then
 	NTP_Ready
