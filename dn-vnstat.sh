@@ -1390,6 +1390,7 @@ MainMenu(){
 				if Check_Lock menu; then
 					Generate_Images
 					Generate_Stats
+					Generate_CSVs
 					Clear_Lock
 				fi
 				PressEnter
@@ -1952,6 +1953,7 @@ case "$1" in
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
+		Generate_CSVs
 		Clear_Lock
 		exit 0
 	;;
@@ -1962,6 +1964,7 @@ case "$1" in
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
+		Generate_CSVs
 		Generate_Email daily
 		exit 0
 	;;
@@ -1977,6 +1980,7 @@ case "$1" in
 			Generate_Images silent
 			Generate_Stats silent
 			Check_Bandwidth_Usage silent
+			Generate_CSVs
 			echo 'var vnstatstatus = "Done";' > /tmp/detect_vnstat.js
 			Clear_Lock
 			exit 0
@@ -2015,6 +2019,7 @@ case "$1" in
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
+		Generate_CSVs
 		exit 0
 	;;
 	postupdate)
@@ -2030,6 +2035,7 @@ case "$1" in
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
+		Generate_CSVs
 		exit 0
 	;;
 	vnstat2)
