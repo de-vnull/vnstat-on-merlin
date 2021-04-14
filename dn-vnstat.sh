@@ -1882,6 +1882,18 @@ case "$1" in
 		Menu_Uninstall
 		exit 0
 	;;
+	develop)
+		SCRIPT_BRANCH="jackyaz-dev"
+		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+		Update_Version force
+		exit 0
+	;;
+	stable)
+		SCRIPT_BRANCH="master"
+		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+		Update_Version force
+		exit 0
+	;;
 	*)
 		echo "Command not recognised, please try again"
 		exit 1
