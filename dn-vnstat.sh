@@ -20,8 +20,8 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v1.0.1"
-SCRIPT_BRANCH="main"
+readonly SCRIPT_VERSION="v1.0.2"
+SCRIPT_BRANCH="legacy-v1"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_CONF="$SCRIPT_DIR/config"
@@ -1924,18 +1924,6 @@ case "$1" in
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
-		exit 0
-	;;
-	develop)
-		SCRIPT_BRANCH="jackyaz-dev"
-		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
-		Update_Version force
-		exit 0
-	;;
-	stable)
-		SCRIPT_BRANCH="master"
-		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
-		Update_Version force
 		exit 0
 	;;
 	uninstall)
