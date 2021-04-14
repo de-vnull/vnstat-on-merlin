@@ -138,7 +138,15 @@ Update_Check(){
 	localver=$(grep "SCRIPT_VERSION=" /jffs/scripts/"$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep -qF "de-vnull" || { Print_Output true "404 error detected - stopping update" "$ERR"; return 1; }
 	serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
-	if [ "$localver" != "$serverver" ]; then
+	if uname -m | grep -iq "mips"; then
+		Print_Output true "MIPS detected, forcing legacy version of $SCRIPT_NAME" "$WARN"
+		SCRIPT_BRANCH="legacy-v1"
+		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+		doupdate="md5"
+		serverver="$localver"
+		Set_Version_Custom_Settings "server" "$serverver-hotfix"
+		echo 'var updatestatus = "'"$serverver-hotfix"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+	elif [ "$localver" != "$serverver" ]; then
 		doupdate="version"
 		Set_Version_Custom_Settings server "$serverver"
 		echo 'var updatestatus = "'"$serverver"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
@@ -179,6 +187,10 @@ Update_Version(){
 			read -r confirm
 			case "$confirm" in
 				y|Y)
+					if uname -m | grep -iq "mips"; then
+						SCRIPT_BRANCH="legacy-v1"
+						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+					fi
 					printf "\\n"
 					Update_File shared-jy.tar.gz
 					Update_File vnstat-ui.asp
@@ -210,6 +222,11 @@ Update_Version(){
 	fi
 	
 	if [ "$1" = "force" ]; then
+		if uname -m | grep -iq "mips"; then
+			Print_Output true "MIPS detected, forcing legacy version of $SCRIPT_NAME" "$WARN"
+			SCRIPT_BRANCH="legacy-v1"
+			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+		fi
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 		Update_File shared-jy.tar.gz
