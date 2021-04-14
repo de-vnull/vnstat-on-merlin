@@ -1913,22 +1913,6 @@ case "$1" in
 		Update_Version force
 		exit 0
 	;;
-	setversion)
-		Process_Upgrade
-		Create_Dirs
-		Conf_Exists
-		Create_Symlinks
-		Auto_Startup create 2>/dev/null
-		Auto_Cron create 2>/dev/null
-		Auto_ServiceEvent create 2>/dev/null
-		Shortcut_Script create
-		Set_Version_Custom_Settings local "$SCRIPT_VERSION"
-		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
-		Generate_Images silent
-		Generate_Stats silent
-		Check_Bandwidth_Usage silent
-		exit 0
-	;;
 	postupdate)
 		Process_Upgrade
 		Create_Dirs
