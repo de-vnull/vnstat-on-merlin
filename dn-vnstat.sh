@@ -135,7 +135,7 @@ Set_Version_Custom_Settings(){
 Update_Check(){
 	echo 'var updatestatus = "InProgress";' > "$SCRIPT_WEB_DIR/detect_update.js"
 	doupdate="false"
-	localver=$(grep "SCRIPT_VERSION=" /jffs/scripts/"$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+	localver=$(grep "SCRIPT_VERSION=" "/jffs/scripts/$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep -qF "de-vnull" || { Print_Output true "404 error detected - stopping update" "$ERR"; return 1; }
 	serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	if uname -m | grep -iq "mips"; then
@@ -149,7 +149,11 @@ Update_Check(){
 	elif [ "$localver" != "$serverver" ]; then
 		doupdate="version"
 		Set_Version_Custom_Settings server "$serverver"
-		echo 'var updatestatus = "'"$serverver"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+		if echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+			echo 'var updatestatus = "'"$serverver"' - WARNING: DATABASE WILL BE RESET WHEN UPDATING FROM V1 TO V2";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+		else
+			echo 'var updatestatus = "'"$serverver"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+		fi
 	else
 		localmd5="$(md5sum "/jffs/scripts/$SCRIPT_NAME" | awk '{print $1}')"
 		remotemd5="$(curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | md5sum | awk '{print $1}')"
@@ -180,6 +184,10 @@ Update_Version(){
 			Print_Output true "New version of $SCRIPT_NAME available - $serverver" "$PASS"
 		elif [ "$isupdate" = "md5" ]; then
 			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available - $serverver" "$PASS"
+		fi
+		
+		if echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+			Print_Output true "WARNING: DATABASE WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
 		fi
 		
 		if [ "$isupdate" != "false" ]; then
@@ -227,7 +235,11 @@ Update_Version(){
 			SCRIPT_BRANCH="legacy-v1"
 			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 		fi
+		localver=$(grep "SCRIPT_VERSION=" "/jffs/scripts/$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+		if echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+			Print_Output true "WARNING: DATABASE WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
+		fi
 		Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 		Update_File shared-jy.tar.gz
 		Update_File vnstat-ui.asp
