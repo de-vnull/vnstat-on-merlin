@@ -28,3 +28,6 @@ The `Bandwidth allowance` should be entered as __GB/TB__, and the calculations f
 * You should consider the usage as the __start of the cycle__ rather than __end of cycle__, which may be more familiar billing- and accountability-wise.
 * In the United States, Comcast/Xfinity begins measurement on the 1st of the month in all markets, so no adjustment from the default is required.
 
+# Time-output-mode #
+
+* Placeholder.
