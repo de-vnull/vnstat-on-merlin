@@ -1329,6 +1329,30 @@ Process_Upgrade(){
 	if [ ! -f "$CSV_OUTPUT_DIR/CompleteResults.htm" ]; then
 		Generate_CSVs
 	fi
+	if [ ! -f "$SCRIPT_STORAGE_DIR/.v2upgraded" ]; then
+		/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
+		touch /opt/etc/vnstat.conf
+		if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
+			if [ ! -d "$SCRIPT_STORAGE_DIR" ]; then
+				mkdir -p "$SCRIPT_STORAGE_DIR"
+			fi
+			$VNSTAT_COMMAND --exportdb > "$SCRIPT_STORAGE_DIR/vnstat-data.bak"
+			rm -rf /opt/var/lib/vnstat/*
+		fi
+		opkg update
+		opkg remove --autoremove vnstati
+		opkg remove --autoremove vnstat
+		rm -f /opt/etc/init.d/S33vnstat
+		rm -f /opt/etc/vnstat.conf
+		opkg install vnstat2
+		opkg install vnstati2
+		opkg install libjpeg-turbo >/dev/null 2>&1
+		opkg install jq
+		opkg install sqlite3-cli
+		opkg install p7zip
+		rm -f /opt/etc/vnstat.conf
+		touch "$SCRIPT_STORAGE_DIR/.v2upgraded"
+	fi
 }
 
 ScriptHeader(){
@@ -1583,7 +1607,11 @@ Menu_Install(){
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
 	
-	Process_Upgrade
+	if [ ! -f "$SCRIPT_STORAGE_DIR/.vnstatusage" ]; then
+		echo "var usagethreshold = false;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
+		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
+	fi
 	
 	if [ -n "$(pidof vnstatd)" ];then
 		Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
