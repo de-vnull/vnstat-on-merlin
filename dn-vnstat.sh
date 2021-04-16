@@ -1889,7 +1889,7 @@ case "$1" in
 		exit 0
 	;;
 	stable)
-		SCRIPT_BRANCH="master"
+		SCRIPT_BRANCH="main"
 		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 		Update_Version force
 		exit 0
