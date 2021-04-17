@@ -2074,19 +2074,10 @@ case "$1" in
 		exit 0
 	;;
 	uninstall)
-		if [ -f "/opt/share/$SCRIPT_NAME.d/config" ]; then
-			SCRIPT_CONF="/opt/share/$SCRIPT_NAME.d/config"
-			SCRIPT_STORAGE_DIR="/opt/share/$SCRIPT_NAME.d"
-		else
-			SCRIPT_CONF="/jffs/addons/$SCRIPT_NAME.d/config"
-			SCRIPT_STORAGE_DIR="/jffs/addons/$SCRIPT_NAME.d"
-		fi
-		
-		CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
-		IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
-		VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
-		VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
-		VNSTAT_OUTPUT_FILE="$SCRIPT_STORAGE_DIR/vnstat.txt"
+		Entware_Ready
+		Create_Dirs
+		Conf_Exists
+		ScriptStorageLocation load
 		Check_Lock
 		Menu_Uninstall
 		exit 0
