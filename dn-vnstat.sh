@@ -198,6 +198,13 @@ Update_Version(){
 					if uname -m | grep -iq "mips"; then
 						SCRIPT_BRANCH="legacy-v1"
 						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+					elif echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+						Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
+						SCRIPT_BRANCH="vnstat2"
+						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+						/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+						exec "$0"
+						exit 0
 					fi
 					printf "\\n"
 					Update_File shared-jy.tar.gz
@@ -239,6 +246,16 @@ Update_Version(){
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		if echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
 			Print_Output true "WARNING: VNSTAT.CONF AND DATABASE WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
+			Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
+			SCRIPT_BRANCH="vnstat2"
+			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+			if [ -z "$2" ]; then
+				exec "$0"
+			elif [ "$2" = "unattended" ]; then
+				exec "$0" postupdate
+			fi
+			exit 0
 		fi
 		Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 		Update_File shared-jy.tar.gz
