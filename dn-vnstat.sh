@@ -2040,7 +2040,6 @@ case "$1" in
 		exit 0
 	;;
 	postupdate)
-		Process_Upgrade
 		Create_Dirs
 		Conf_Exists
 		ScriptStorageLocation load
@@ -2049,6 +2048,7 @@ case "$1" in
 		Auto_Cron create 2>/dev/null
 		Auto_ServiceEvent create 2>/dev/null
 		Shortcut_Script create
+		Process_Upgrade
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
