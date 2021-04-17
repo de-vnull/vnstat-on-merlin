@@ -1320,9 +1320,6 @@ Process_Upgrade(){
 		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	fi
-	if [ ! -f "$CSV_OUTPUT_DIR/CompleteResults.htm" ]; then
-		Generate_CSVs
-	fi
 	if [ ! -f "$SCRIPT_STORAGE_DIR/.v2upgraded" ]; then
 		/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
 		touch /opt/etc/vnstat.conf
@@ -1333,11 +1330,19 @@ Process_Upgrade(){
 			$VNSTAT_COMMAND --exportdb > "$SCRIPT_STORAGE_DIR/vnstat-data.bak"
 			rm -rf /opt/var/lib/vnstat/*
 		fi
+		mv "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" 2>/dev/null
+		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.bak" "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" 2>/dev/null
+		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default" "$SCRIPT_STORAGE_DIR/vnstat.conf.default.v1" 2>/dev/null
 		opkg update
 		opkg remove --autoremove vnstati
 		opkg remove --autoremove vnstat
 		rm -f /opt/etc/init.d/S33vnstat
 		rm -f /opt/etc/vnstat.conf
+		
+		Update_File vnstat.conf
+		interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" | awk '{print $2}' | sed 's/"//g')"
+		sed -i 's/^Interface .*$/Interface "'"$interface"'"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		
 		opkg install vnstat2
 		opkg install vnstati2
 		opkg install libjpeg-turbo >/dev/null 2>&1
@@ -1345,6 +1350,18 @@ Process_Upgrade(){
 		opkg install sqlite3-cli
 		opkg install p7zip
 		rm -f /opt/etc/vnstat.conf
+		Update_File vnstat-ui.asp
+		Update_File S33vnstat
+		if [ -n "$(pidof vnstatd)" ];then
+			Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
+			sleep 60
+			Generate_Images
+			Generate_Stats
+			Check_Bandwidth_Usage silent
+			Generate_CSVs
+		else
+			Print_Output false "vnstatd not running, please check system log" "$ERR"
+		fi
 		touch "$SCRIPT_STORAGE_DIR/.v2upgraded"
 	fi
 }
