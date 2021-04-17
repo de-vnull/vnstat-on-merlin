@@ -446,9 +446,9 @@ Conf_Exists(){
 		
 		if [ "$restartvnstat" = "true" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
-			Generate_Images
-			Generate_Stats
-			Check_Bandwidth_Usage
+			Generate_Images silent
+			Generate_Stats silent
+			Check_Bandwidth_Usage silent
 		fi
 	else
 		Update_File vnstat.conf
