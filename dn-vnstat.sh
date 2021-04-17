@@ -1352,6 +1352,7 @@ Process_Upgrade(){
 		rm -f /opt/etc/vnstat.conf
 		Update_File vnstat-ui.asp
 		Update_File S33vnstat
+		touch "$SCRIPT_STORAGE_DIR/.v2upgraded"
 		if [ -n "$(pidof vnstatd)" ];then
 			Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
 			sleep 60
@@ -1362,7 +1363,6 @@ Process_Upgrade(){
 		else
 			Print_Output false "vnstatd not running, please check system log" "$ERR"
 		fi
-		touch "$SCRIPT_STORAGE_DIR/.v2upgraded"
 	fi
 }
 
