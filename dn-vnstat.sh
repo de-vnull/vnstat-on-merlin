@@ -149,7 +149,7 @@ Update_Check(){
 	elif [ "$localver" != "$serverver" ]; then
 		doupdate="version"
 		Set_Version_Custom_Settings server "$serverver"
-		if echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
 			echo 'var updatestatus = "'"$serverver"' - WARNING: VNSTAT.CONF AND DATABASE WILL BE RESET WHEN UPDATING FROM V1 TO V2";'  > "$SCRIPT_WEB_DIR/detect_update.js"
 		else
 			echo 'var updatestatus = "'"$serverver"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
@@ -186,7 +186,7 @@ Update_Version(){
 			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available - $serverver" "$PASS"
 		fi
 		
-		if echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
 			Print_Output true "WARNING: VNSTAT.CONF AND DATABASE WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
 		fi
 		
@@ -198,7 +198,7 @@ Update_Version(){
 					if uname -m | grep -iq "mips"; then
 						SCRIPT_BRANCH="legacy-v1"
 						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
-					elif echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+					elif echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
 						Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 						SCRIPT_BRANCH="vnstat2"
 						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
@@ -246,7 +246,7 @@ Update_Version(){
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		echo $localver
 		echo $serverver
-		if echo "$localver" | grep -m1 -qoE 'v1[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
 			Print_Output true "WARNING: VNSTAT.CONF AND DATABASE WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
 			Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 			SCRIPT_BRANCH="vnstat2"
