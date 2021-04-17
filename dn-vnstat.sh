@@ -1864,8 +1864,8 @@ Menu_Uninstall(){
 	Shortcut_Script delete
 	/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
 	touch /opt/etc/vnstat.conf
-	opkg remove --autoremove vnstati
-	opkg remove --autoremove vnstat
+	opkg remove --autoremove vnstati2
+	opkg remove --autoremove vnstat2
 	
 	rm -f /opt/etc/init.d/S33vnstat
 	rm -f /opt/etc/vnstat.conf
@@ -1873,6 +1873,7 @@ Menu_Uninstall(){
 	Reset_Allowance_Warnings force
 	rm -f "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	rm -rf "$IMAGE_OUTPUT_DIR"
+	rm -rf "$CSV_OUTPUT_DIR"
 	
 	SETTINGSFILE=/jffs/addons/custom_settings.txt
 	sed -i '/dnvnstat_version_local/d' "$SETTINGSFILE"
@@ -2073,6 +2074,19 @@ case "$1" in
 		exit 0
 	;;
 	uninstall)
+		if [ -f "/opt/share/$SCRIPT_NAME.d/config" ]; then
+			SCRIPT_CONF="/opt/share/$SCRIPT_NAME.d/config"
+			SCRIPT_STORAGE_DIR="/opt/share/$SCRIPT_NAME.d"
+		else
+			SCRIPT_CONF="/jffs/addons/$SCRIPT_NAME.d/config"
+			SCRIPT_STORAGE_DIR="/jffs/addons/$SCRIPT_NAME.d"
+		fi
+		
+		CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
+		IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
+		VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+		VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+		VNSTAT_OUTPUT_FILE="$SCRIPT_STORAGE_DIR/vnstat.txt"
 		Check_Lock
 		Menu_Uninstall
 		exit 0
