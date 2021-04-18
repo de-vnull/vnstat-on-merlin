@@ -889,7 +889,7 @@ Generate_Email(){
 			{
 				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 				echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-				echo "Subject: vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")";
+				echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")";
 				echo "Date: $(date -R)";
 				echo "";
 			} > /tmp/mail.txt
