@@ -198,6 +198,9 @@ Update_Version(){
 					if uname -m | grep -iq "mips"; then
 						SCRIPT_BRANCH="legacy-v1"
 						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+						/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+						exec "$0"
+						exit 0
 					elif echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
 						Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 						SCRIPT_BRANCH="vnstat2"
@@ -241,6 +244,13 @@ Update_Version(){
 			Print_Output true "MIPS detected, forcing legacy version of $SCRIPT_NAME" "$WARN"
 			SCRIPT_BRANCH="legacy-v1"
 			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+			if [ -z "$2" ]; then
+				exec "$0"
+			elif [ "$2" = "unattended" ]; then
+				exec "$0" postupdate
+			fi
+			exit 0
 		fi
 		localver=$(grep "SCRIPT_VERSION=" "/jffs/scripts/$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
