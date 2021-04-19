@@ -143,7 +143,7 @@ Update_Check(){
 		SCRIPT_BRANCH="legacy-v1"
 		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 		doupdate="md5"
-		serverver="$localver"
+		serverver="1.0.1"
 		Set_Version_Custom_Settings "server" "$serverver-hotfix"
 		echo 'var updatestatus = "'"$serverver-hotfix"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
 	elif [ "$localver" != "$serverver" ]; then
@@ -198,6 +198,8 @@ Update_Version(){
 					if uname -m | grep -iq "mips"; then
 						SCRIPT_BRANCH="legacy-v1"
 						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+						Set_Version_Custom_Settings local 1.0.1
+						Set_Version_Custom_Settings server 1.0.1
 						/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
 						exec "$0"
 						exit 0
@@ -205,6 +207,8 @@ Update_Version(){
 						Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 						SCRIPT_BRANCH="vnstat2"
 						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+						Set_Version_Custom_Settings local 2.0.0
+						Set_Version_Custom_Settings server 2.0.0
 						/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
 						exec "$0"
 						exit 0
@@ -244,6 +248,8 @@ Update_Version(){
 			Print_Output true "MIPS detected, forcing legacy version of $SCRIPT_NAME" "$WARN"
 			SCRIPT_BRANCH="legacy-v1"
 			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+			Set_Version_Custom_Settings local 1.0.1
+			Set_Version_Custom_Settings server 1.0.1
 			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
 			if [ -z "$2" ]; then
 				exec "$0"
@@ -259,6 +265,8 @@ Update_Version(){
 			Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 			SCRIPT_BRANCH="vnstat2"
 			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+			Set_Version_Custom_Settings local 2.0.0
+			Set_Version_Custom_Settings server 2.0.0
 			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
 			if [ -z "$2" ]; then
 				exec "$0"
