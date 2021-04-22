@@ -21,7 +21,7 @@
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
 readonly SCRIPT_VERSION="v1.0.1"
-SCRIPT_BRANCH="jackyaz-dev"
+SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_CONF="$SCRIPT_DIR/config"
@@ -1907,12 +1907,6 @@ case "$1" in
 	uninstall)
 		Check_Lock
 		Menu_Uninstall
-		exit 0
-	;;
-	vnstat2)
-		SCRIPT_BRANCH="vnstat2"
-		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
-		Update_Version force
 		exit 0
 	;;
 	develop)
