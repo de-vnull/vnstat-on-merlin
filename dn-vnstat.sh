@@ -135,13 +135,22 @@ Set_Version_Custom_Settings(){
 Update_Check(){
 	echo 'var updatestatus = "InProgress";' > "$SCRIPT_WEB_DIR/detect_update.js"
 	doupdate="false"
-	localver=$(grep "SCRIPT_VERSION=" /jffs/scripts/"$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+	localver=$(grep "SCRIPT_VERSION=" "/jffs/scripts/$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep -qF "de-vnull" || { Print_Output true "404 error detected - stopping update" "$ERR"; return 1; }
 	serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
-	if [ "$localver" != "$serverver" ]; then
+	if uname -m | grep -iq "mips"; then
+		doupdate="md5"
+		serverver="v1.0.1"
+		Set_Version_Custom_Settings "server" "$serverver-hotfix"
+		echo 'var updatestatus = "'"$serverver-hotfix"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+	elif [ "$localver" != "$serverver" ]; then
 		doupdate="version"
 		Set_Version_Custom_Settings server "$serverver"
-		echo 'var updatestatus = "'"$serverver"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+			echo 'var updatestatus = "'"$serverver"' - WARNING: MAJOR UPGRADE TO VNSTAT2. VNSTAT.CONF WILL BE RESET WHEN UPDATING FROM V1 TO V2";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+		else
+			echo 'var updatestatus = "'"$serverver"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+		fi
 	else
 		localmd5="$(md5sum "/jffs/scripts/$SCRIPT_NAME" | awk '{print $1}')"
 		remotemd5="$(curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | md5sum | awk '{print $1}')"
@@ -174,11 +183,34 @@ Update_Version(){
 			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available - $serverver" "$PASS"
 		fi
 		
+		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+			Print_Output true "WARNING: MAJOR UPGRADE TO VNSTAT2. VNSTAT.CONF WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
+		fi
+		
 		if [ "$isupdate" != "false" ]; then
 			printf "\\n\\e[1mDo you want to continue with the update? (y/n)\\e[0m  "
 			read -r confirm
 			case "$confirm" in
 				y|Y)
+					if uname -m | grep -iq "mips"; then
+						Print_Output true "MIPS support will be maintained on the legacy-v1 branch" "$WARN"
+						SCRIPT_BRANCH="legacy-v1"
+						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+						Set_Version_Custom_Settings local v1.0.1
+						Set_Version_Custom_Settings server v1.0.1
+						/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+						exec "$0"
+						exit 0
+					elif echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+						Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
+						SCRIPT_BRANCH="vnstat2"
+						SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+						Set_Version_Custom_Settings local v2.0.0
+						Set_Version_Custom_Settings server v2.0.0
+						/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+						exec "$0"
+						exit 0
+					fi
 					printf "\\n"
 					Update_File shared-jy.tar.gz
 					Update_File vnstat-ui.asp
@@ -210,7 +242,37 @@ Update_Version(){
 	fi
 	
 	if [ "$1" = "force" ]; then
+		if uname -m | grep -iq "mips"; then
+			Print_Output true "MIPS support will be maintained on the legacy-v1 branch" "$WARN"
+			SCRIPT_BRANCH="legacy-v1"
+			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+			Set_Version_Custom_Settings local v1.0.1
+			Set_Version_Custom_Settings server v1.0.1
+			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+			if [ -z "$2" ]; then
+				exec "$0"
+			elif [ "$2" = "unattended" ]; then
+				exec "$0" postupdate
+			fi
+			exit 0
+		fi
+		localver=$(grep "SCRIPT_VERSION=" "/jffs/scripts/$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
+			Print_Output true "WARNING: MAJOR UPGRADE TO VNSTAT2. VNSTAT.CONF WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
+			Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
+			SCRIPT_BRANCH="vnstat2"
+			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+			Set_Version_Custom_Settings local v2.0.0
+			Set_Version_Custom_Settings server v2.0.0
+			/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" -o "/jffs/scripts/$SCRIPT_NAME" && Print_Output true "$SCRIPT_NAME successfully updated"
+			if [ -z "$2" ]; then
+				exec "$0"
+			elif [ "$2" = "unattended" ]; then
+				exec "$0" postupdate
+			fi
+			exit 0
+		fi
 		Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 		Update_File shared-jy.tar.gz
 		Update_File vnstat-ui.asp
@@ -642,15 +704,9 @@ Mount_WebUI(){
 		
 		if ! grep -q 'menuName: "Addons"' /tmp/menuTree.js ; then
 			lineinsbefore="$(( $(grep -n "exclude:" /tmp/menuTree.js | cut -f1 -d':') - 1))"
-			sed -i "$lineinsbefore"'i,\n{\nmenuName: "Addons",\nindex: "menu_Addons",\ntab: [\n{url: "ext/shared-jy/redirect.htm", tabName: "Help & Support"},\n{url: "NULL", tabName: "__INHERIT__"}\n]\n}' /tmp/menuTree.js
+			sed -i "$lineinsbefore"'i,\n{\nmenuName: "Addons",\nindex: "menu_Addons",\ntab: [\n{url: "javascript:var helpwindow=window.open('"'"'/ext/shared-jy/redirect.htm'"'"')", tabName: "Help & Support"},\n{url: "NULL", tabName: "__INHERIT__"}\n]\n}' /tmp/menuTree.js
 		fi
 		
-		if grep -q "javascript:window.open('/ext/shared-jy/redirect.htm'" /tmp/menuTree.js ; then
-			sed -i "s~javascript:window.open('/ext/shared-jy/redirect.htm','_blank')~javascript:var helpwindow=window.open('/ext/shared-jy/redirect.htm','_blank')~" /tmp/menuTree.js
-		fi
-		if ! grep -q "javascript:var helpwindow=window.open('/ext/shared-jy/redirect.htm'" /tmp/menuTree.js ; then
-			sed -i "s~ext/shared-jy/redirect.htm~javascript:var helpwindow=window.open('/ext/shared-jy/redirect.htm','_blank')~" /tmp/menuTree.js
-		fi
 		sed -i "/url: \"javascript:var helpwindow=window.open('\/ext\/shared-jy\/redirect.htm'/i {url: \"$MyPage\", tabName: \"$SCRIPT_NAME\"}," /tmp/menuTree.js
 		
 		umount /www/require/modules/menuTree.js 2>/dev/null
@@ -895,7 +951,7 @@ Generate_Email(){
 			{
 				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
 				echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-				echo "Subject: vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")";
+				echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")";
 				echo "Date: $(date -R)";
 				echo "";
 			} > /tmp/mail.txt
@@ -1165,64 +1221,6 @@ Check_Bandwidth_Usage(){
 	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_DIR/.vnstatusage"
 }
 
-vom_rio(){
-	ScriptHeader
-	printf "\\n\\nPrevious alpha/beta1/self-install version of Vnstat on Merlin has been detected on your router.\\n"
-	printf "\\n\\e[1m%s needs to remove this version to install a newer version.\\e[0m\\n" "$SCRIPT_NAME"
-	printf "\\nNote that %s will NOT delete any existing vnstat database files.\\n" "$SCRIPT_NAME"
-	printf "\\n\\e[33mPress y to continue or any other key to quit this installation and keep the existing version:\\e[0m  "
-	read -r CONDITION
-	
-	if [ "$CONDITION" = "y" ]; then
-		Print_Output false "Uninstalling 'VoM alpha/beta1/manual version'..."
-		# Kill vnstat - probably not necessary, but better safe
-		Print_Output false "Stopping vnstatd..."
-		/opt/etc/init.d/S32vnstat stop
-		killall vnstatd 2>/dev/null
-		
-		# Delete cron jobs
-		Print_Output false "Removing cron jobs..."
-		cru d vnstat_daily
-		cru d vnstat_update
-		# Delete vnstat activities from the various startup scripts
-		Print_Output false "Removing vnstat hooks from user scripts..."
-		grep "vnstat_daily" /jffs/scripts/service-event && sed -i '/vnstat_daily/d' /jffs/scripts/service-event 2>/dev/null
-		grep "vnstat_update" /jffs/scripts/service-event && sed -i '/vnstat_update/d' /jffs/scripts/service-event 2>/dev/null
-		grep "vnstat_daily" /jffs/scripts/services-start && sed -i '/vnstat_daily/d' /jffs/scripts/services-start 2>/dev/null
-		grep "vnstat_update" /jffs/scripts/services-start && sed -i '/vnstat_update/d' /jffs/scripts/services-start 2>/dev/null
-		grep "vnstat-ui" /jffs/scripts/post-mount && sed -i '/vnstat-ui/d' /jffs/scripts/post-mount 2>/dev/null
-		# Now remove the directories and files associated with the alpha/beta1/manual installations
-		Print_Output false "Deleting directories '/jffs/addons/vnstat*' and other un-needed files - no database files will be removed."
-		Get_WebUI_Page "/jffs/addons/vnstat-ui.d/vnstat-ui.asp"
-		if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
-			sed -i "\\~$MyPage~d" /tmp/menuTree.js
-			umount /www/require/modules/menuTree.js
-			mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
-		fi
-		rm -rf /jffs/addons/vnstat-ui.d
-		rm -rf /jffs/addons/vnstat.d
-		rm -f /jffs/scripts/send-vnstat.sh
-		rm -f /jffs/scripts/vnstat-stats
-		rm -f /jffs/scripts/vnstat-ui
-		rm -f /jffs/scripts/vnstat-ww.sh
-		rm -f /jffs/scripts/vnstat-install.sh
-		Print_Output false "Renaming /opt/etc/vnstat.conf to /opt/etc/vnstat.conf.old"
-		mv /opt/etc/vnstat.conf /opt/etc/vnstat.conf.old
-		# Wrap up
-		Print_Output false "Removal of old script files completed. Installation of $SCRIPT_NAME will continue." "$PASS"
-		printf "\\n\\e[1m\\e[33mNote, if you made any manual edits to /opt/etc/vnstat.conf (such as customizing the location of the database files)\\n"
-		printf "you will need to re-apply them to %s/vnstat.conf once installation is complete.\\e[0m\\n" "$SCRIPT_DIR"
-		PressEnter
-		ScriptHeader
-	else
-		Print_Output false "Exiting, previous version of vnstat script must be removed to install $SCRIPT_NAME"
-		PressEnter
-		Clear_Lock
-		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
-		exit 1
-	fi
-}
-
 Process_Upgrade(){
 	if [ ! -f "$SCRIPT_DIR/.vnstatusage" ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
@@ -1420,10 +1418,6 @@ MainMenu(){
 Menu_Install(){
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz"
 	sleep 1
-	
-	if [ -d /jffs/addons/vnstat.d ] || [ -f /opt/etc/vnstat.conf ] || [ -f /jffs/scripts/vnstat-install.sh ]; then
-		vom_rio
-	fi
 	
 	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
 		if [ ! -d "$SCRIPT_DIR" ]; then
@@ -1896,22 +1890,6 @@ case "$1" in
 		Update_Version force
 		exit 0
 	;;
-	setversion)
-		Process_Upgrade
-		Create_Dirs
-		Conf_Exists
-		Create_Symlinks
-		Auto_Startup create 2>/dev/null
-		Auto_Cron create 2>/dev/null
-		Auto_ServiceEvent create 2>/dev/null
-		Shortcut_Script create
-		Set_Version_Custom_Settings local "$SCRIPT_VERSION"
-		Set_Version_Custom_Settings server "$SCRIPT_VERSION"
-		Generate_Images silent
-		Generate_Stats silent
-		Check_Bandwidth_Usage silent
-		exit 0
-	;;
 	postupdate)
 		Process_Upgrade
 		Create_Dirs
@@ -1926,6 +1904,11 @@ case "$1" in
 		Check_Bandwidth_Usage silent
 		exit 0
 	;;
+	uninstall)
+		Check_Lock
+		Menu_Uninstall
+		exit 0
+	;;
 	develop)
 		SCRIPT_BRANCH="jackyaz-dev"
 		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
@@ -1933,14 +1916,9 @@ case "$1" in
 		exit 0
 	;;
 	stable)
-		SCRIPT_BRANCH="master"
+		SCRIPT_BRANCH="main"
 		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 		Update_Version force
-		exit 0
-	;;
-	uninstall)
-		Check_Lock
-		Menu_Uninstall
 		exit 0
 	;;
 	*)
