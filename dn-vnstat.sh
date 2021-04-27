@@ -984,30 +984,30 @@ Generate_Email(){
 			if [ "$(DailyEmail check)" = "text" ];  then
 				# plain text email to send #
 				{
-					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
-					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")";
-					echo "Date: $(date -R)";
-					echo "";
-					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')";
+					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>"
+					echo "To: \"$TO_NAME\" <$TO_ADDRESS>"
+					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")"
+					echo "Date: $(date -R)"
+					echo ""
+					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
 				} > /tmp/mail.txt
 				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
 			elif [ "$(DailyEmail check)" = "html" ]; then
 				# html message to send #
 				{
-					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
-					echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")";
-					echo "Date: $(date -R)";
-					echo "MIME-Version: 1.0";
-					echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\"";
-					echo "hello there";
-					echo "";
-					echo "--MULTIPART-MIXED-BOUNDARY";
-					echo "Content-Type: multipart/related; boundary=\"MULTIPART-RELATED-BOUNDARY\"";
-					echo "";
-					echo "--MULTIPART-RELATED-BOUNDARY";
-					echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\"";
+					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>"
+					echo "To: \"$TO_NAME\" <$TO_ADDRESS>"
+					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")"
+					echo "Date: $(date -R)"
+					echo "MIME-Version: 1.0"
+					echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\""
+					echo "hello there"
+					echo ""
+					echo "--MULTIPART-MIXED-BOUNDARY"
+					echo "Content-Type: multipart/related; boundary=\"MULTIPART-RELATED-BOUNDARY\""
+					echo ""
+					echo "--MULTIPART-RELATED-BOUNDARY"
+					echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\""
 				} > /tmp/mail.txt
 				
 				outputs="s h d t m"
@@ -1021,15 +1021,15 @@ Generate_Email(){
 				message_base64="$(openssl base64 -A < /tmp/message.html)"
 				rm -f /tmp/message.html
 				{
-					echo "";
-					echo "--MULTIPART-ALTERNATIVE-BOUNDARY";
-					echo "Content-Type: text/html; charset=utf-8";
-					echo "Content-Transfer-Encoding: base64";
-					echo "";
-					echo "$message_base64";
-					echo "";
-					echo "--MULTIPART-ALTERNATIVE-BOUNDARY--";
-					echo "";
+					echo ""
+					echo "--MULTIPART-ALTERNATIVE-BOUNDARY"
+					echo "Content-Type: text/html; charset=utf-8"
+					echo "Content-Transfer-Encoding: base64"
+					echo ""
+					echo "$message_base64"
+					echo ""
+					echo "--MULTIPART-ALTERNATIVE-BOUNDARY--"
+					echo ""
 				} >> /tmp/mail.txt
 				
 				for output in $outputs; do
@@ -1040,9 +1040,9 @@ Generate_Email(){
 				Encode_Text vnstat.txt "$(cat "$VNSTAT_OUTPUT_FILE")" /tmp/mail.txt
 				
 				{
-					echo "--MULTIPART-RELATED-BOUNDARY--";
-					echo "";
-					echo "--MULTIPART-MIXED-BOUNDARY--";
+					echo "--MULTIPART-RELATED-BOUNDARY--"
+					echo ""
+					echo "--MULTIPART-MIXED-BOUNDARY--"
 				} >> /tmp/mail.txt
 			fi
 		elif [ "$emailtype" = "usage" ]; then
@@ -1051,11 +1051,11 @@ Generate_Email(){
 			usagestring="$3"
 			# plain text email to send #
 			{
-				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>";
-				echo "To: \"$TO_NAME\" <$TO_ADDRESS>";
-				echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")";
-				echo "Date: $(date -R)";
-				echo "";
+				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>"
+				echo "To: \"$TO_NAME\" <$TO_ADDRESS>"
+				echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")"
+				echo "Date: $(date -R)"
+				echo ""
 			} > /tmp/mail.txt
 			printf "%s" "$usagestring" >> /tmp/mail.txt
 		fi
