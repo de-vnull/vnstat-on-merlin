@@ -1857,7 +1857,9 @@ case "$1" in
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
-		Generate_Email daily
+		if [ "$(DailyEmail check)" != "none" ]; then
+			Generate_Email daily
+		fi
 		exit 0
 	;;
 	service_event)
