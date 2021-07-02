@@ -1757,7 +1757,7 @@ Menu_AllowanceUnit(){
 				elif [ "$scaletype" = "divide" ]; then
 					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 				fi
-				BandwidthAllowance update "$(echo "$bandwidthallowance")" noreset
+				BandwidthAllowance update "$bandwidthallowance" noreset
 			fi
 		fi
 	fi
