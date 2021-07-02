@@ -1328,7 +1328,6 @@ Process_Upgrade(){
 				mkdir -p "$SCRIPT_STORAGE_DIR"
 			fi
 			$VNSTAT_COMMAND --exportdb > "$SCRIPT_STORAGE_DIR/vnstat-data.bak"
-			rm -rf /opt/var/lib/vnstat/*
 		fi
 		mv "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" 2>/dev/null
 		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.bak" "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" 2>/dev/null
