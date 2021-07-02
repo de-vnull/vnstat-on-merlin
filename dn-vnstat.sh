@@ -16,6 +16,8 @@
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
 # shellcheck disable=SC2059
+# shellcheck disable=SC2086
+# shellcheck disable=SC2155
 #################################################
 
 ### Start of script variables ###
@@ -973,9 +975,9 @@ Generate_Email(){
 		elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# new OpenSSL 1.1.x non-converted password
 			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-		elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+		elif /usr/sbin/openssl aes-256-cbc "$emailPwEnc" -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# new OpenSSL 1.1.x converted password with -pbkdf2 flag
-			PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc "$emailPwEnc" -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
 		fi
 		
 		emailtype="$1"
@@ -1253,7 +1255,7 @@ Check_Bandwidth_Usage(){
 	userLimit="$(BandwidthAllowance check)"
 	
 	scalefactor=$((1000*1000*1000))
-	if echo "$(AllowanceUnit check)" | grep -q T; then
+	if AllowanceUnit check | grep -q T; then
 		scalefactor=$((1000*1000*1000))
 	fi
 	bandwidthused=$(echo "$rawbandwidthused $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
@@ -1703,7 +1705,7 @@ Menu_AllowanceUnit(){
 	exitmenu="false"
 	allowanceunit=""
 	prevallowanceunit="$(AllowanceUnit check)"
-	unitsuffix="$(echo "$(AllowanceUnit check)" | sed 's/T//;s/G//;')"
+	unitsuffix="$(AllowanceUnit check | sed 's/T//;s/G//;')"
 	ScriptHeader
 	
 	while true; do
@@ -1741,9 +1743,9 @@ Menu_AllowanceUnit(){
 			
 			scaletype="none"
 			if [ "$prevallowanceunit" != "$(AllowanceUnit check)" ]; then
-				if echo "$prevallowanceunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
+				if echo "$prevallowanceunit" | grep -q G && AllowanceUnit check | grep -q T; then
 					scaletype="divide"
-				elif echo "$prevallowanceunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
+				elif echo "$prevallowanceunit" | grep -q T && AllowanceUnit check | grep -q G; then
 					scaletype="multiply"
 				fi
 			fi
