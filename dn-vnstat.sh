@@ -739,6 +739,7 @@ Check_Requirements(){
 		opkg install jq
 		opkg install sqlite3-cli
 		opkg install p7zip
+		opkg install findutils
 		rm -f /opt/etc/vnstat.conf
 		return 0
 	else
@@ -961,6 +962,16 @@ Generate_Images(){
 }
 
 Generate_Stats(){
+	if [ ! -f /opt/bin/xargs ]; then
+		Print_Output true "Installing findutils from Entware"
+		opkg update
+		opkg install findutils
+	fi
+	if [ -n "$PPID" ]; then
+		ps | grep -v grep | grep -v $$ | grep -v "$PPID" | grep -i "$SCRIPT_NAME" | grep generate | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
+	else
+		ps | grep -v grep | grep -v $$ | grep -i "$SCRIPT_NAME" | grep generate | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
+	fi
 	Create_Dirs
 	Conf_Exists
 	ScriptStorageLocation load
@@ -1874,6 +1885,11 @@ Menu_Edit(){
 }
 
 Menu_Uninstall(){
+	if [ -n "$PPID" ]; then
+		ps | grep -v grep | grep -v $$ | grep -v "$PPID" | grep -i "$SCRIPT_NAME" | grep generate | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
+	else
+		ps | grep -v grep | grep -v $$ | grep -i "$SCRIPT_NAME" | grep generate | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
+	fi
 	Print_Output true "Removing $SCRIPT_NAME..." "$PASS"
 	Auto_Startup delete 2>/dev/null
 	Auto_Cron delete 2>/dev/null
@@ -1913,7 +1929,7 @@ Menu_Uninstall(){
 	sed -i '/dnvnstat_version_local/d' "$SETTINGSFILE"
 	sed -i '/dnvnstat_version_server/d' "$SETTINGSFILE"
 	
-	printf "\\n\\e[1mWould you like to keep the vnstat\\ndata files and configuration? (y/n)\\e[0m  "
+	printf "\\n${BOLD}Would you like to keep the vnstat\\ndata files and configuration? (y/n)${CLEARFORMAT}  "
 	read -r confirm
 	case "$confirm" in
 		y|Y)
