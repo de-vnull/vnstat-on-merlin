@@ -933,6 +933,7 @@ function RedrawAllCharts(){
 	$j('#DataUsage_Period').val(GetCookie('DataUsage_Period','number'));
 	$j('#DataUsage_Unit').val(GetCookie('DataUsage_Unit','number'));
 	$j('#DataUsage_Scale').val(GetCookie('DataUsage_Scale','number'));
+	Draw_Chart_NoData(metriclist[i]);
 	for(var i = 0; i < chartlist.length; i++){
 		for(var i2 = 0; i2 < dataintervallist.length; i2++){
 			d3.csv('/ext/dn-vnstat/csv/DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,'DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]));
