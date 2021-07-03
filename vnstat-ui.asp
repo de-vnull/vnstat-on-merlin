@@ -366,6 +366,12 @@ function update_vnstat(){
 			if(vnstatstatus == 'InProgress'){
 				setTimeout(update_vnstat,1000);
 			}
+			else if(vnstatstatus == 'LOCKED'){
+				document.getElementById('vnstatupdate_text').innerHTML = 'vnstat update already in progress';
+				showhide('imgVnStatUpdate',false);
+				showhide('vnstatupdate_text',true);
+				showhide('btnUpdateStats',true);
+			}
 			else if(vnstatstatus == 'Done'){
 				reload_js('/ext/dn-vnstat/vnstatusage.js');
 				UpdateText();
