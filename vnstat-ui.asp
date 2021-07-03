@@ -609,6 +609,15 @@ function Draw_Chart(txtchartname){
 	var timeaxisformat = getTimeFormat($j('#Time_Format option:selected').val(),'axis');
 	var timetooltipformat = getTimeFormat($j('#Time_Format option:selected').val(),'tooltip');
 	
+	if(chartinterval == 'fiveminute'){
+		charttype = 'line';
+	}
+	
+	if(chartinterval == 'hour'){
+		chartxaxismax = moment().add(1,'hours');
+		zoompanxaxismax = chartxaxismax;
+	}
+	
 	if(chartinterval == 'day'){
 		chartxaxismax = moment().endOf('day').subtract(9,'hours');
 		chartxaxismin = moment().startOf('day').subtract(numunitx-1,txtunitx+'s').subtract(12,'hours');
