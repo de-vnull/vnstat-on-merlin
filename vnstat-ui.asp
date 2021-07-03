@@ -613,16 +613,17 @@ function Draw_Chart(txtchartname){
 	var timetooltipformat = getTimeFormat($j('#Time_Format option:selected').val(),'tooltip');
 	
 	if(chartinterval == 'day'){
-		charttype = 'bar';
 		chartxaxismax = moment().endOf('day').subtract(9,'hours');
-		chartaxismin = moment().startOf('day').subtract(numunitx-1,txtunitx+'s').subtract(12,'hours');
+		chartxaxismin = moment().startOf('day').subtract(numunitx-1,txtunitx+'s').subtract(12,'hours');
+		zoompanxaxismax = chartxaxismax;
 	}
-	
+
 	if(chartperiod == 'daily' && chartinterval == 'day'){
 		txtunitx = 'day';
 		numunitx = 1;
 		chartxaxismax = moment().endOf('day').subtract(9,'hours');
-		chartaxismin = moment().startOf('day').subtract(12,'hours');
+		chartxaxismin = moment().startOf('day').subtract(12,'hours');
+		zoompanxaxismax = chartxaxismax;
 	}
 	
 	factor=0;
@@ -699,7 +700,7 @@ function Draw_Chart(txtchartname){
 				type: 'time',
 				gridLines: { display: true,color: '#282828' },
 				ticks: {
-					min: chartaxismin,
+					min: chartxaxismin,
 					max: chartxaxismax,
 					display: true
 				},
@@ -733,11 +734,12 @@ function Draw_Chart(txtchartname){
 					enabled: ChartPan,
 					mode: 'xy',
 					rangeMin: {
-						x: new Date().getTime() - (factor * numunitx),
-						y: 0,
+						x: chartxaxismin,
+						y: 0
 					},
 					rangeMax: {
-						x: new Date().getTime()
+						x: zoompanxaxismax//,
+						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
 					},
 				},
 				zoom: {
@@ -745,11 +747,12 @@ function Draw_Chart(txtchartname){
 					drag: DragZoom,
 					mode: 'xy',
 					rangeMin: {
-						x: new Date().getTime() - (factor * numunitx),
-						y: 0,
+						x: chartxaxismin,
+						y: 0
 					},
 					rangeMax: {
-						x: new Date().getTime()
+						x: zoompanxaxismax//,
+						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
 					},
 					speed: 0.1
 				},
