@@ -951,10 +951,9 @@ Generate_Images(){
 	outputs="s h d t m"   # what images to generate
 	
 	$VNSTATI_COMMAND -s -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_s.png"
-	$VNSTATI_COMMAND -h 25 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_h.png"
-	$VNSTATI_COMMAND -d 8 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_d.png"
-	$VNSTATI_COMMAND -m 6 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_m.png"
-	$VNSTATI_COMMAND -y 5 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_y.png"
+	$VNSTATI_COMMAND -hg -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_h.png"
+	$VNSTATI_COMMAND -d 31 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_d.png"
+	$VNSTATI_COMMAND -m 12 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_m.png"
 	$VNSTATI_COMMAND -t 10 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_t.png"
 	
 	sleep 1
@@ -991,8 +990,10 @@ Generate_Stats(){
 	export TZ
 	printf "vnstats as of: %s\\n\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	{
-		$VNSTAT_COMMAND -m 12 -i "$interface";
-		$VNSTAT_COMMAND -d 30 -i "$interface";
+		$VNSTAT_COMMAND -h 25 -i "$interface";
+        	$VNSTAT_COMMAND -d 8 -i "$interface";
+        	$VNSTAT_COMMAND -m 6 -i "$interface";
+        	$VNSTAT_COMMAND -y 5 -i "$interface";
 	} >> "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && cat "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && printf "\\n"
