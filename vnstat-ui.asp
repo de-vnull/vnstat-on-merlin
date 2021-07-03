@@ -579,9 +579,10 @@ function Draw_Chart(txtchartname){
 	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
 	var txtunitx = timeunitlist[$j('#'+txtchartname+'_Period option:selected').val()];
 	var numunitx = intervallist[$j('#'+txtchartname+'_Period option:selected').val()];
+	var zoompanxaxismax = moment();
 	var chartxaxismax = null;
-	var chartaxismin = moment().subtract(numunitx,txtunitx+'s');
-	var charttype = 'line';
+	var chartxaxismin = moment().subtract(numunitx,txtunitx+'s');
+	var charttype = 'bar';
 	var dataobject = window[txtchartname+'_'+chartinterval+'_'+chartperiod];
 	if(typeof dataobject === 'undefined' || dataobject === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	if(dataobject.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
