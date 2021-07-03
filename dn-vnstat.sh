@@ -601,6 +601,38 @@ Get_WebUI_Page(){
 	done
 }
 
+### function based on @dave14305's FlexQoS webconfigpage function ###
+Get_WebUI_URL(){
+	urlpage=""
+	urlproto=""
+	urldomain=""
+	urlport=""
+
+	urlpage="$(sed -nE "/$SCRIPT_NAME/ s/.*url\: \"(user[0-9]+\.asp)\".*/\1/p" /tmp/menuTree.js)"
+	if [ "$(nvram get http_enable)" -eq 1 ]; then
+		urlproto="https"
+	else
+		urlproto="http"
+	fi
+	if [ -n "$(nvram get lan_domain)" ]; then
+		urldomain="$(nvram get lan_hostname).$(nvram get lan_domain)"
+	else
+		urldomain="$(nvram get lan_ipaddr)"
+	fi
+	if [ "$(nvram get ${urlproto}_lanport)" -eq 80 ] || [ "$(nvram get ${urlproto}_lanport)" -eq 443 ]; then
+		urlport=""
+	else
+		urlport=":$(nvram get ${urlproto}_lanport)"
+	fi
+
+	if echo "$urlpage" | grep -qE "user[0-9]+\.asp"; then
+		echo "${urlproto}://${urldomain}${urlport}/${urlpage}" | tr "A-Z" "a-z"
+	else
+		echo "WebUI page not found"
+	fi
+}
+### ###
+
 ### locking mechanism code credit to Martineau (@MartineauUK) ###
 Mount_WebUI(){
 	Print_Output true "Mounting WebUI tab for $SCRIPT_NAME" "$PASS"
@@ -1392,6 +1424,7 @@ MainMenu(){
 	else
 		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check)$(AllowanceUnit check)"
 	fi
+	printf "WebUI for %s is available at:\\n${SETTING}%s\\e[0m\\n\\n" "$SCRIPT_NAME" "$(Get_WebUI_URL)"
 	printf "1.    Update stats now\\n\\n"
 	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m$MENU_DAILYEMAIL\\e[0m\\n\\n"
 	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m$MENU_USAGE_ENABLED\\e[0m\\n\\n"
