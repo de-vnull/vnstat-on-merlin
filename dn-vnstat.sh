@@ -43,7 +43,9 @@ readonly CRIT="\\e[41m"
 readonly ERR="\\e[31m"
 readonly WARN="\\e[33m"
 readonly PASS="\\e[32m"
-readonly SETTING="\\e[1m\\e[36m"
+readonly BOLD="\\e[1m"
+readonly SETTING="${BOLD}\\e[36m"
+readonly CLEARFORMAT="\\e[0m"
 ### End of output format variables ###
 
 # $1 = print to syslog, $2 = message to print, $3 = log level
@@ -51,7 +53,7 @@ Print_Output(){
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME" "$2"
 	fi
-	printf "\\e[1m${3}%s\\e[0m\\n\\n" "$2"
+	printf "${BOLD}${3}%s${CLEARFORMAT}\\n\\n" "$2"
 }
 
 ### Check firmware version contains the "am_addons" feature flag ###
@@ -176,7 +178,7 @@ Update_Version(){
 		fi
 		
 		if [ "$isupdate" != "false" ]; then
-			printf "\\n\\e[1mDo you want to continue with the update? (y/n)\\e[0m  "
+			printf "\\n${BOLD}Do you want to continue with the update? (y/n)${CLEARFORMAT}  "
 			read -r confirm
 			case "$confirm" in
 				y|Y)
@@ -1159,13 +1161,13 @@ DailyEmail(){
 			if [ -z "$2" ]; then
 				ScriptHeader
 				exitmenu="false"
-				printf "\\n\\e[1mA choice of emails is available:\\e[0m\\n"
+				printf "\\n${BOLD}A choice of emails is available:${CLEARFORMAT}\\n"
 				printf "1.    HTML (includes images from WebUI + summary stats as attachment)\\n"
 				printf "2.    Plain text (summary stats only)\\n"
 				printf "\\ne.    Exit to main menu\\n"
 				
 				while true; do
-					printf "\\n\\e[1mChoose an option:\\e[0m  "
+					printf "\\n${BOLD}Choose an option:${CLEARFORMAT}  "
 					read -r emailtype
 					case "$emailtype" in
 						1)
@@ -1407,16 +1409,16 @@ Process_Upgrade(){
 ScriptHeader(){
 	clear
 	printf "\\n"
-	printf "\\e[1m##################################################\\e[0m\\n"
-	printf "\\e[1m##                                              ##\\e[0m\\n"
-	printf "\\e[1m##             vnStat on Merlin                 ##\\e[0m\\n"
-	printf "\\e[1m##        for AsusWRT-Merlin routers            ##\\e[0m\\n"
-	printf "\\e[1m##                                              ##\\e[0m\\n"
-	printf "\\e[1m##             %s on %-11s            ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
-	printf "\\e[1m##                                              ## \\e[0m\\n"
-	printf "\\e[1m## https://github.com/de-vnull/vnstat-on-merlin ##\\e[0m\\n"
-	printf "\\e[1m##                                              ##\\e[0m\\n"
-	printf "\\e[1m##################################################\\e[0m\\n"
+	printf "${BOLD}##################################################${CLEARFORMAT}\\n"
+	printf "${BOLD}##                                              ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##             vnStat on Merlin                 ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##        for AsusWRT-Merlin routers            ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##                                              ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##             %s on %-11s            ##${CLEARFORMAT}\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "${BOLD}##                                              ## ${CLEARFORMAT}\\n"
+	printf "${BOLD}## https://github.com/de-vnull/vnstat-on-merlin ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##                                              ##${CLEARFORMAT}\\n"
+	printf "${BOLD}##################################################${CLEARFORMAT}\\n"
 	printf "\\n"
 }
 
@@ -1437,22 +1439,22 @@ MainMenu(){
 	else
 		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check)$(AllowanceUnit check)"
 	fi
-	printf "WebUI for %s is available at:\\n${SETTING}%s\\e[0m\\n\\n" "$SCRIPT_NAME" "$(Get_WebUI_URL)"
+	printf "WebUI for %s is available at:\\n${SETTING}%s${CLEARFORMAT}\\n\\n" "$SCRIPT_NAME" "$(Get_WebUI_URL)"
 	printf "1.    Update stats now\\n\\n"
-	printf "2.    Toggle emails for daily summary stats\\n      Currently: \\e[1m$MENU_DAILYEMAIL\\e[0m\\n\\n"
-	printf "3.    Toggle emails for data usage warnings\\n      Currently: \\e[1m$MENU_USAGE_ENABLED\\e[0m\\n\\n"
-	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
-	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "$(AllowanceUnit check)"
-	printf "6.    Set start day of cycle for bandwidth allowance\\n      Currently: ${SETTING}%s\\e[0m\\n\\n" "Day $(AllowanceStartDay check) of month"
-	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s\\e[0m\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "2.    Toggle emails for daily summary stats\\n      Currently: ${BOLD}$MENU_DAILYEMAIL${CLEARFORMAT}\\n\\n"
+	printf "3.    Toggle emails for data usage warnings\\n      Currently: ${BOLD}$MENU_USAGE_ENABLED${CLEARFORMAT}\\n\\n"
+	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s${CLEARFORMAT}\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
+	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s${CLEARFORMAT}\\n\\n" "$(AllowanceUnit check)"
+	printf "6.    Set start day of cycle for bandwidth allowance\\n      Currently: ${SETTING}%s${CLEARFORMAT}\\n\\n" "Day $(AllowanceStartDay check) of month"
+	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s${CLEARFORMAT}\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
-	printf "s.    Toggle storage location for stats and config\\n      Current location is ${SETTING}%s\\e[0m \\n\\n" "$(ScriptStorageLocation check)"
+	printf "s.    Toggle storage location for stats and config\\n      Current location is ${SETTING}%s${CLEARFORMAT} \\n\\n" "$(ScriptStorageLocation check)"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
 	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
 	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
 	printf "\\n"
-	printf "\\e[1m##################################################\\e[0m\\n"
+	printf "${BOLD}##################################################${CLEARFORMAT}\\n"
 	printf "\\n"
 	
 	while true; do
@@ -1561,12 +1563,12 @@ MainMenu(){
 			;;
 			e)
 				ScriptHeader
-				printf "\\n\\e[1mThanks for using %s!\\e[0m\\n\\n\\n" "$SCRIPT_NAME"
+				printf "\\n${BOLD}Thanks for using %s!${CLEARFORMAT}\\n\\n\\n" "$SCRIPT_NAME"
 				exit 0
 			;;
 			z)
 				while true; do
-					printf "\\n\\e[1mAre you sure you want to uninstall %s? (y/n)\\e[0m  " "$SCRIPT_NAME"
+					printf "\\n${BOLD}Are you sure you want to uninstall %s? (y/n)${CLEARFORMAT}  " "$SCRIPT_NAME"
 					read -r confirm
 					case "$confirm" in
 						y|Y)
@@ -1590,6 +1592,7 @@ MainMenu(){
 }
 
 Menu_Install(){
+	ScriptHeader
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz"
 	sleep 1
 	
@@ -1604,9 +1607,9 @@ Menu_Install(){
 	fi
 	
 	IFACE=""
-	printf "\\n\\e[1mWAN Interface detected as %s\\e[0m\\n" "$(Get_WAN_IFace)"
+	printf "\\n${BOLD}WAN Interface detected as %s${CLEARFORMAT}\\n" "$(Get_WAN_IFace)"
 	while true; do
-		printf "\\n\\e[1mIs this correct? (y/n)\\e[0m  "
+		printf "\\n${BOLD}Is this correct? (y/n)${CLEARFORMAT}  "
 		read -r confirm
 		case "$confirm" in
 			y|Y)
@@ -1615,7 +1618,7 @@ Menu_Install(){
 			;;
 			n|N)
 				while true; do
-					printf "\\n\\e[1mPlease enter correct interface:\\e[0m  "
+					printf "\\n${BOLD}Please enter correct interface:${CLEARFORMAT}  "
 					read -r iface
 					iface_lower="$(echo "$iface" | tr "A-Z" "a-z")"
 					if [ "$iface" = "e" ]; then
@@ -1623,7 +1626,7 @@ Menu_Install(){
 						rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 						exit 1
 					elif [ ! -f "/sys/class/net/$iface_lower/operstate" ] || [ "$(cat "/sys/class/net/$iface_lower/operstate")" = "down" ]; then
-						printf "\\n\\e[31mInput is not a valid interface or interface not up, please try again\\e[0m\\n"
+						printf "\\n\\e[31mInput is not a valid interface or interface not up, please try again${CLEARFORMAT}\\n"
 					else
 						IFACE="$iface_lower"
 						break
@@ -1717,14 +1720,14 @@ Menu_BandwidthAllowance(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter your monthly bandwidth allowance\\n(%s, 0 = unlimited, max. 2 decimals):\\e[0m  " "$(AllowanceUnit check)"
+		printf "\\n${BOLD}Please enter your monthly bandwidth allowance\\n(%s, 0 = unlimited, max. 2 decimals):${CLEARFORMAT}  " "$(AllowanceUnit check)"
 		read -r allowance
 		
 		if [ "$allowance" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Bandwidth "$allowance"; then
-			printf "\\n\\e[31mPlease enter a valid number (%s, 0 = unlimited, max. 2 decimals)\\e[0m\\n" "$(AllowanceUnit check)"
+			printf "\\n\\e[31mPlease enter a valid number (%s, 0 = unlimited, max. 2 decimals)${CLEARFORMAT}\\n" "$(AllowanceUnit check)"
 		else
 			bandwidthallowance="$allowance"
 			printf "\\n"
@@ -1747,7 +1750,7 @@ Menu_AllowanceUnit(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease select the unit to use for bandwidth allowance:\\e[0m\\n"
+		printf "\\n${BOLD}Please select the unit to use for bandwidth allowance:${CLEARFORMAT}\\n"
 		printf "1.    G%s\\n" "$unitsuffix"
 		printf "2.    T%s\\n\\n" "$unitsuffix"
 		printf "Choose an option:  "
@@ -1809,17 +1812,17 @@ Menu_AllowanceStartDay(){
 	ScriptHeader
 	
 	while true; do
-		printf "\\n\\e[1mPlease enter day of month that your bandwidth allowance\\nresets (1-28):\\e[0m  "
+		printf "\\n${BOLD}Please enter day of month that your bandwidth allowance\\nresets (1-28):${CLEARFORMAT}  "
 		read -r startday
 		
 		if [ "$startday" = "e" ]; then
 			exitmenu="exit"
 			break
 		elif ! Validate_Number "$startday"; then
-			printf "\\n\\e[31mPlease enter a valid number (1-28)\\e[0m\\n"
+			printf "\\n\\e[31mPlease enter a valid number (1-28)${CLEARFORMAT}\\n"
 		else
 			if [ "$startday" -lt 1 ] || [ "$startday" -gt 28 ]; then
-				printf "\\n\\e[31mPlease enter a number between 1 and 28\\e[0m\\n"
+				printf "\\n\\e[31mPlease enter a number between 1 and 28${CLEARFORMAT}\\n"
 			else
 				allowancestartday="$startday"
 				printf "\\n"
@@ -1839,13 +1842,13 @@ Menu_Edit(){
 	texteditor=""
 	exitmenu="false"
 	
-	printf "\\n\\e[1mA choice of text editors is available:\\e[0m\\n"
+	printf "\\n${BOLD}A choice of text editors is available:${CLEARFORMAT}\\n"
 	printf "1.    nano (recommended for beginners)\\n"
 	printf "2.    vi\\n"
 	printf "\\ne.    Exit to main menu\\n"
 	
 	while true; do
-		printf "\\n\\e[1mChoose an option:\\e[0m  "
+		printf "\\n${BOLD}Choose an option:${CLEARFORMAT}  "
 		read -r editor
 		case "$editor" in
 			1)
