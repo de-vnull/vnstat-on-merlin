@@ -548,7 +548,7 @@ function reload(){
 	location.reload(true);
 }
 
-function Draw_Chart_NoData(txtchartname){
+function Draw_Chart_NoData(txtchartname,texttodisplay){
 	document.getElementById('divLineChart_'+txtchartname).width='730';
 	document.getElementById('divLineChart_'+txtchartname).height='500';
 	document.getElementById('divLineChart_'+txtchartname).style.width='730px';
@@ -559,7 +559,7 @@ function Draw_Chart_NoData(txtchartname){
 	ctx.textBaseline = 'middle';
 	ctx.font = 'normal normal bolder 48px Arial';
 	ctx.fillStyle = 'white';
-	ctx.fillText('No data to display',365,250);
+	ctx.fillText(texttodisplay,365,250);
 	ctx.restore();
 }
 
@@ -583,8 +583,8 @@ function Draw_Chart(txtchartname){
 	var chartaxismin = moment().subtract(numunitx,txtunitx+'s');
 	var charttype = 'line';
 	var dataobject = window[txtchartname+'_'+chartinterval+'_'+chartperiod];
-	if(typeof dataobject === 'undefined' || dataobject === null){ Draw_Chart_NoData(txtchartname); return; }
-	if(dataobject.length == 0){ Draw_Chart_NoData(txtchartname); return; }
+	if(typeof dataobject === 'undefined' || dataobject === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	if(dataobject.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	
 	var unique = [];
 	var chartTrafficTypes = [];
