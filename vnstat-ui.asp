@@ -307,7 +307,6 @@ function update_status(){
 	$j.ajax({
 		url: '/ext/dn-vnstat/detect_update.js',
 		dataType: 'script',
-		timeout: 3000,
 		error: function(xhr){
 			setTimeout(update_status,1000);
 		},
@@ -393,7 +392,6 @@ function get_conf_file(){
 	$j.ajax({
 		url: '/ext/dn-vnstat/config.htm',
 		dataType: 'text',
-		timeout: 1000,
 		error: function(xhr){
 			setTimeout(get_conf_file,1000);
 		},
@@ -412,7 +410,6 @@ function get_vnstatconf_file(){
 	$j.ajax({
 		url: '/ext/dn-vnstat/vnstatconf.htm',
 		dataType: 'text',
-		timeout: 1000,
 		error: function(xhr){
 			setTimeout(get_vnstatconf_file,1000);
 		},
@@ -480,7 +477,6 @@ function update_vnstat(){
 	$j.ajax({
 		url: '/ext/dn-vnstat/detect_vnstat.js',
 		dataType: 'script',
-		timeout: 1000,
 		error: function(xhr){
 			setTimeout(update_vnstat,1000);
 		},
