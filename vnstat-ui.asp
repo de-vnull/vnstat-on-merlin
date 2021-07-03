@@ -69,9 +69,21 @@ var bordercolourlist= ['#fc8500','#42ecf5'];
 var backgroundcolourlist = ['rgba(252,133,0,0.5)','rgba(66,236,245,0.5)'];
 
 function keyHandler(e){
-	if(e.keyCode == 27){
+	if(e.keyCode == 82){
 		$j(document).off('keydown');
 		ResetZoom();
+	}
+	else if(e.keyCode == 68){
+		$j(document).off('keydown');
+		ToggleDragZoom(document.form.btnDragZoom);
+	}
+	else if(e.keyCode == 70){
+		$j(document).off('keydown');
+		ToggleFill();
+	}
+	else if(e.keyCode == 76){
+		$j(document).off('keydown');
+		ToggleLines();
 	}
 }
 
