@@ -377,6 +377,8 @@ function update_vnstat(){
 				UpdateText();
 				UpdateImages();
 				loadVnStatOutput();
+				currentNoCharts = 0;
+				RedrawAllCharts();
 				document.getElementById('vnstatupdate_text').innerHTML = '';
 				showhide('imgVnStatUpdate',false);
 				showhide('vnstatupdate_text',false);
