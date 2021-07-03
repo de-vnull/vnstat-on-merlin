@@ -975,6 +975,7 @@ Generate_Stats(){
 	else
 		ps | grep -v grep | grep -v $$ | grep -i "$SCRIPT_NAME" | grep generate | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
 	fi
+	sleep 5
 	Create_Dirs
 	Conf_Exists
 	ScriptStorageLocation load
