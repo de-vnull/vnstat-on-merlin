@@ -42,19 +42,19 @@ if [ "$1" = "start" ] || [ "$1" = "restart" ]; then
 	fi
 	
 	if [ "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
-		if ! vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" -i "$IFACE" >/dev/null 2>&1; then
+		if ! vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" -i "$IFACE"; then
 			if [ "$(ls -A /opt/var/lib/vnstat | wc -l)" -gt 0 ]; then
-				vnstatd -d --config "$SCRIPT_STORAGE_DIR/vnstat.conf" >/dev/null 2>&1
+				vnstatd -d --config "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			else
-				vnstatd $ARGS >/dev/null 2>&1
-				vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" --add -i "$IFACE" >/dev/null 2>&1
+				vnstatd $ARGS
+				vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" --add -i "$IFACE"
 			fi
-			killall vnstatd >/dev/null 2>&1
+			killall vnstatd
 		fi
 	else
-		vnstatd $ARGS >/dev/null 2>&1
-		vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" --add -i "$IFACE" >/dev/null 2>&1
-		killall vnstatd >/dev/null 2>&1
+		vnstatd $ARGS
+		vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" --add -i "$IFACE"
+		killall vnstatd
 	fi
 fi
 
