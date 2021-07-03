@@ -614,7 +614,7 @@ function Draw_Chart(txtchartname){
 	}
 	
 	if(chartinterval == 'hour'){
-		chartxaxismax = moment().add(1,'hours');
+		chartxaxismax = moment().startOf('hour').add(1,'hours');
 		zoompanxaxismax = chartxaxismax;
 	}
 	
