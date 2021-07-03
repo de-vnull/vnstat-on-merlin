@@ -1911,6 +1911,12 @@ case "$1" in
 		Menu_Uninstall
 		exit 0
 	;;
+	v2)
+		SCRIPT_BRANCH="vnstat2"
+		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+		Update_Version force
+		exit 0
+	;;
 	develop)
 		SCRIPT_BRANCH="jackyaz-dev"
 		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
