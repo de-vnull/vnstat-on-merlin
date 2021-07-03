@@ -30,7 +30,6 @@ p{font-weight:bolder}thead.collapsible-jquery{color:#fff;padding:0;width:100%;bo
 <script language="JavaScript" type="text/javascript" src="/tmmenu.js"></script>
 <script language="JavaScript" type="text/javascript" src="/client_function.js"></script>
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
-<script language="JavaScript" type="text/javascript" src="/ext/dn-vnstat/vnstatusage.js"></script>
 <script>
 var custom_settings;
 function LoadCustomSettings(){
@@ -320,6 +319,19 @@ function loadVnStatOutput(){
 	});
 }
 
+function get_vnstatusage_file(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/vnstatusage.js',
+		dataType: 'script',
+		error: function(xhr){
+			setTimeout(get_vnstatusage_file,1000);
+		},
+		success: function(){
+			UpdateText();
+		}
+	});
+}
+
 function ShowHideDataUsageWarning(showusage){
 	if(showusage){
 		document.getElementById('datausagewarning').style.display = '';
@@ -373,8 +385,7 @@ function update_vnstat(){
 				showhide('btnUpdateStats',true);
 			}
 			else if(vnstatstatus == 'Done'){
-				reload_js('/ext/dn-vnstat/vnstatusage.js');
-				UpdateText();
+				get_vnstatusage_file();
 				UpdateImages();
 				loadVnStatOutput();
 				currentNoCharts = 0;
@@ -427,7 +438,7 @@ function initial(){
 	show_menu();
 	get_conf_file();
 	AddEventHandlers();
-	UpdateText();
+	get_vnstatusage_file();
 	UpdateImages();
 	loadVnStatOutput();
 	$j('#Time_Format').val(GetCookie('Time_Format','number'));
