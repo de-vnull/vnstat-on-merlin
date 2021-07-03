@@ -951,10 +951,11 @@ Generate_Images(){
 	outputs="s h d t m"   # what images to generate
 	
 	$VNSTATI_COMMAND -s -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_s.png"
-	$VNSTATI_COMMAND -h 24 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_h.png"
-	$VNSTATI_COMMAND -d 30 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_d.png"
+	$VNSTATI_COMMAND -h 25 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_h.png"
+	$VNSTATI_COMMAND -d 8 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_d.png"
+	$VNSTATI_COMMAND -m 6 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_m.png"
+	$VNSTATI_COMMAND -y 5 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_y.png"
 	$VNSTATI_COMMAND -t 10 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_t.png"
-	$VNSTATI_COMMAND -m 12 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_m.png"
 	
 	sleep 1
 	
