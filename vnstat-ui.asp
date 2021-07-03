@@ -431,11 +431,11 @@ function reload(){
 }
 
 function Draw_Chart_NoData(txtchartname,texttodisplay){
-	document.getElementById('divLineChart_'+txtchartname).width='730';
-	document.getElementById('divLineChart_'+txtchartname).height='500';
-	document.getElementById('divLineChart_'+txtchartname).style.width='730px';
-	document.getElementById('divLineChart_'+txtchartname).style.height='500px';
-	var ctx = document.getElementById('divLineChart_'+txtchartname).getContext('2d');
+	document.getElementById('divChart_'+txtchartname).width='730';
+	document.getElementById('divChart_'+txtchartname).height='500';
+	document.getElementById('divChart_'+txtchartname).style.width='730px';
+	document.getElementById('divChart_'+txtchartname).style.height='500px';
+	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
 	ctx.save();
 	ctx.textAlign = 'center';
 	ctx.textBaseline = 'middle';
@@ -486,7 +486,7 @@ function Draw_Chart(txtchartname){
 		return item.Metric == metric1;
 	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
 	
-	var objchartname=window['LineChart_'+txtchartname];
+	var objchartname=window['Chart_'+txtchartname];
 	
 	var timeaxisformat = getTimeFormat($j('#Time_Format option:selected').val(),'axis');
 	var timetooltipformat = getTimeFormat($j('#Time_Format option:selected').val(),'tooltip');
@@ -522,7 +522,7 @@ function Draw_Chart(txtchartname){
 		factor=60*60*24*1000;
 	}
 	if(objchartname != undefined) objchartname.destroy();
-	var ctx = document.getElementById('divLineChart_'+txtchartname).getContext('2d');
+	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
 	var lineOptions = {
 		segmentShowStroke : false,
 		segmentStrokeColor : '#000',
@@ -808,7 +808,7 @@ function Draw_Chart(txtchartname){
 		options: lineOptions,
 		data: lineDataset
 	});
-	window['LineChart_'+txtchartname]=objchartname;
+	window['Chart_'+txtchartname]=objchartname;
 }
 
 function LogarithmicFormatter(tickValue,index,ticks){
@@ -913,7 +913,7 @@ function ToggleLines(){
 		SetCookie('ShowLines','');
 	}
 	
-	var chartobj = window['LineChart_DataUsage'];
+	var chartobj = window['Chart_DataUsage'];
 	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 	var maxlines = 6;
 	for(var i = 0; i < maxlines; i++){
@@ -932,7 +932,7 @@ function ToggleFill(){
 		SetCookie('ShowFill','origin');
 	}
 	
-	var chartobj = window['LineChart_DataUsage'];
+	var chartobj = window['Chart_DataUsage'];
 	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 	chartobj.data.datasets[0].fill=ShowFill;
 	chartobj.data.datasets[1].fill=ShowFill;
@@ -1026,7 +1026,7 @@ function getChartInterval(layout){
 }
 
 function ResetZoom(){
-	var chartobj = window['LineChart_DataUsage'];
+	var chartobj = window['Chart_DataUsage'];
 	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 	chartobj.resetZoom();
 }
@@ -1050,7 +1050,7 @@ function ToggleDragZoom(button){
 		buttonvalue = 'Drag Zoom On';
 	}
 	
-	var chartobj = window['LineChart_DataUsage'];
+	var chartobj = window['Chart_DataUsage'];
 	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 	chartobj.options.plugins.zoom.zoom.drag = drag;
 	chartobj.options.plugins.zoom.pan.enabled = pan;
