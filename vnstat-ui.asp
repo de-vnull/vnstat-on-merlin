@@ -1267,40 +1267,6 @@ function changePeriod(e){
 </td></tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
-<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="thead_summary">
-<tr><td colspan="2">Summary of all usage (click to expand/collapse)</td></tr>
-</thead>
-<tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_s" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_s.htm');">
-<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_s.png" alt="Summary" />
-</div>
-</td></tr>
-</table>
-<div style="line-height:10px;">&nbsp;</div>
-<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="thead_top10">
-<tr><td colspan="2">Top 10 usage (click to expand/collapse)</td></tr>
-</thead>
-<tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_t" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_t.htm');">
-<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_t.png" alt="Top10" />
-</div>
-</td></tr>
-</table>
-<div style="line-height:10px;">&nbsp;</div>
-<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="thead_cli">
-<tr><td colspan="2">vnstat CLI (click to expand/collapse)</td></tr>
-</thead>
-<tr>
-<td colspan="2" style="padding: 0px;">
-<textarea cols="65" rows="35" wrap="off" readonly="readonly" id="VnStatOuput" class="textarea_log_table" style="width:738px;font-family:'Courier New',Courier,mono;font-size:11px;border:none;padding:5px;text-align:center;">If you are seeing this message, it means you don't have a vntstat stats file present on your router.
-Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
-</td>
-</tr>
-</table>
-<div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons2">
 <thead class="collapsible-jquery" id="charttools">
 <tr><td colspan="2">Chart Display Options (click to expand/collapse)</td></tr>
@@ -1376,7 +1342,41 @@ Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 </tr>
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
-<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divLineChart_DataUsage" height="500" /></div>
+<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divChart_DataUsage" height="500" /></div>
+</td>
+</tr>
+</table>
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+<thead class="collapsible-jquery" id="thead_summary">
+<tr><td colspan="2">Summary of all usage (click to expand/collapse)</td></tr>
+</thead>
+<tr><td colspan="2" align="center" style="padding: 0px;">
+<div id="img_s" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_s.htm');">
+<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_s.png" alt="Summary" />
+</div>
+</td></tr>
+</table>
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+<thead class="collapsible-jquery" id="thead_top10">
+<tr><td colspan="2">Top 10 usage (click to expand/collapse)</td></tr>
+</thead>
+<tr><td colspan="2" align="center" style="padding: 0px;">
+<div id="img_t" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_t.htm');">
+<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_t.png" alt="Top10" />
+</div>
+</td></tr>
+</table>
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+<thead class="collapsible-jquery" id="thead_cli">
+<tr><td colspan="2">vnstat CLI (click to expand/collapse)</td></tr>
+</thead>
+<tr>
+<td colspan="2" style="padding: 0px;">
+<textarea cols="65" rows="35" wrap="off" readonly="readonly" id="VnStatOuput" class="textarea_log_table" style="width:738px;font-family:'Courier New',Courier,mono;font-size:11px;border:none;padding:5px;text-align:center;">If you are seeing this message, it means you don't have a vntstat stats file present on your router.
+Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 </td>
 </tr>
 </table>
