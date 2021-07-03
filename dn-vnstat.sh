@@ -13,11 +13,14 @@
 
 ########         Shellcheck directives     ######
 # shellcheck disable=SC1091
+# shellcheck disable=SC2016
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
 # shellcheck disable=SC2059
 # shellcheck disable=SC2086
+# shellcheck disable=SC2154
 # shellcheck disable=SC2155
+# shellcheck disable=SC2181
 #################################################
 
 ### Start of script variables ###
@@ -133,7 +136,7 @@ Set_Version_Custom_Settings(){
 Update_Check(){
 	echo 'var updatestatus = "InProgress";' > "$SCRIPT_WEB_DIR/detect_update.js"
 	doupdate="false"
-	localver=$(grep "SCRIPT_VERSION=" /jffs/scripts/"$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
+	localver=$(grep "SCRIPT_VERSION=" "/jffs/scripts/$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep -qF "de-vnull" || { Print_Output true "404 error detected - stopping update" "$ERR"; return 1; }
 	serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 	if [ "$localver" != "$serverver" ]; then
@@ -145,7 +148,7 @@ Update_Check(){
 		remotemd5="$(curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | md5sum | awk '{print $1}')"
 		if [ "$localmd5" != "$remotemd5" ]; then
 			doupdate="md5"
-			Set_Version_Custom_Settings "server" "$serverver-hotfix"
+			Set_Version_Custom_Settings server "$serverver-hotfix"
 			echo 'var updatestatus = "'"$serverver-hotfix"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
 		fi
 	fi
@@ -226,13 +229,9 @@ Update_Version(){
 }
 
 Validate_Number(){
-	if [ "$2" -eq "$2" ] 2>/dev/null; then
+	if [ "$1" -eq "$1" ] 2>/dev/null; then
 		return 0
 	else
-		formatted="$(echo "$1" | sed -e 's/|/ /g')"
-		if [ -z "$3" ]; then
-			Print_Output false "$formatted - $2 is not a number" "$ERR"
-		fi
 		return 1
 	fi
 }
@@ -476,7 +475,6 @@ Auto_ServiceEvent(){
 		create)
 			if [ -f /jffs/scripts/service-event ]; then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)
-				# shellcheck disable=SC2016
 				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" /jffs/scripts/service-event)
 				
 				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }; then
@@ -484,13 +482,11 @@ Auto_ServiceEvent(){
 				fi
 				
 				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
-					# shellcheck disable=SC2016
 					echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
 				fi
 			else
 				echo "#!/bin/sh" > /jffs/scripts/service-event
 				echo "" >> /jffs/scripts/service-event
-				# shellcheck disable=SC2016
 				echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
 				chmod 0755 /jffs/scripts/service-event
 			fi
@@ -869,7 +865,7 @@ Generate_CSVs(){
 	
 	dos2unix "$CSV_OUTPUT_DIR/"*.htm
 	
-	tmpoutputdir="/tmp/${SCRIPT_NAME_LOWER}results"
+	tmpoutputdir="/tmp/${SCRIPT_NAME}results"
 	mkdir -p "$tmpoutputdir"
 	mv "$CSV_OUTPUT_DIR/CompleteResults"*.htm "$tmpoutputdir/."
 	
@@ -968,7 +964,6 @@ Generate_Email(){
 		. /opt/share/diversion/.conf/email.conf
 		PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
 		PASSWORD=""
-		# shellcheck disable=SC2154
 		if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# old OpenSSL 1.0.x
 			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
@@ -1068,7 +1063,6 @@ Generate_Email(){
 		--upload-file /tmp/mail.txt \
 		--ssl-reqd \
 		--user "$USERNAME:$PASSWORD" $SSL_FLAG
-		# shellcheck disable=SC2181
 		if [ $? -eq 0 ]; then
 			[ -z "$5" ] && Print_Output true "Email sent successfully" "$PASS"
 			rm -f /tmp/mail.txt
@@ -1368,16 +1362,16 @@ Process_Upgrade(){
 ScriptHeader(){
 	clear
 	printf "\\n"
-	printf "\\e[1m################################################\\e[0m\\n"
-	printf "\\e[1m##                                            ##\\e[0m\\n"
-	printf "\\e[1m##            vnStat on Merlin                ##\\e[0m\\n"
-	printf "\\e[1m##       for AsusWRT-Merlin routers           ##\\e[0m\\n"
-	printf "\\e[1m##                                            ##\\e[0m\\n"
-	printf "\\e[1m##            %s on %-11s           ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
-	printf "\\e[1m##                                            ## \\e[0m\\n"
-	printf "\\e[1m##    github.com/de-vnull/vnstat-on-merlin    ##\\e[0m\\n"
-	printf "\\e[1m##                                            ##\\e[0m\\n"
-	printf "\\e[1m################################################\\e[0m\\n"
+	printf "\\e[1m##################################################\\e[0m\\n"
+	printf "\\e[1m##                                              ##\\e[0m\\n"
+	printf "\\e[1m##             vnStat on Merlin                 ##\\e[0m\\n"
+	printf "\\e[1m##        for AsusWRT-Merlin routers            ##\\e[0m\\n"
+	printf "\\e[1m##                                              ##\\e[0m\\n"
+	printf "\\e[1m##             %s on %-11s            ##\\e[0m\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "\\e[1m##                                              ## \\e[0m\\n"
+	printf "\\e[1m## https://github.com/de-vnull/vnstat-on-merlin ##\\e[0m\\n"
+	printf "\\e[1m##                                              ##\\e[0m\\n"
+	printf "\\e[1m##################################################\\e[0m\\n"
 	printf "\\n"
 }
 
@@ -1412,7 +1406,7 @@ MainMenu(){
 	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
 	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
 	printf "\\n"
-	printf "\\e[1m################################################\\e[0m\\n"
+	printf "\\e[1m##################################################\\e[0m\\n"
 	printf "\\n"
 	
 	while true; do
@@ -1775,7 +1769,7 @@ Menu_AllowanceStartDay(){
 		if [ "$startday" = "e" ]; then
 			exitmenu="exit"
 			break
-		elif ! Validate_Number "" "$startday" silent; then
+		elif ! Validate_Number "$startday"; then
 			printf "\\n\\e[31mPlease enter a valid number (1-28)\\e[0m\\n"
 		else
 			if [ "$startday" -lt 1 ] || [ "$startday" -gt 28 ]; then
@@ -1850,6 +1844,10 @@ Menu_Uninstall(){
 	Auto_Cron delete 2>/dev/null
 	Auto_ServiceEvent delete 2>/dev/null
 	
+	LOCKFILE=/tmp/addonwebui.lock
+	FD=386
+	eval exec "$FD>$LOCKFILE"
+	flock -x "$FD"
 	Get_WebUI_Page "$SCRIPT_DIR/vnstat-ui.asp"
 	if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
 		sed -i "\\~$MyPage~d" /tmp/menuTree.js
@@ -1857,6 +1855,7 @@ Menu_Uninstall(){
 		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 		rm -rf "{$SCRIPT_WEBPAGE_DIR:?}/$MyPage"
 	fi
+	flock -u "$FD"
 	rm -f "$SCRIPT_DIR/vnstat-ui.asp"
 	rm -rf "$SCRIPT_WEB_DIR"
 	
@@ -1874,7 +1873,7 @@ Menu_Uninstall(){
 	rm -rf "$IMAGE_OUTPUT_DIR"
 	rm -rf "$CSV_OUTPUT_DIR"
 	
-	SETTINGSFILE=/jffs/addons/custom_settings.txt
+	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	sed -i '/dnvnstat_version_local/d' "$SETTINGSFILE"
 	sed -i '/dnvnstat_version_server/d' "$SETTINGSFILE"
 	
@@ -1936,6 +1935,44 @@ Entware_Ready(){
 			Clear_Lock
 		fi
 	fi
+}
+### ###
+
+Show_About(){
+	cat <<EOF
+About
+  $SCRIPT_NAME implements an NTP time server for AsusWRT Merlin
+  with charts for daily, weekly and monthly summaries of performance.
+  A choice between ntpd and chrony is available.
+License
+  $SCRIPT_NAME is free to use under the GNU General Public License
+  version 3 (GPL-3.0) https://opensource.org/licenses/GPL-3.0
+Help & Support
+  https://www.snbforums.com/forums/asuswrt-merlin-addons.60/?prefix_id=22
+Source code
+  https://github.com/jackyaz/$SCRIPT_NAME
+EOF
+	printf "\\n"
+}
+### ###
+
+### function based on @dave14305's FlexQoS show_help function ###
+Show_Help(){
+	cat <<EOF
+Available commands:
+  $SCRIPT_NAME about              explains functionality
+  $SCRIPT_NAME update             checks for updates
+  $SCRIPT_NAME forceupdate        updates to latest version (force update)
+  $SCRIPT_NAME startup force      runs startup actions such as mount WebUI tab
+  $SCRIPT_NAME install            installs script
+  $SCRIPT_NAME uninstall          uninstalls script
+  $SCRIPT_NAME generate           get latest data from vnstat. also runs outputcsv
+  $SCRIPT_NAME summary            get daily summary data from vnstat. runs automatically at end of day. also runs outputcsv
+  $SCRIPT_NAME outputcsv          create CSVs from database, used by WebUI and export
+  $SCRIPT_NAME develop            switch to development branch
+  $SCRIPT_NAME stable             switch to stable branch
+EOF
+	printf "\\n"
 }
 ### ###
 
@@ -2002,7 +2039,7 @@ case "$1" in
 		Generate_Email daily
 		exit 0
 	;;
-	csv)
+	outputcsv)
 		NTP_Ready
 		Entware_Ready
 		Generate_CSVs
@@ -2054,10 +2091,18 @@ case "$1" in
 		Generate_CSVs
 		exit 0
 	;;
-	vnstat2)
-		SCRIPT_BRANCH="vnstat2"
-		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
-		Update_Version force
+	uninstall)
+		Menu_Uninstall
+		exit 0
+	;;
+	about)
+		ScriptHeader
+		Show_About
+		exit 0
+	;;
+	help)
+		ScriptHeader
+		Show_Help
 		exit 0
 	;;
 	develop)
@@ -2072,17 +2117,10 @@ case "$1" in
 		Update_Version force
 		exit 0
 	;;
-	uninstall)
-		Entware_Ready
-		Create_Dirs
-		Conf_Exists
-		ScriptStorageLocation load
-		Check_Lock
-		Menu_Uninstall
-		exit 0
-	;;
 	*)
-		echo "Command not recognised, please try again"
+		ScriptHeader
+		Print_Output false "Command not recognised." "$ERR"
+		Print_Output false "For a list of available commands run: $SCRIPT_NAME help"
 		exit 1
 	;;
 esac
