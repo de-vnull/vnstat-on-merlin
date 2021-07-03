@@ -1355,8 +1355,6 @@ Process_Upgrade(){
 		Update_File S33vnstat
 		touch "$SCRIPT_STORAGE_DIR/.v2upgraded"
 		if [ -n "$(pidof vnstatd)" ];then
-			Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
-			sleep 60
 			Generate_Images
 			Generate_Stats
 			Check_Bandwidth_Usage silent
