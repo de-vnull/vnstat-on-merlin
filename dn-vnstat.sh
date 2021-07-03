@@ -810,6 +810,7 @@ ScriptStorageLocation(){
 }
 
 Generate_CSVs(){
+	renice 15 $$
 	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	dbdir="$(grep "^DatabaseDir " "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	TZ=$(cat /etc/TZ)
@@ -920,6 +921,7 @@ Generate_CSVs(){
 	/opt/bin/7za a -y -bsp0 -bso0 -tzip "/tmp/${SCRIPT_NAME}data.zip" "$tmpoutputdir/*"
 	mv "/tmp/${SCRIPT_NAME}data.zip" "$CSV_OUTPUT_DIR"
 	rm -rf "$tmpoutputdir"
+	renice 0 $$
 }
 
 Generate_Images(){
