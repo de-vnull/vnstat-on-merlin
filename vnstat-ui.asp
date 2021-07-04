@@ -1252,7 +1252,10 @@ function changePeriod(e){
 <tr><td colspan="2">Monthly usage (click to expand/collapse)</td></tr>
 </thead>
 <tr>
-<th width="20%">Data usage for current cycle</th>
+<th width="20%">Data usage for current cycle
+<br />
+<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units" target="_blank" style="color:#FFCC00;">More info</a>
+</th>
 <td><span id="spandatausage" style="color:#FFFFFF;"></span></td>
 </tr>
 <tr>
