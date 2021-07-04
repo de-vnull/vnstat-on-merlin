@@ -1138,7 +1138,7 @@ function changePeriod(e){
 <div style="height:30px;width:24px;overflow:hidden;float:right;"><a class="hintstyle usagehint" href="javascript:void(0);" onclick="UsageHint();"><img src="/images/New_ui/notification.png" style=""></a></div>
 </div>
 <div>&nbsp;</div>
-<div class="formfonttitle" id="scripttitle" style="text-align:center;margin-left:166px;">Vnstat on Merlin</div>
+<div class="formfonttitle" id="scripttitle" style="text-align:center;margin-left:166px;">vnStat-on-Merlin</div>
 <div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
 <div class="formfontdesc">vnStat is a Linux data usage reporting tool.</div>
