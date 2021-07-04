@@ -948,10 +948,10 @@ Generate_Images(){
 	[ -z "$1" ] && Print_Output false "vnstati updating stats for UI" "$PASS"
 	
 	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-	outputs="s h hg d t m"   # what images to generate
+	outputs="s hg d t m"   # what images to generate
 	
 	$VNSTATI_COMMAND -s -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_s.png"
-	$VNSTATI_COMMAND -hg -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_h.png"
+	$VNSTATI_COMMAND -hg -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_hg.png"
 	$VNSTATI_COMMAND -d 31 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_d.png"
 	$VNSTATI_COMMAND -m 12 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_m.png"
 	$VNSTATI_COMMAND -t 10 -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_t.png"
