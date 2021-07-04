@@ -947,7 +947,7 @@ Generate_CSVs(){
 	sed -i 's/rx/Received/g;s/tx/Sent/g;1i Metric,Time,Value' "$CSV_OUTPUT_DIR/WeekThis.htm"
 	sed -i 's/rx/Received/g;s/tx/Sent/g;1i Metric,Time,Value' "$CSV_OUTPUT_DIR/WeekPrev.htm"
 	
-	cat "$CSV_OUTPUT_DIR/week_summary_this_rx.tmp" "$CSV_OUTPUT_DIR/week_summary_this_tx.tmp" "$CSV_OUTPUT_DIR/week_summary_prev_rx.tmp" "$CSV_OUTPUT_DIR/week_summary_prev_tx.tmp" "$CSV_OUTPUT_DIR/WeekSummary.htm" "$CSV_OUTPUT_DIR/week_summary_prev2_rx.tmp" "$CSV_OUTPUT_DIR/week_summary_prev2_tx.tmp" > "$CSV_OUTPUT_DIR/WeekSummary.htm" 2> /dev/null
+	cat "$CSV_OUTPUT_DIR/week_summary_this_rx.tmp" "$CSV_OUTPUT_DIR/week_summary_this_tx.tmp" "$CSV_OUTPUT_DIR/week_summary_prev_rx.tmp" "$CSV_OUTPUT_DIR/week_summary_prev_tx.tmp" "$CSV_OUTPUT_DIR/week_summary_prev2_rx.tmp" "$CSV_OUTPUT_DIR/week_summary_prev2_tx.tmp" > "$CSV_OUTPUT_DIR/WeekSummary.htm" 2> /dev/null
 	sed -i 's/rx/Received/g;s/tx/Sent/g;1i Metric,Time,Value' "$CSV_OUTPUT_DIR/WeekSummary.htm"
 	
 	rm -f "$CSV_OUTPUT_DIR/week"*
