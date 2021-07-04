@@ -43,7 +43,7 @@ function LoadCustomSettings(){
 	}
 }
 var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
-var maxNoCharts = 9;
+var maxNoCharts = 11;
 var currentNoCharts = 0;
 
 var ShowLines = GetCookie('ShowLines','string');
@@ -64,8 +64,9 @@ var dataintervallist = ['fiveminute','hour','day'];
 var chartlist = ['daily','weekly','monthly'];
 var timeunitlist = ['hour','day','day'];
 var intervallist = [24,7,30];
-var bordercolourlist= ['#fc8500','#42ecf5'];
-var backgroundcolourlist = ['rgba(252,133,0,0.5)','rgba(66,236,245,0.5)'];
+var bordercolourlist= ['#fc8500','#42ecf5','#53047a','#07f242'];
+var backgroundcolourlist = ['rgba(252,133,0,0.5)','rgba(66,236,245,0.5)','rgba(83,4,122,0.5)','rgba(7,242,66,0.5)'];
+var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage'];
 
 function keyHandler(e){
 	if(e.keyCode == 82){
@@ -399,11 +400,6 @@ function update_vnstat(){
 	});
 }
 
-function reload_js(src){
-	$j('script[src="'+src+'"]').remove();
-	$j('<script>').attr('src',src+'?cachebuster='+ new Date().getTime()).appendTo('head');
-}
-
 function AddEventHandlers(){
 	$j('.collapsible-jquery').off('click').on('click',function(){
 		$j(this).siblings().toggle('fast',function(){
@@ -490,7 +486,7 @@ function Draw_Chart(txtchartname){
 	
 	var unique = [];
 	var chartTrafficTypes = [];
-	for( let i = 0; i < dataobject.length; i++){
+	for(let i = 0; i < dataobject.length; i++){
 		if(!unique[dataobject[i].Metric]){
 			chartTrafficTypes.push(dataobject[i].Metric);
 			unique[dataobject[i].Metric] = 1;
@@ -932,13 +928,15 @@ function ToggleLines(){
 		SetCookie('ShowLines','');
 	}
 	
-	var chartobj = window['Chart_DataUsage'];
-	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-	var maxlines = 6;
-	for(var i = 0; i < maxlines; i++){
-		chartobj.options.annotation.annotations[i].type=ShowLines;
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		var maxlines = 6;
+		for(var i2 = 0; i2 < maxlines; i2++){
+			chartobj.options.annotation.annotations[i2].type=ShowLines;
+		}
+		chartobj.update();
 	}
-	chartobj.update();
 }
 
 function ToggleFill(){
@@ -951,11 +949,50 @@ function ToggleFill(){
 		SetCookie('ShowFill','origin');
 	}
 	
-	var chartobj = window['Chart_DataUsage'];
-	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-	chartobj.data.datasets[0].fill=ShowFill;
-	chartobj.data.datasets[1].fill=ShowFill;
-	chartobj.update();
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.data.datasets[0].fill=ShowFill;
+		chartobj.data.datasets[1].fill=ShowFill;
+		chartobj.update();
+	}
+}
+
+function ToggleDragZoom(button){
+	var drag = true;
+	var pan = false;
+	var buttonvalue = '';
+	if(button.value.indexOf('On') != -1){
+		drag = false;
+		pan = true;
+		DragZoom = false;
+		ChartPan = true;
+		buttonvalue = 'Drag Zoom Off';
+	}
+	else{
+		drag = true;
+		pan = false;
+		DragZoom = true;
+		ChartPan = false;
+		buttonvalue = 'Drag Zoom On';
+	}
+	
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.options.plugins.zoom.zoom.drag = drag;
+		chartobj.options.plugins.zoom.pan.enabled = pan;
+		chartobj.update();
+		button.value = buttonvalue;
+	}
+}
+
+function ResetZoom(){
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.resetZoom();
+	}
 }
 
 function RedrawAllCharts(){
@@ -965,11 +1002,16 @@ function RedrawAllCharts(){
 	$j('#DataUsage_Unit').val(GetCookie('DataUsage_Unit','number'));
 	$j('#DataUsage_Scale').val(GetCookie('DataUsage_Scale','number'));
 	Draw_Chart_NoData('DataUsage','Data loading...');
+	Draw_Chart_NoData('CompareUsage','Data loading...');
 	for(var i = 0; i < chartlist.length; i++){
 		for(var i2 = 0; i2 < dataintervallist.length; i2++){
 			d3.csv('/ext/dn-vnstat/csv/DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,'DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]));
 		}
 	}
+	$j('#CompareUsage_Unit').val(GetCookie('CompareUsage_Unit','number'));
+	$j('#CompareUsage_Scale').val(GetCookie('CompareUsage_Scale','number'));
+	d3.csv('/ext/dn-vnstat/csv/WeekThis.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekThis'));
+	d3.csv('/ext/dn-vnstat/csv/WeekPrev.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekPrev'));
 }
 
 function SetGlobalDataset(txtchartname,dataobject){
@@ -977,6 +1019,7 @@ function SetGlobalDataset(txtchartname,dataobject){
 	currentNoCharts++;
 	if(currentNoCharts == maxNoCharts){
 		Draw_Chart('DataUsage');
+		Draw_Chart_Compare('CompareUsage');
 	}
 }
 
@@ -1044,50 +1087,23 @@ function getChartInterval(layout){
 	return charttype;
 }
 
-function ResetZoom(){
-	var chartobj = window['Chart_DataUsage'];
-	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-	chartobj.resetZoom();
-}
-
-function ToggleDragZoom(button){
-	var drag = true;
-	var pan = false;
-	var buttonvalue = '';
-	if(button.value.indexOf('On') != -1){
-		drag = false;
-		pan = true;
-		DragZoom = false;
-		ChartPan = true;
-		buttonvalue = 'Drag Zoom Off';
-	}
-	else{
-		drag = true;
-		pan = false;
-		DragZoom = true;
-		ChartPan = false;
-		buttonvalue = 'Drag Zoom On';
-	}
-	
-	var chartobj = window['Chart_DataUsage'];
-	if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-	chartobj.options.plugins.zoom.zoom.drag = drag;
-	chartobj.options.plugins.zoom.pan.enabled = pan;
-	chartobj.update();
-	button.value = buttonvalue;
-}
-
 function changeAllCharts(e){
 	value = e.value * 1;
 	SetCookie(e.id,value);
 	Draw_Chart('DataUsage');
+	Draw_Chart_Compare('CompareUsage');
 }
 
 function changeChart(e){
 	value = e.value * 1;
 	name = e.id.substring(0,e.id.lastIndexOf('_'));
 	SetCookie(e.id,value);
-	Draw_Chart(name);
+	if(name == 'DataUsage'){
+		Draw_Chart(name);
+	}
+	else{
+		Draw_Chart_Compare(name);
+	}
 }
 
 function changePeriod(e){
@@ -1100,6 +1116,376 @@ function changePeriod(e){
 		$j('select[id="'+name+'_Period"] option:contains("Today")').text('Last 24 hours');
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+function Draw_Chart_Compare(txtchartname){
+	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
+	var txttitle = 'Compare Usage';
+	var metric0 = 'Received';
+	var metric1 = 'Sent';
+	
+	var decimals = 2;
+	if(txtunity == 'B' || txtunity == 'KB'){
+		decimals = 0;
+	}
+	
+	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
+	var txtunitx = 'day';
+	var zoompanxaxismax = moment().endOf('day');
+	var chartxaxismax = moment().endOf('day');
+	var chartxaxismin = moment().endOf('day').subtract(7,'days').subtract(12,'hours');
+	var charttype = 'bar';
+	var dataobject0 = window[txtchartname+'_WeekThis'];
+	if(typeof dataobject0 === 'undefined' || dataobject0 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	if(dataobject0.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	
+	var dataobject1 = window[txtchartname+'_WeekPrev'];
+	
+	var unique = [];
+	var chartTrafficTypes = [];
+	for(let i = 0; i < dataobject0.length; i++){
+		if(!unique[dataobject0[i].Metric]){
+			chartTrafficTypes.push(dataobject0[i].Metric);
+			unique[dataobject0[i].Metric] = 1;
+		}
+	}
+	
+	var chartData0 = dataobject0.filter(function(item){
+		return item.Metric == metric0;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartData1 = dataobject0.filter(function(item){
+		return item.Metric == metric1;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartData2 = dataobject0.filter(function(item){
+		return item.Metric == metric0;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartData3 = dataobject0.filter(function(item){
+		return item.Metric == metric1;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var objchartname=window['Chart_'+txtchartname];
+	
+	var factor=60*60*24*1000;
+	
+	if(objchartname != undefined) objchartname.destroy();
+	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
+	var lineOptions = {
+		segmentShowStroke : false,
+		segmentStrokeColor : '#000',
+		animationEasing : 'easeOutQuart',
+		animationSteps : 100,
+		maintainAspectRatio: false,
+		animateScale : true,
+		hover: { mode: 'point' },
+		legend: {
+			display: true,
+			position: 'top',
+			reverse: false,
+			onClick: function (e,legendItem){
+				var index = legendItem.datasetIndex;
+				var ci = this.chart;
+				var meta = ci.getDatasetMeta(index);
+				
+				meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+				
+				if(ShowLines == 'line'){
+					var annotationline = '';
+					if(meta.hidden != true){
+						annotationline = 'line';
+					}
+					
+					if(ci.data.datasets[index].label == 'Received'){
+						for(aindex = 0; aindex < 3; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+					else if(ci.data.datasets[index].label == 'Sent'){
+						for(aindex = 3; aindex < 6; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+				}
+				
+				ci.update();
+			}
+		},
+		title: { display: true,text: txttitle },
+		tooltips: {
+			callbacks: {
+					title: function (tooltipItem,data){
+						return data.datasets[tooltipItem[0].datasetIndex].label;
+					},
+					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals)+' '+txtunitytip;}
+				},
+			itemSort: function(a,b){
+				return b.datasetIndex - a.datasetIndex;
+			},
+			mode: 'point',
+			position: 'cursor',
+			intersect: true
+		},
+		scales: {
+			xAxes: [{
+				type: 'time',
+				gridLines: { display: true,color: '#282828' },
+				ticks: {
+					min: chartxaxismin,
+					max: chartxaxismax,
+					display: true
+				},
+				time: {
+					parser: 'X',
+					unit: txtunitx,
+					stepSize: 1,
+					displayFormats: {day: 'dddd'}
+				}
+			}],
+			yAxes: [{
+				type: getChartScale($j('#'+txtchartname+'_Scale option:selected').val()),
+				gridLines: { display: false,color: '#282828' },
+				scaleLabel: { display: false,labelString: txtunity },
+				id: 'left-y-axis',
+				position: 'left',
+				ticks: {
+					display: true,
+					beginAtZero: true,
+					labels: {
+						index:  ['min','max'],
+						removeEmptyLines: true,
+					},
+					userCallback: LogarithmicFormatter
+				},
+			}]
+		},
+		plugins: {
+			zoom: {
+				pan: {
+					enabled: ChartPan,
+					mode: 'xy',
+					rangeMin: {
+						x: chartxaxismin,
+						y: 0
+					},
+					rangeMax: {
+						x: zoompanxaxismax//,
+						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
+					},
+				},
+				zoom: {
+					enabled: true,
+					drag: DragZoom,
+					mode: 'xy',
+					rangeMin: {
+						x: chartxaxismin,
+						y: 0
+					},
+					rangeMax: {
+						x: zoompanxaxismax//,
+						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
+					},
+					speed: 0.1
+				},
+			},
+		},
+		annotation: {
+			drawTime: 'afterDatasetsDraw',
+			annotations: [{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartData0),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric0+'='+round(getAverage(chartData0),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData0,'y','max',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric0+'='+round(getLimit(chartData0,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData0,'y','min',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric0+'='+round(getLimit(chartData0,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartData1),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric1+'='+round(getAverage(chartData1),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData1,'y','max',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric1+'='+round(getLimit(chartData1,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData1,'y','min',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric1+'='+round(getLimit(chartData1,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			}
+		]}
+	};
+	var lineDataset = {
+		datasets: getDataSets_Compare(dataobject0,dataobject1,chartTrafficTypes,chartunitmultiplier)
+	};
+	objchartname = new Chart(ctx,{
+		type: charttype,
+		options: lineOptions,
+		data: lineDataset
+	});
+	window['Chart_'+txtchartname]=objchartname;
+}
+
+function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultiplier){
+	var datasets = [];
+	
+	for(var i = 0; i < objTrafficTypes.length; i++){
+		var traffictypedata = objdata0.filter(function(item){
+			return item.Metric == objTrafficTypes[i];
+		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+		
+		datasets.push({ label: 'Last 7 - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i]});
+	}
+	for(var i = 0; i < objTrafficTypes.length; i++){
+		var traffictypedata = objdata1.filter(function(item){
+			return item.Metric == objTrafficTypes[i];
+		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+		
+		datasets.push({ label: 'Previous 7 - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i+2],borderColor: bordercolourlist[i+2]});
+	}
+	
+	return datasets;
+}
+
 </script>
 </head>
 <body onload="initial();" onunload="return unload_body();">
@@ -1368,6 +1754,50 @@ function changePeriod(e){
 </td>
 </tr>
 </table>
+
+
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+<thead class="collapsible-jquery" id="chart_CompareUsage">
+<tr>
+<td colspan="2">Compare Usage (click to expand/collapse)</td>
+</tr>
+</thead>
+<tr class="even">
+<th width="40%">Unit for data usage</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="CompareUsage_Unit">
+<option value="0">B</option>
+<option value="1">KB</option>
+<option value="2">MB</option>
+<option value="3">GB</option>
+<option value="4">TB</option>
+</select>
+</td>
+</tr>
+<tr class="even">
+<th width="40%">Scale type</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="CompareUsage_Scale">
+<option value="0">Linear</option>
+<option value="1">Logarithmic</option>
+</select>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center" style="padding: 0px;">
+<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divChart_CompareUsage" height="500" /></div>
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_summary">
