@@ -64,8 +64,8 @@ var dataintervallist = ['fiveminute','hour','day'];
 var chartlist = ['daily','weekly','monthly'];
 var timeunitlist = ['hour','day','day'];
 var intervallist = [24,7,30];
-var bordercolourlist= ['#fc8500','#42ecf5','#53047a','#07f242'];
-var backgroundcolourlist = ['rgba(252,133,0,0.5)','rgba(66,236,245,0.5)','rgba(83,4,122,0.5)','rgba(7,242,66,0.5)'];
+var bordercolourlist= ['#c5c5ce','#0ec009','#956222','#38959d'];
+var backgroundcolourlist = ['rgba(197,197,206,0.5)','rgba(14,192,9,0.5)','rgba(149,98,34,0.5)','rgba(56,149,157,0.5)'];
 var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage'];
 
 function keyHandler(e){
