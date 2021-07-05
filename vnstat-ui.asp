@@ -1669,7 +1669,7 @@ function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultipli
 <tr><td colspan="2">Hourly usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_h" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_hg.htm');">
+<div id="img_hg" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_hg.htm');">
 <img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_hg.png" alt="Hourly" />
 </div>
 </td></tr>
