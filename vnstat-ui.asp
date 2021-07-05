@@ -1168,13 +1168,16 @@ function Draw_Chart_Compare(txtchartname){
 		return item.Metric == metric1;
 	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
 	
-	var chartData2 = dataobject0.filter(function(item){
+	var chartData2 = dataobject1.filter(function(item){
 		return item.Metric == metric0;
 	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
 	
-	var chartData3 = dataobject0.filter(function(item){
+	var chartData3 = dataobject1.filter(function(item){
 		return item.Metric == metric1;
 	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartDataRx = chartData0.concat(chartData2);
+	var chartDataTx = chartData1.concat(chartData3);
 	
 	var objchartname=window['Chart_'+txtchartname];
 	
@@ -1307,7 +1310,7 @@ function Draw_Chart_Compare(txtchartname){
 				type: ShowLines,
 				mode: 'horizontal',
 				scaleID: 'left-y-axis',
-				value: getAverage(chartData0),
+				value: getAverage(chartDataRx),
 				borderColor: bordercolourlist[0],
 				borderWidth: 1,
 				borderDash: [5,5],
@@ -1324,7 +1327,7 @@ function Draw_Chart_Compare(txtchartname){
 					enabled: true,
 					xAdjust: 0,
 					yAdjust: 0,
-					content: 'Avg. '+metric0+'='+round(getAverage(chartData0),decimals).toFixed(decimals)+txtunity,
+					content: 'Avg. '+metric0+'='+round(getAverage(chartDataRx),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -1332,7 +1335,7 @@ function Draw_Chart_Compare(txtchartname){
 				type: ShowLines,
 				mode: 'horizontal',
 				scaleID: 'left-y-axis',
-				value: getLimit(chartData0,'y','max',true),
+				value: getLimit(chartDataRx,'y','max',true),
 				borderColor: bordercolourlist[0],
 				borderWidth: 1,
 				borderDash: [5,5],
@@ -1349,7 +1352,7 @@ function Draw_Chart_Compare(txtchartname){
 					enabled: true,
 					xAdjust: 15,
 					yAdjust: 0,
-					content: 'Max. '+metric0+'='+round(getLimit(chartData0,'y','max',true),decimals).toFixed(decimals)+txtunity,
+					content: 'Max. '+metric0+'='+round(getLimit(chartDataRx,'y','max',true),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -1357,7 +1360,7 @@ function Draw_Chart_Compare(txtchartname){
 				type: ShowLines,
 				mode: 'horizontal',
 				scaleID: 'left-y-axis',
-				value: getLimit(chartData0,'y','min',true),
+				value: getLimit(chartDataRx,'y','min',true),
 				borderColor: bordercolourlist[0],
 				borderWidth: 1,
 				borderDash: [5,5],
@@ -1374,7 +1377,7 @@ function Draw_Chart_Compare(txtchartname){
 					enabled: true,
 					xAdjust: 15,
 					yAdjust: 0,
-					content: 'Min. '+metric0+'='+round(getLimit(chartData0,'y','min',true),decimals).toFixed(decimals)+txtunity,
+					content: 'Min. '+metric0+'='+round(getLimit(chartDataRx,'y','min',true),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -1382,7 +1385,7 @@ function Draw_Chart_Compare(txtchartname){
 				type: ShowLines,
 				mode: 'horizontal',
 				scaleID: 'left-y-axis',
-				value: getAverage(chartData1),
+				value: getAverage(chartDataTx),
 				borderColor: bordercolourlist[1],
 				borderWidth: 1,
 				borderDash: [5,5],
@@ -1399,7 +1402,7 @@ function Draw_Chart_Compare(txtchartname){
 					enabled: true,
 					xAdjust: 0,
 					yAdjust: 0,
-					content: 'Avg. '+metric1+'='+round(getAverage(chartData1),decimals).toFixed(decimals)+txtunity,
+					content: 'Avg. '+metric1+'='+round(getAverage(chartDataTx),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -1407,7 +1410,7 @@ function Draw_Chart_Compare(txtchartname){
 				type: ShowLines,
 				mode: 'horizontal',
 				scaleID: 'left-y-axis',
-				value: getLimit(chartData1,'y','max',true),
+				value: getLimit(chartDataTx,'y','max',true),
 				borderColor: bordercolourlist[1],
 				borderWidth: 1,
 				borderDash: [5,5],
@@ -1424,7 +1427,7 @@ function Draw_Chart_Compare(txtchartname){
 					enabled: true,
 					xAdjust: 15,
 					yAdjust: 0,
-					content: 'Max. '+metric1+'='+round(getLimit(chartData1,'y','max',true),decimals).toFixed(decimals)+txtunity,
+					content: 'Max. '+metric1+'='+round(getLimit(chartDataTx,'y','max',true),decimals).toFixed(decimals)+txtunity,
 				}
 			},
 			{
@@ -1432,7 +1435,7 @@ function Draw_Chart_Compare(txtchartname){
 				type: ShowLines,
 				mode: 'horizontal',
 				scaleID: 'left-y-axis',
-				value: getLimit(chartData1,'y','min',true),
+				value: getLimit(chartDataTx,'y','min',true),
 				borderColor: bordercolourlist[1],
 				borderWidth: 1,
 				borderDash: [5,5],
@@ -1449,7 +1452,7 @@ function Draw_Chart_Compare(txtchartname){
 					enabled: true,
 					xAdjust: 15,
 					yAdjust: 0,
-					content: 'Min. '+metric1+'='+round(getLimit(chartData1,'y','min',true),decimals).toFixed(decimals)+txtunity,
+					content: 'Min. '+metric1+'='+round(getLimit(chartDataTx,'y','min',true),decimals).toFixed(decimals)+txtunity,
 				}
 			}
 		]}
