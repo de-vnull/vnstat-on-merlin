@@ -351,7 +351,7 @@ function UpdateText(){
 }
 
 function UpdateImages(){
-	var images=['s','h','d','t','m'];
+	var images=['s','hg','d','t','m'];
 	var datestring = new Date().getTime();
 	for(var index = 0; index < images.length; index++){
 		document.getElementById('img_'+images[index]).style.backgroundImage='url(/ext/dn-vnstat/images/.vnstat_'+images[index]+'.htm?cachebuster='+datestring+')';
