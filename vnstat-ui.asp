@@ -43,7 +43,7 @@ function LoadCustomSettings(){
 	}
 }
 var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
-var maxNoCharts = 11;
+var maxNoCharts = 12;
 var currentNoCharts = 0;
 
 var ShowLines = GetCookie('ShowLines','string');
@@ -66,7 +66,7 @@ var timeunitlist = ['hour','day','day'];
 var intervallist = [24,7,30];
 var bordercolourlist= ['#c5c5ce','#0ec009','#956222','#38959d'];
 var backgroundcolourlist = ['rgba(197,197,206,0.5)','rgba(14,192,9,0.5)','rgba(149,98,34,0.5)','rgba(56,149,157,0.5)'];
-var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage'];
+var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage','Chart_SummaryUsage'];
 
 function keyHandler(e){
 	if(e.keyCode == 82){
@@ -478,7 +478,7 @@ function Draw_Chart(txtchartname){
 	var numunitx = intervallist[$j('#'+txtchartname+'_Period option:selected').val()];
 	var zoompanxaxismax = moment();
 	var chartxaxismax = null;
-	var chartxaxismin = moment().subtract(numunitx,txtunitx+'s');
+	var chartxaxismin = moment().startOf('hour').subtract(numunitx,txtunitx+'s').subtract(30,'minutes');
 	var charttype = 'bar';
 	var dataobject = window[txtchartname+'_'+chartinterval+'_'+chartperiod];
 	if(typeof dataobject === 'undefined' || dataobject === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
@@ -529,16 +529,9 @@ function Draw_Chart(txtchartname){
 		zoompanxaxismax = chartxaxismax;
 	}
 	
-	factor=0;
-	if(txtunitx=='hour'){
-		factor=60*60*1000;
-	}
-	else if(txtunitx=='day'){
-		factor=60*60*24*1000;
-	}
 	if(objchartname != undefined) objchartname.destroy();
 	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
-	var lineOptions = {
+	var chartOptions = {
 		segmentShowStroke : false,
 		segmentStrokeColor : '#000',
 		animationEasing : 'easeOutQuart',
@@ -815,314 +808,335 @@ function Draw_Chart(txtchartname){
 			}
 		]}
 	};
-	var lineDataset = {
+	var chartDataset = {
 		datasets: getDataSets(dataobject,chartTrafficTypes,chartunitmultiplier)
 	};
 	objchartname = new Chart(ctx,{
 		type: charttype,
-		options: lineOptions,
-		data: lineDataset
+		options: chartOptions,
+		data: chartDataset
 	});
 	window['Chart_'+txtchartname]=objchartname;
 }
 
-function LogarithmicFormatter(tickValue,index,ticks){
-	var unit = this.options.scaleLabel.labelString;
+
+function Draw_Chart_Summary(txtchartname){
+	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
+	var txttitle = 'Summary Usage';
+	var metric0 = 'Received';
+	var metric1 = 'Sent';
+	
 	var decimals = 2;
-	if(unit == 'B' || unit == 'KB'){
+	if(txtunity == 'B' || txtunity == 'KB'){
 		decimals = 0;
 	}
-	if(this.type != 'logarithmic'){
-		if(! isNaN(tickValue)){
-			return round(tickValue,decimals).toFixed(decimals)+' '+unit;
-		}
-		else{
-			return tickValue+' '+unit;
+	
+	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
+	var charttype = 'bar';
+	var dataobject0 = window[txtchartname+'_WeekSummary'];
+	if(typeof dataobject0 === 'undefined' || dataobject0 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	if(dataobject0.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	
+	var unique = [];
+	var chartTrafficTypes = [];
+	for(let i = 0; i < dataobject0.length; i++){
+		if(!unique[dataobject0[i].Metric]){
+			chartTrafficTypes.push(dataobject0[i].Metric);
+			unique[dataobject0[i].Metric] = 1;
 		}
 	}
-	else{
-		var labelOpts =  this.options.ticks.labels || {};
-		var labelIndex = labelOpts.index || ['min','max'];
-		var labelSignificand = labelOpts.significand || [1,2,5];
-		var significand = tickValue / (Math.pow(10,Math.floor(Chart.helpers.log10(tickValue))));
-		var emptyTick = labelOpts.removeEmptyLines === true ? undefined : '';
-		var namedIndex = '';
-		if(index === 0){
-			namedIndex = 'min';
+	
+	var chartData0 = dataobject0.filter(function(item){
+		return item.Metric == metric0;
+	}).map(function(d){return d.Value/chartunitmultiplier});
+	
+	var chartData1 = dataobject0.filter(function(item){
+		return item.Metric == metric1;
+	}).map(function(d){return d.Value/chartunitmultiplier});
+	
+	chartData0.reverse();
+	chartData1.reverse();
+	
+	unique = [];
+	var chartLabels = [];
+	for(let i = 0; i < dataobject0.length; i++){
+		if(!unique[dataobject0[i].Time]){
+			chartLabels.push(dataobject0[i].Time);
+			unique[dataobject0[i].Time] = 1;
 		}
-		else if(index === ticks.length - 1){
-			namedIndex = 'max';
-		}
-		if(labelOpts === 'all' || labelSignificand.indexOf(significand) !== -1 || labelIndex.indexOf(index) !== -1 || labelIndex.indexOf(namedIndex) !== -1){
-			if(tickValue === 0){
-				return '0'+' '+unit;
-			}
-			else{
-				if(! isNaN(tickValue)){
-					return round(tickValue,decimals).toFixed(decimals)+' '+unit;
+	}
+	
+	chartLabels.reverse();
+	
+	var objchartname=window['Chart_'+txtchartname];
+	
+	if(objchartname != undefined) objchartname.destroy();
+	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
+	var chartOptions = {
+		segmentShowStroke : false,
+		segmentStrokeColor : '#000',
+		animationEasing : 'easeOutQuart',
+		animationSteps : 100,
+		maintainAspectRatio: false,
+		animateScale : true,
+		hover: { mode: 'point' },
+		legend: {
+			display: true,
+			position: 'top',
+			reverse: false,
+			onClick: function (e,legendItem){
+				var index = legendItem.datasetIndex;
+				var ci = this.chart;
+				var meta = ci.getDatasetMeta(index);
+				
+				meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+				
+				if(ShowLines == 'line'){
+					var annotationline = '';
+					if(meta.hidden != true){
+						annotationline = 'line';
+					}
+					
+					if(ci.data.datasets[index].label == 'Received'){
+						for(aindex = 0; aindex < 3; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+					else if(ci.data.datasets[index].label == 'Sent'){
+						for(aindex = 3; aindex < 6; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
 				}
-				else{
-					return tickValue+' '+unit;
+				
+				ci.update();
+			}
+		},
+		title: { display: true,text: txttitle },
+		tooltips: {
+			callbacks: {
+					title: function (tooltipItem,data){
+						return data.datasets[tooltipItem[0].datasetIndex].label;
+					},
+					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals)+' '+txtunitytip;}
+				},
+			itemSort: function(a,b){
+				return b.datasetIndex - a.datasetIndex;
+			},
+			mode: 'point',
+			position: 'cursor',
+			intersect: true
+		},
+		scales: {
+			xAxes: [{
+				type: 'category',
+				gridLines: { display: true,color: '#282828' },
+				ticks: {
+					display: true
+				}
+			}],
+			yAxes: [{
+				type: getChartScale($j('#'+txtchartname+'_Scale option:selected').val()),
+				gridLines: { display: false,color: '#282828' },
+				scaleLabel: { display: false,labelString: txtunity },
+				id: 'left-y-axis',
+				position: 'left',
+				ticks: {
+					display: true,
+					beginAtZero: true,
+					labels: {
+						index:  ['min','max'],
+						removeEmptyLines: true,
+					},
+					userCallback: LogarithmicFormatter
+				},
+			}]
+		},
+		plugins: {
+			zoom: {
+				pan: {
+					enabled: ChartPan,
+					mode: 'xy',
+					rangeMin: {
+						y: 0
+					}
+				},
+				zoom: {
+					enabled: true,
+					drag: DragZoom,
+					mode: 'xy',
+					rangeMin: {
+						y: 0
+					},
+					speed: 0.1
+				}
+			},
+		},
+		annotation: {
+			drawTime: 'afterDatasetsDraw',
+			annotations: [{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartData0),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric0+'='+round(getAverage(chartData0),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData0,'y','max',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric0+'='+round(getLimit(chartData0,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData0,'y','min',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric0+'='+round(getLimit(chartData0,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartData1),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric1+'='+round(getAverage(chartData1),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData1,'y','max',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric1+'='+round(getLimit(chartData1,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData1,'y','min',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric1+'='+round(getLimit(chartData1,'y','min',true),decimals).toFixed(decimals)+txtunity,
 				}
 			}
-		}
-		return emptyTick;
-	}
-};
-
-function getDataSets(objdata,objTrafficTypes,chartunitmultiplier){
-	var datasets = [];
-	
-	for(var i = 0; i < objTrafficTypes.length; i++){
-		var traffictypedata = objdata.filter(function(item){
-			return item.Metric == objTrafficTypes[i];
-		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
-		
-		datasets.push({ label: objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i]});
-	}
-	return datasets;
+		]}
+	};
+	var chartDataset = {
+		labels: chartLabels,
+		datasets: getDataSets(dataobject0,chartTrafficTypes,chartunitmultiplier)
+	};
+	objchartname = new Chart(ctx,{
+		type: charttype,
+		options: chartOptions,
+		data: chartDataset
+	});
+	window['Chart_'+txtchartname]=objchartname;
 }
-
-function getLimit(datasetname,axis,maxmin,isannotation){
-	var limit = 0;
-	var values;
-	if(axis == 'x'){
-		values = datasetname.map(function(o){ return o.x } );
-	}
-	else{
-		values = datasetname.map(function(o){ return o.y } );
-	}
-	
-	if(maxmin == 'max'){
-		limit=Math.max.apply(Math,values);
-	}
-	else{
-		limit=Math.min.apply(Math,values);
-	}
-	if(maxmin == 'max' && limit == 0 && isannotation == false){
-		limit = 1;
-	}
-	return limit;
-}
-
-function getAverage(datasetname){
-	var total = 0;
-	for(var i = 0; i < datasetname.length; i++){
-		total += (datasetname[i].y*1);
-	}
-	var avg = total / datasetname.length;
-	return avg;
-}
-
-function round(value,decimals){
-	return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
-}
-
-function ToggleLines(){
-	if(ShowLines == ''){
-		ShowLines = 'line';
-		SetCookie('ShowLines','line');
-	}
-	else{
-		ShowLines = '';
-		SetCookie('ShowLines','');
-	}
-	
-	for(var i = 0; i < chartobjlist.length; i++){
-		var chartobj = window[chartobjlist[i]];
-		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-		var maxlines = 6;
-		for(var i2 = 0; i2 < maxlines; i2++){
-			chartobj.options.annotation.annotations[i2].type=ShowLines;
-		}
-		chartobj.update();
-	}
-}
-
-function ToggleFill(){
-	if(ShowFill == 'origin'){
-		ShowFill = 'false';
-		SetCookie('ShowFill','false');
-	}
-	else{
-		ShowFill = 'origin';
-		SetCookie('ShowFill','origin');
-	}
-	
-	for(var i = 0; i < chartobjlist.length; i++){
-		var chartobj = window[chartobjlist[i]];
-		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-		chartobj.data.datasets[0].fill=ShowFill;
-		chartobj.data.datasets[1].fill=ShowFill;
-		chartobj.update();
-	}
-}
-
-function ToggleDragZoom(button){
-	var drag = true;
-	var pan = false;
-	var buttonvalue = '';
-	if(button.value.indexOf('On') != -1){
-		drag = false;
-		pan = true;
-		DragZoom = false;
-		ChartPan = true;
-		buttonvalue = 'Drag Zoom Off';
-	}
-	else{
-		drag = true;
-		pan = false;
-		DragZoom = true;
-		ChartPan = false;
-		buttonvalue = 'Drag Zoom On';
-	}
-	
-	for(var i = 0; i < chartobjlist.length; i++){
-		var chartobj = window[chartobjlist[i]];
-		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-		chartobj.options.plugins.zoom.zoom.drag = drag;
-		chartobj.options.plugins.zoom.pan.enabled = pan;
-		chartobj.update();
-		button.value = buttonvalue;
-	}
-}
-
-function ResetZoom(){
-	for(var i = 0; i < chartobjlist.length; i++){
-		var chartobj = window[chartobjlist[i]];
-		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-		chartobj.resetZoom();
-	}
-}
-
-function RedrawAllCharts(){
-	$j('#DataUsage_Interval').val(GetCookie('DataUsage_Interval','number'));
-	changePeriod(document.getElementById('DataUsage_Interval'));
-	$j('#DataUsage_Period').val(GetCookie('DataUsage_Period','number'));
-	$j('#DataUsage_Unit').val(GetCookie('DataUsage_Unit','number'));
-	$j('#DataUsage_Scale').val(GetCookie('DataUsage_Scale','number'));
-	Draw_Chart_NoData('DataUsage','Data loading...');
-	Draw_Chart_NoData('CompareUsage','Data loading...');
-	for(var i = 0; i < chartlist.length; i++){
-		for(var i2 = 0; i2 < dataintervallist.length; i2++){
-			d3.csv('/ext/dn-vnstat/csv/DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,'DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]));
-		}
-	}
-	$j('#CompareUsage_Unit').val(GetCookie('CompareUsage_Unit','number'));
-	$j('#CompareUsage_Scale').val(GetCookie('CompareUsage_Scale','number'));
-	d3.csv('/ext/dn-vnstat/csv/WeekThis.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekThis'));
-	d3.csv('/ext/dn-vnstat/csv/WeekPrev.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekPrev'));
-}
-
-function SetGlobalDataset(txtchartname,dataobject){
-	window[txtchartname] = dataobject;
-	currentNoCharts++;
-	if(currentNoCharts == maxNoCharts){
-		Draw_Chart('DataUsage');
-		Draw_Chart_Compare('CompareUsage');
-	}
-}
-
-function getTimeFormat(value,format){
-	var timeformat;
-	
-	if(format == 'axis'){
-		if(value == 0){
-			timeformat = {
-				millisecond: 'HH:mm:ss.SSS',
-				second: 'HH:mm:ss',
-				minute: 'HH:mm',
-				hour: 'HH:mm'
-			}
-		}
-		else if(value == 1){
-			timeformat = {
-				millisecond: 'h:mm:ss.SSS A',
-				second: 'h:mm:ss A',
-				minute: 'h:mm A',
-				hour: 'h A'
-			}
-		}
-	}
-	else if(format == 'tooltip'){
-		if(value == 0){
-			timeformat = 'YYYY-MM-DD HH:mm:ss';
-		}
-		else if(value == 1){
-			timeformat = 'YYYY-MM-DD h:mm:ss A';
-		}
-	}
-	
-	return timeformat;
-}
-
-function getChartPeriod(period){
-	var chartperiod = 'daily';
-	if(period == 0) chartperiod = 'daily';
-	else if(period == 1) chartperiod = 'weekly';
-	else if(period == 2) chartperiod = 'monthly';
-	return chartperiod;
-}
-
-function getChartUnitMultiplier(period){
-	return Math.pow(1000,period);
-}
-
-function getChartScale(scale){
-	var chartscale = '';
-	if(scale == 0){
-		chartscale = 'linear';
-	}
-	else if(scale == 1){
-		chartscale = 'logarithmic';
-	}
-	return chartscale;
-}
-
-function getChartInterval(layout){
-	var charttype = 'fiveminute';
-	if(layout == 0) charttype = 'fiveminute';
-	else if(layout == 1) charttype = 'hour';
-	else if(layout == 2) charttype = 'day';
-	return charttype;
-}
-
-function changeAllCharts(e){
-	value = e.value * 1;
-	SetCookie(e.id,value);
-	Draw_Chart('DataUsage');
-	Draw_Chart_Compare('CompareUsage');
-}
-
-function changeChart(e){
-	value = e.value * 1;
-	name = e.id.substring(0,e.id.lastIndexOf('_'));
-	SetCookie(e.id,value);
-	if(name == 'DataUsage'){
-		Draw_Chart(name);
-	}
-	else{
-		Draw_Chart_Compare(name);
-	}
-}
-
-function changePeriod(e){
-	value = e.value * 1;
-	name = e.id.substring(0,e.id.indexOf('_'));
-	if(value == 2){
-		$j('select[id="'+name+'_Period"] option:contains(24)').text('Today');
-	}
-	else{
-		$j('select[id="'+name+'_Period"] option:contains("Today")').text('Last 24 hours');
-	}
-}
-
-
-
-
-
-
-
 
 
 
@@ -1181,11 +1195,9 @@ function Draw_Chart_Compare(txtchartname){
 	
 	var objchartname=window['Chart_'+txtchartname];
 	
-	var factor=60*60*24*1000;
-	
 	if(objchartname != undefined) objchartname.destroy();
 	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
-	var lineOptions = {
+	var chartOptions = {
 		segmentShowStroke : false,
 		segmentStrokeColor : '#000',
 		animationEasing : 'easeOutQuart',
@@ -1457,15 +1469,28 @@ function Draw_Chart_Compare(txtchartname){
 			}
 		]}
 	};
-	var lineDataset = {
+	var chartDataset = {
 		datasets: getDataSets_Compare(dataobject0,dataobject1,chartTrafficTypes,chartunitmultiplier)
 	};
 	objchartname = new Chart(ctx,{
 		type: charttype,
-		options: lineOptions,
-		data: lineDataset
+		options: chartOptions,
+		data: chartDataset
 	});
 	window['Chart_'+txtchartname]=objchartname;
+}
+
+function getDataSets(objdata,objTrafficTypes,chartunitmultiplier){
+	var datasets = [];
+	
+	for(var i = 0; i < objTrafficTypes.length; i++){
+		var traffictypedata = objdata.filter(function(item){
+			return item.Metric == objTrafficTypes[i];
+		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+		
+		datasets.push({ label: objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i]});
+	}
+	return datasets;
 }
 
 function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultiplier){
@@ -1489,6 +1514,304 @@ function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultipli
 	return datasets;
 }
 
+function LogarithmicFormatter(tickValue,index,ticks){
+	var unit = this.options.scaleLabel.labelString;
+	var decimals = 2;
+	if(unit == 'B' || unit == 'KB'){
+		decimals = 0;
+	}
+	if(this.type != 'logarithmic'){
+		if(! isNaN(tickValue)){
+			return round(tickValue,decimals).toFixed(decimals)+' '+unit;
+		}
+		else{
+			return tickValue+' '+unit;
+		}
+	}
+	else{
+		var labelOpts =  this.options.ticks.labels || {};
+		var labelIndex = labelOpts.index || ['min','max'];
+		var labelSignificand = labelOpts.significand || [1,2,5];
+		var significand = tickValue / (Math.pow(10,Math.floor(Chart.helpers.log10(tickValue))));
+		var emptyTick = labelOpts.removeEmptyLines === true ? undefined : '';
+		var namedIndex = '';
+		if(index === 0){
+			namedIndex = 'min';
+		}
+		else if(index === ticks.length - 1){
+			namedIndex = 'max';
+		}
+		if(labelOpts === 'all' || labelSignificand.indexOf(significand) !== -1 || labelIndex.indexOf(index) !== -1 || labelIndex.indexOf(namedIndex) !== -1){
+			if(tickValue === 0){
+				return '0'+' '+unit;
+			}
+			else{
+				if(! isNaN(tickValue)){
+					return round(tickValue,decimals).toFixed(decimals)+' '+unit;
+				}
+				else{
+					return tickValue+' '+unit;
+				}
+			}
+		}
+		return emptyTick;
+	}
+};
+
+function getLimit(datasetname,axis,maxmin,isannotation){
+	var limit = 0;
+	var values;
+	if(axis == 'x'){
+		values = datasetname.map(function(o){ return o.x } );
+	}
+	else{
+		values = datasetname.map(function(o){
+			if(o.y == null || isNaN(o.y)){
+				return o;
+			}
+			else{
+				return o.y;
+			}
+		});
+	}
+	
+	if(maxmin == 'max'){
+		limit=Math.max.apply(Math,values);
+	}
+	else{
+		limit=Math.min.apply(Math,values);
+	}
+	if(maxmin == 'max' && limit == 0 && isannotation == false){
+		limit = 1;
+	}
+	return limit;
+}
+
+function getAverage(datasetname){
+	var total = 0;
+	for(var i = 0; i < datasetname.length; i++){
+		if(datasetname[i].y == null || isNaN(datasetname[i].y)){
+			total += (datasetname[i]*1);
+		}
+		else{
+			total += (datasetname[i].y*1);
+		}
+	}
+	var avg = total / datasetname.length;
+	return avg;
+}
+
+function round(value,decimals){
+	return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
+function ToggleLines(){
+	if(ShowLines == ''){
+		ShowLines = 'line';
+		SetCookie('ShowLines','line');
+	}
+	else{
+		ShowLines = '';
+		SetCookie('ShowLines','');
+	}
+	
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		var maxlines = 6;
+		for(var i2 = 0; i2 < maxlines; i2++){
+			chartobj.options.annotation.annotations[i2].type=ShowLines;
+		}
+		chartobj.update();
+	}
+}
+
+function ToggleFill(){
+	if(ShowFill == 'origin'){
+		ShowFill = 'false';
+		SetCookie('ShowFill','false');
+	}
+	else{
+		ShowFill = 'origin';
+		SetCookie('ShowFill','origin');
+	}
+	
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.data.datasets[0].fill=ShowFill;
+		chartobj.data.datasets[1].fill=ShowFill;
+		chartobj.update();
+	}
+}
+
+function ToggleDragZoom(button){
+	var drag = true;
+	var pan = false;
+	var buttonvalue = '';
+	if(button.value.indexOf('On') != -1){
+		drag = false;
+		pan = true;
+		DragZoom = false;
+		ChartPan = true;
+		buttonvalue = 'Drag Zoom Off';
+	}
+	else{
+		drag = true;
+		pan = false;
+		DragZoom = true;
+		ChartPan = false;
+		buttonvalue = 'Drag Zoom On';
+	}
+	
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.options.plugins.zoom.zoom.drag = drag;
+		chartobj.options.plugins.zoom.pan.enabled = pan;
+		chartobj.update();
+		button.value = buttonvalue;
+	}
+}
+
+function ResetZoom(){
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.resetZoom();
+	}
+}
+
+function RedrawAllCharts(){
+	$j('#DataUsage_Interval').val(GetCookie('DataUsage_Interval','number'));
+	changePeriod(document.getElementById('DataUsage_Interval'));
+	$j('#DataUsage_Period').val(GetCookie('DataUsage_Period','number'));
+	$j('#DataUsage_Unit').val(GetCookie('DataUsage_Unit','number'));
+	$j('#DataUsage_Scale').val(GetCookie('DataUsage_Scale','number'));
+	Draw_Chart_NoData('DataUsage','Data loading...');
+	Draw_Chart_NoData('CompareUsage','Data loading...');
+	Draw_Chart_NoData('SummaryUsage','Data loading...');
+	for(var i = 0; i < chartlist.length; i++){
+		for(var i2 = 0; i2 < dataintervallist.length; i2++){
+			d3.csv('/ext/dn-vnstat/csv/DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,'DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]));
+		}
+	}
+	$j('#CompareUsage_Unit').val(GetCookie('CompareUsage_Unit','number'));
+	$j('#CompareUsage_Scale').val(GetCookie('CompareUsage_Scale','number'));
+	d3.csv('/ext/dn-vnstat/csv/WeekThis.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekThis'));
+	d3.csv('/ext/dn-vnstat/csv/WeekPrev.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekPrev'));
+	$j('#SummaryUsage_Unit').val(GetCookie('SummaryUsage_Unit','number'));
+	$j('#SummaryUsage_Scale').val(GetCookie('SummaryUsage_Scale','number'));
+	d3.csv('/ext/dn-vnstat/csv/WeekSummary.htm').then(SetGlobalDataset.bind(null,'SummaryUsage_WeekSummary'));
+}
+
+function SetGlobalDataset(txtchartname,dataobject){
+	window[txtchartname] = dataobject;
+	currentNoCharts++;
+	if(currentNoCharts == maxNoCharts){
+		Draw_Chart('DataUsage');
+		Draw_Chart_Compare('CompareUsage');
+		Draw_Chart_Summary('SummaryUsage');
+	}
+}
+
+function getTimeFormat(value,format){
+	var timeformat;
+	
+	if(format == 'axis'){
+		if(value == 0){
+			timeformat = {
+				millisecond: 'HH:mm:ss.SSS',
+				second: 'HH:mm:ss',
+				minute: 'HH:mm',
+				hour: 'HH:mm'
+			}
+		}
+		else if(value == 1){
+			timeformat = {
+				millisecond: 'h:mm:ss.SSS A',
+				second: 'h:mm:ss A',
+				minute: 'h:mm A',
+				hour: 'h A'
+			}
+		}
+	}
+	else if(format == 'tooltip'){
+		if(value == 0){
+			timeformat = 'YYYY-MM-DD HH:mm:ss';
+		}
+		else if(value == 1){
+			timeformat = 'YYYY-MM-DD h:mm:ss A';
+		}
+	}
+	
+	return timeformat;
+}
+
+function getChartPeriod(period){
+	var chartperiod = 'daily';
+	if(period == 0) chartperiod = 'daily';
+	else if(period == 1) chartperiod = 'weekly';
+	else if(period == 2) chartperiod = 'monthly';
+	return chartperiod;
+}
+
+function getChartUnitMultiplier(period){
+	return Math.pow(1000,period);
+}
+
+function getChartScale(scale){
+	var chartscale = '';
+	if(scale == 0){
+		chartscale = 'linear';
+	}
+	else if(scale == 1){
+		chartscale = 'logarithmic';
+	}
+	return chartscale;
+}
+
+function getChartInterval(layout){
+	var charttype = 'fiveminute';
+	if(layout == 0) charttype = 'fiveminute';
+	else if(layout == 1) charttype = 'hour';
+	else if(layout == 2) charttype = 'day';
+	return charttype;
+}
+
+function changeAllCharts(e){
+	value = e.value * 1;
+	SetCookie(e.id,value);
+	Draw_Chart('DataUsage');
+	Draw_Chart_Compare('CompareUsage');
+	Draw_Chart_Summary('SummaryUsage');
+}
+
+function changeChart(e){
+	value = e.value * 1;
+	name = e.id.substring(0,e.id.lastIndexOf('_'));
+	SetCookie(e.id,value);
+	if(name == 'DataUsage'){
+		Draw_Chart(name);
+	}
+	else if(name == 'SummaryUsage'){
+		Draw_Chart_Summary(name);
+	}
+	else if(name == 'CompareUsage'){
+		Draw_Chart_Compare(name);
+	}
+}
+
+function changePeriod(e){
+	value = e.value * 1;
+	name = e.id.substring(0,e.id.indexOf('_'));
+	if(value == 2){
+		$j('select[id="'+name+'_Period"] option:contains(24)').text('Today');
+	}
+	else{
+		$j('select[id="'+name+'_Period"] option:contains("Today")').text('Last 24 hours');
+	}
+}
 </script>
 </head>
 <body onload="initial();" onunload="return unload_body();">
@@ -1793,14 +2116,40 @@ function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultipli
 </td>
 </tr>
 </table>
-
-
-
-
-
-
-
-
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+<thead class="collapsible-jquery" id="chart_SummaryUsage">
+<tr>
+<td colspan="2">Summary Usage (click to expand/collapse)</td>
+</tr>
+</thead>
+<tr class="even">
+<th width="40%">Unit for data usage</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="SummaryUsage_Unit">
+<option value="0">B</option>
+<option value="1">KB</option>
+<option value="2">MB</option>
+<option value="3">GB</option>
+<option value="4">TB</option>
+</select>
+</td>
+</tr>
+<tr class="even">
+<th width="40%">Scale type</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="SummaryUsage_Scale">
+<option value="0">Linear</option>
+<option value="1">Logarithmic</option>
+</select>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center" style="padding: 0px;">
+<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divChart_SummaryUsage" height="500" /></div>
+</td>
+</tr>
+</table>
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
 <thead class="collapsible-jquery" id="thead_summary">
