@@ -66,7 +66,7 @@ var timeunitlist = ['hour','day','day'];
 var intervallist = [24,7,30];
 var bordercolourlist= ['#c5c5ce','#0ec009','#956222','#38959d'];
 var backgroundcolourlist = ['rgba(197,197,206,0.5)','rgba(14,192,9,0.5)','rgba(149,98,34,0.5)','rgba(56,149,157,0.5)'];
-var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage','Chart_SummaryUsage'];
+var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage'];
 
 function keyHandler(e){
 	if(e.keyCode == 82){
@@ -1138,10 +1138,6 @@ function Draw_Chart_Summary(txtchartname){
 	window['Chart_'+txtchartname]=objchartname;
 }
 
-
-
-
-
 function Draw_Chart_Compare(txtchartname){
 	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
 	var txttitle = 'Compare Usage';
@@ -1566,7 +1562,7 @@ function getLimit(datasetname,axis,maxmin,isannotation){
 	}
 	else{
 		values = datasetname.map(function(o){
-			if(o.y == null || isNaN(o.y)){
+			if(typeof o.y === 'undefined' || o.y == null || isNaN(o.y)){
 				return o;
 			}
 			else{
@@ -1574,6 +1570,8 @@ function getLimit(datasetname,axis,maxmin,isannotation){
 			}
 		});
 	}
+	
+	values = values.filter(function(item){return ! isNaN(item);});
 	
 	if(maxmin == 'max'){
 		limit=Math.max.apply(Math,values);
@@ -1589,15 +1587,23 @@ function getLimit(datasetname,axis,maxmin,isannotation){
 
 function getAverage(datasetname){
 	var total = 0;
+	var modifier = 0;
+	
 	for(var i = 0; i < datasetname.length; i++){
-		if(datasetname[i].y == null || isNaN(datasetname[i].y)){
-			total += (datasetname[i]*1);
+		if(typeof datasetname[i].y === 'undefined' || datasetname[i].y == null || isNaN(datasetname[i].y)){
+			if(isNaN(datasetname[i])){
+				modifier=modifier+1;
+				total += 0;
+			}
+			else{
+				total += (datasetname[i]*1);
+			}
 		}
 		else{
 			total += (datasetname[i].y*1);
 		}
 	}
-	var avg = total / datasetname.length;
+	var avg = total / (datasetname.length - modifier);
 	return avg;
 }
 
@@ -1618,8 +1624,7 @@ function ToggleLines(){
 	for(var i = 0; i < chartobjlist.length; i++){
 		var chartobj = window[chartobjlist[i]];
 		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
-		var maxlines = 6;
-		for(var i2 = 0; i2 < maxlines; i2++){
+		for(var i2 = 0; i2 < chartobj.options.annotation.annotations.length; i2++){
 			chartobj.options.annotation.annotations[i2].type=ShowLines;
 		}
 		chartobj.update();
@@ -1690,19 +1695,17 @@ function RedrawAllCharts(){
 	$j('#DataUsage_Scale').val(GetCookie('DataUsage_Scale','number'));
 	Draw_Chart_NoData('DataUsage','Data loading...');
 	Draw_Chart_NoData('CompareUsage','Data loading...');
-	Draw_Chart_NoData('SummaryUsage','Data loading...');
 	for(var i = 0; i < chartlist.length; i++){
 		for(var i2 = 0; i2 < dataintervallist.length; i2++){
 			d3.csv('/ext/dn-vnstat/csv/DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,'DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]));
 		}
 	}
+	$j('#CompareUsage_Interval').val(GetCookie('CompareUsage_Interval','number'));
 	$j('#CompareUsage_Unit').val(GetCookie('CompareUsage_Unit','number'));
 	$j('#CompareUsage_Scale').val(GetCookie('CompareUsage_Scale','number'));
 	d3.csv('/ext/dn-vnstat/csv/WeekThis.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekThis'));
 	d3.csv('/ext/dn-vnstat/csv/WeekPrev.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekPrev'));
-	$j('#SummaryUsage_Unit').val(GetCookie('SummaryUsage_Unit','number'));
-	$j('#SummaryUsage_Scale').val(GetCookie('SummaryUsage_Scale','number'));
-	d3.csv('/ext/dn-vnstat/csv/WeekSummary.htm').then(SetGlobalDataset.bind(null,'SummaryUsage_WeekSummary'));
+	d3.csv('/ext/dn-vnstat/csv/WeekSummary.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekSummary'));
 }
 
 function SetGlobalDataset(txtchartname,dataobject){
@@ -1710,8 +1713,12 @@ function SetGlobalDataset(txtchartname,dataobject){
 	currentNoCharts++;
 	if(currentNoCharts == maxNoCharts){
 		Draw_Chart('DataUsage');
-		Draw_Chart_Compare('CompareUsage');
-		Draw_Chart_Summary('SummaryUsage');
+		if(getSummaryInterval($j('#CompareUsage_Interval option:selected').val()) == 'week'){
+			Draw_Chart_Summary('CompareUsage');
+		}
+		else if(getSummaryInterval($j('#CompareUsage_Interval option:selected').val()) == 'day'){
+			Draw_Chart_Compare('CompareUsage');
+		}
 	}
 }
 
@@ -1779,12 +1786,23 @@ function getChartInterval(layout){
 	return charttype;
 }
 
+function getSummaryInterval(layout){
+	var charttype = 'day';
+	if(layout == 0) charttype = 'day';
+	else if(layout == 1) charttype = 'week';
+	return charttype;
+}
+
 function changeAllCharts(e){
 	value = e.value * 1;
 	SetCookie(e.id,value);
 	Draw_Chart('DataUsage');
-	Draw_Chart_Compare('CompareUsage');
-	Draw_Chart_Summary('SummaryUsage');
+	if(getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'week'){
+		Draw_Chart_Compare('CompareUsage');
+	}
+	else if(getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'day'){
+		Draw_Chart_Summary('CompareUsage');
+	}
 }
 
 function changeChart(e){
@@ -1794,10 +1812,10 @@ function changeChart(e){
 	if(name == 'DataUsage'){
 		Draw_Chart(name);
 	}
-	else if(name == 'SummaryUsage'){
+	else if(name == 'CompareUsage' && getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'week'){
 		Draw_Chart_Summary(name);
 	}
-	else if(name == 'CompareUsage'){
+	else if(name == 'CompareUsage' && getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'day'){
 		Draw_Chart_Compare(name);
 	}
 }
@@ -2090,6 +2108,15 @@ function changePeriod(e){
 </tr>
 </thead>
 <tr class="even">
+<th width="40%">Data interval</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="CompareUsage_Interval">
+<option value="0">Days</option>
+<option value="1">Weeks</option>
+</select>
+</td>
+</tr>
+<tr class="even">
 <th width="40%">Unit for data usage</th>
 <td>
 <select style="width:150px" class="input_option" onchange="changeChart(this)" id="CompareUsage_Unit">
@@ -2113,40 +2140,6 @@ function changePeriod(e){
 <tr>
 <td colspan="2" align="center" style="padding: 0px;">
 <div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divChart_CompareUsage" height="500" /></div>
-</td>
-</tr>
-</table>
-<div style="line-height:10px;">&nbsp;</div>
-<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
-<thead class="collapsible-jquery" id="chart_SummaryUsage">
-<tr>
-<td colspan="2">Summary Usage (click to expand/collapse)</td>
-</tr>
-</thead>
-<tr class="even">
-<th width="40%">Unit for data usage</th>
-<td>
-<select style="width:150px" class="input_option" onchange="changeChart(this)" id="SummaryUsage_Unit">
-<option value="0">B</option>
-<option value="1">KB</option>
-<option value="2">MB</option>
-<option value="3">GB</option>
-<option value="4">TB</option>
-</select>
-</td>
-</tr>
-<tr class="even">
-<th width="40%">Scale type</th>
-<td>
-<select style="width:150px" class="input_option" onchange="changeChart(this)" id="SummaryUsage_Scale">
-<option value="0">Linear</option>
-<option value="1">Logarithmic</option>
-</select>
-</td>
-</tr>
-<tr>
-<td colspan="2" align="center" style="padding: 0px;">
-<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divChart_SummaryUsage" height="500" /></div>
 </td>
 </tr>
 </table>
