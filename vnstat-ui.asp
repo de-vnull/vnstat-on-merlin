@@ -1497,14 +1497,14 @@ function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultipli
 			return item.Metric == objTrafficTypes[i];
 		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
 		
-		datasets.push({ label: 'Last 7 - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i]});
+		datasets.push({ label: 'Current 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i]});
 	}
 	for(var i = 0; i < objTrafficTypes.length; i++){
 		var traffictypedata = objdata1.filter(function(item){
 			return item.Metric == objTrafficTypes[i];
 		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
 		
-		datasets.push({ label: 'Previous 7 - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i+2],borderColor: bordercolourlist[i+2]});
+		datasets.push({ label: 'Previous 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i+2],borderColor: bordercolourlist[i+2]});
 	}
 	
 	return datasets;
