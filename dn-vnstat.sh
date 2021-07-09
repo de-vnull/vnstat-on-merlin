@@ -1342,10 +1342,10 @@ AllowanceUnit(){
 }
 
 Reset_Allowance_Warnings(){
-	if [ "$(($(date +%d) + 1))" -eq "$(AllowanceStartDay check)" ] || [ "$1" = "force" ]; then
-		rm -f "$SCRIPT_STORAGE_DIR/.warning75"
-		rm -f "$SCRIPT_STORAGE_DIR/.warning90"
-		rm -f "$SCRIPT_STORAGE_DIR/.warning100"
+	if [ "$(($(date +%-d) + 1))" -eq "$(AllowanceStartDay check)" ] || [ "$1" = "force" ]; then
+		rm -f "$SCRIPT_DIR/.warning75"
+		rm -f "$SCRIPT_DIR/.warning90"
+		rm -f "$SCRIPT_DIR/.warning100"
 	fi
 }
 
@@ -2157,8 +2157,9 @@ case "$1" in
 		Generate_Images silent
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
-		Generate_CSVs
-		Generate_Email daily
+		if [ "$(DailyEmail check)" != "none" ]; then
+			Generate_Email daily
+		fi
 		exit 0
 	;;
 	outputcsv)
@@ -2234,7 +2235,7 @@ case "$1" in
 		exit 0
 	;;
 	stable)
-		SCRIPT_BRANCH="master"
+		SCRIPT_BRANCH="main"
 		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 		Update_Version force
 		exit 0
