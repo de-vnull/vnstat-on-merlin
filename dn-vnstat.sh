@@ -1121,16 +1121,19 @@ Generate_Email(){
 					echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\""
 				} > /tmp/mail.txt
 				
-				outputs="s h d t m"
 				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
 				echo "<p>$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
 				
+				outputs="s hg d t m"
 				for output in $outputs; do
 					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
 				done
+				
 				echo "</body></html>" >> /tmp/message.html
+				
 				message_base64="$(openssl base64 -A < /tmp/message.html)"
 				rm -f /tmp/message.html
+				
 				{
 					echo ""
 					echo "--MULTIPART-ALTERNATIVE-BOUNDARY"
