@@ -20,7 +20,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v1.0.1"
+readonly SCRIPT_VERSION="v1.0.2"
 SCRIPT_BRANCH="legacy-v1"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -1042,7 +1042,7 @@ BandwidthAllowance(){
 AllowanceStartDay(){
 	case "$1" in
 		update)
-			sed -i 's/^MonthRotate.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
+			sed -i 's/^MonthRotate .*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
@@ -1050,7 +1050,7 @@ AllowanceStartDay(){
 			Check_Bandwidth_Usage
 		;;
 		check)
-			MonthRotate=$(grep "^MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			MonthRotate=$(grep "^MonthRotate " "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
 			echo "$MonthRotate"
 		;;
 	esac
