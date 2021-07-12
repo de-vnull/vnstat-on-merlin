@@ -1131,7 +1131,7 @@ AllowanceUnit(){
 }
 
 Reset_Allowance_Warnings(){
-	if [ "$(($(date +%-d) + 1))" -eq "$(AllowanceStartDay check)" ] || [ "$1" = "force" ]; then
+	if [ "$(echo "$(date +%d)" | awk '{printf("%s", $1+1);}')" -eq "$(AllowanceStartDay check)" ] || [ "$1" = "force" ]; then
 		rm -f "$SCRIPT_DIR/.warning75"
 		rm -f "$SCRIPT_DIR/.warning90"
 		rm -f "$SCRIPT_DIR/.warning100"
