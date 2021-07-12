@@ -1226,7 +1226,7 @@ Check_Bandwidth_Usage(){
 		printf "var usagestring = \"%s\";\\n" "$usagestring"
 		printf "var realusagestring = \"%s\";\\n" "$realusagestring"
 		printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")"
-	} > "$SCRIPT_DIR/.vnstatusage"
+	} >> "$SCRIPT_DIR/.vnstatusage"
 }
 
 Process_Upgrade(){
