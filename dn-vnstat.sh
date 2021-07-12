@@ -13,9 +13,15 @@
 
 ########         Shellcheck directives     ######
 # shellcheck disable=SC1091
+# shellcheck disable=SC2009
+# shellcheck disable=SC2016
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
 # shellcheck disable=SC2059
+# shellcheck disable=SC2086
+# shellcheck disable=SC2154
+# shellcheck disable=SC2155
+# shellcheck disable=SC2181
 #################################################
 
 ### Start of script variables ###
@@ -868,9 +874,9 @@ Generate_Email(){
 		elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# new OpenSSL 1.1.x non-converted password
 			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-		elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+		elif /usr/sbin/openssl aes-256-cbc "$emailPwEnc" -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# new OpenSSL 1.1.x converted password with -pbkdf2 flag
-			PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc "$emailPwEnc" -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
 		fi
 		
 		emailtype="$1"
@@ -1152,14 +1158,14 @@ Check_Bandwidth_Usage(){
 	userLimit="$(BandwidthAllowance check)"
 	
 	scalefactor=$((1000*1000))
-	if echo "$(AllowanceUnit check)" | grep -q T; then
+	if AllowanceUnit check | grep -q T; then
 		scalefactor=$((1000*1000*1000))
 	fi
 	bandwidthused=$(echo "$rawbandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*1.024/$2);}')
 	
 	realscalefactor=$((1024*1024))
 	realbandwidthusedg=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
-	realscalefactor=$(($realscalefactor*1024))
+	realscalefactor=$((realscalefactor*1024))
 	realbandwidthusedt=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 	realusagestring="vnStat will show your usage as ${realbandwidthusedg}GiB / ${realbandwidthusedt}TiB"
 	
@@ -1223,9 +1229,11 @@ Check_Bandwidth_Usage(){
 
 Process_Upgrade(){
 	if [ ! -f "$SCRIPT_DIR/.vnstatusage" ]; then
-		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
-		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
+		{
+			echo "var usagethreshold = false;"
+			echo 'var thresholdstring = "";'
+			echo 'var usagestring = "Not enough data gathered by vnstat";'
+		} > "$SCRIPT_DIR/.vnstatusage"
 	fi
 	if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
 		rm -f "$SCRIPT_DIR/.emailenabled"
