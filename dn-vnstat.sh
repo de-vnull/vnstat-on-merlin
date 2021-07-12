@@ -1419,13 +1419,6 @@ Menu_Install(){
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz"
 	sleep 1
 	
-	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
-		if [ ! -d "$SCRIPT_DIR" ]; then
-			mkdir -p "$SCRIPT_DIR"
-		fi
-		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
-	fi
-	
 	Print_Output false "Checking your router meets the requirements for $SCRIPT_NAME"
 	
 	if ! Check_Requirements; then
@@ -1434,6 +1427,13 @@ Menu_Install(){
 		Clear_Lock
 		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 		exit 1
+	fi
+	
+	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ] && [ -f /opt/bin/vnstat ]; then
+		if [ ! -d "$SCRIPT_DIR" ]; then
+			mkdir -p "$SCRIPT_DIR"
+		fi
+		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
 	fi
 	
 	IFACE=""
