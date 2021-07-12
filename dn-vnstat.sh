@@ -1676,6 +1676,13 @@ Menu_Install(){
 		exit 1
 	fi
 	
+	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ] && [ -f /opt/bin/vnstat ]; then
+		if [ ! -d "$SCRIPT_DIR" ]; then
+			mkdir -p "$SCRIPT_DIR"
+		fi
+		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
+	fi
+	
 	IFACE=""
 	printf "\\n${BOLD}WAN Interface detected as %s${CLEARFORMAT}\\n" "$(Get_WAN_IFace)"
 	while true; do
