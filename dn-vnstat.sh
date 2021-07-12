@@ -578,12 +578,12 @@ Auto_Cron(){
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_generate")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-				cru d "${SCRIPT_NAME}_images"
+				cru d "${SCRIPT_NAME}_generate"
 			fi
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_summary")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-				cru d "${SCRIPT_NAME}_stats"
+				cru d "${SCRIPT_NAME}_summary"
 			fi
 		;;
 	esac
