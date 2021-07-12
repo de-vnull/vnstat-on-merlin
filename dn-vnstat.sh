@@ -1112,7 +1112,7 @@ AllowanceStartDay(){
 			Check_Bandwidth_Usage
 		;;
 		check)
-			MonthRotate=$(grep "^MonthRotate" "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
+			MonthRotate=$(grep "^MonthRotate " "$SCRIPT_DIR/vnstat.conf" | cut -f2 -d" ")
 			echo "$MonthRotate"
 		;;
 	esac
