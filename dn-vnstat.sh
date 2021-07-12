@@ -13,14 +13,20 @@
 
 ########         Shellcheck directives     ######
 # shellcheck disable=SC1091
+# shellcheck disable=SC2009
+# shellcheck disable=SC2016
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
 # shellcheck disable=SC2059
+# shellcheck disable=SC2086
+# shellcheck disable=SC2154
+# shellcheck disable=SC2155
+# shellcheck disable=SC2181
 #################################################
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v1.0.1"
+readonly SCRIPT_VERSION="v1.0.2"
 SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -640,12 +646,12 @@ Auto_Cron(){
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_generate")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-				cru d "${SCRIPT_NAME}_images"
+				cru d "${SCRIPT_NAME}_generate"
 			fi
 			
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_summary")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
-				cru d "${SCRIPT_NAME}_stats"
+				cru d "${SCRIPT_NAME}_summary"
 			fi
 		;;
 	esac
@@ -868,9 +874,9 @@ Generate_Email(){
 		elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# new OpenSSL 1.1.x non-converted password
 			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-		elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+		elif /usr/sbin/openssl aes-256-cbc "$emailPwEnc" -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# new OpenSSL 1.1.x converted password with -pbkdf2 flag
-			PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc "$emailPwEnc" -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
 		fi
 		
 		emailtype="$1"
@@ -1104,7 +1110,7 @@ BandwidthAllowance(){
 AllowanceStartDay(){
 	case "$1" in
 		update)
-			sed -i 's/^MonthRotate.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
+			sed -i 's/^MonthRotate .*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
@@ -1152,14 +1158,14 @@ Check_Bandwidth_Usage(){
 	userLimit="$(BandwidthAllowance check)"
 	
 	scalefactor=$((1000*1000))
-	if echo "$(AllowanceUnit check)" | grep -q T; then
+	if AllowanceUnit check | grep -q T; then
 		scalefactor=$((1000*1000*1000))
 	fi
 	bandwidthused=$(echo "$rawbandwidthused $scalefactor" | awk '{printf("%.2f\n", $1*1.024/$2);}')
 	
 	realscalefactor=$((1024*1024))
 	realbandwidthusedg=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
-	realscalefactor=$(($realscalefactor*1024))
+	realscalefactor=$((realscalefactor*1024))
 	realbandwidthusedt=$(echo "$rawbandwidthused $realscalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 	realusagestring="vnStat will show your usage as ${realbandwidthusedg}GiB / ${realbandwidthusedt}TiB"
 	
@@ -1216,16 +1222,20 @@ Check_Bandwidth_Usage(){
 			touch "$SCRIPT_DIR/.warning100"
 		fi
 	fi
-	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_DIR/.vnstatusage"
-	printf "var realusagestring = \"%s\";\\n" "$realusagestring" >> "$SCRIPT_DIR/.vnstatusage"
-	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_DIR/.vnstatusage"
+	{
+		printf "var usagestring = \"%s\";\\n" "$usagestring"
+		printf "var realusagestring = \"%s\";\\n" "$realusagestring"
+		printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")"
+	} > "$SCRIPT_DIR/.vnstatusage"
 }
 
 Process_Upgrade(){
 	if [ ! -f "$SCRIPT_DIR/.vnstatusage" ]; then
-		echo "var usagethreshold = false;" > "$SCRIPT_DIR/.vnstatusage"
-		echo 'var thresholdstring = "";' >> "$SCRIPT_DIR/.vnstatusage"
-		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_DIR/.vnstatusage"
+		{
+			echo "var usagethreshold = false;"
+			echo 'var thresholdstring = "";'
+			echo 'var usagestring = "Not enough data gathered by vnstat";'
+		} > "$SCRIPT_DIR/.vnstatusage"
 	fi
 	if [ -f "$SCRIPT_DIR/.emailenabled" ]; then
 		rm -f "$SCRIPT_DIR/.emailenabled"
@@ -1419,13 +1429,6 @@ Menu_Install(){
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz"
 	sleep 1
 	
-	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
-		if [ ! -d "$SCRIPT_DIR" ]; then
-			mkdir -p "$SCRIPT_DIR"
-		fi
-		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
-	fi
-	
 	Print_Output false "Checking your router meets the requirements for $SCRIPT_NAME"
 	
 	if ! Check_Requirements; then
@@ -1434,6 +1437,13 @@ Menu_Install(){
 		Clear_Lock
 		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 		exit 1
+	fi
+	
+	if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ] && [ -f /opt/bin/vnstat ]; then
+		if [ ! -d "$SCRIPT_DIR" ]; then
+			mkdir -p "$SCRIPT_DIR"
+		fi
+		$VNSTAT_COMMAND --exportdb > "$SCRIPT_DIR/vnstat-data.bak"
 	fi
 	
 	IFACE=""
@@ -1569,7 +1579,7 @@ Menu_AllowanceUnit(){
 	exitmenu="false"
 	allowanceunit=""
 	prevallowanceunit="$(AllowanceUnit check)"
-	unitsuffix="$(echo "$(AllowanceUnit check)" | sed 's/T//;s/G//;')"
+	unitsuffix="$(AllowanceUnit check | sed 's/T//;s/G//;')"
 	ScriptHeader
 	
 	while true; do
@@ -1610,9 +1620,9 @@ Menu_AllowanceUnit(){
 		
 			scaletype="none"
 			if [ "$prevallowanceunit" != "$(AllowanceUnit check)" ]; then
-				if echo "$prevallowanceunit" | grep -q G && echo "$(AllowanceUnit check)" | grep -q T; then
+				if echo "$prevallowanceunit" | grep -q G && AllowanceUnit check | grep -q T; then
 					scaletype="divide"
-				elif echo "$prevallowanceunit" | grep -q T && echo "$(AllowanceUnit check)" | grep -q G; then
+				elif echo "$prevallowanceunit" | grep -q T && AllowanceUnit check | grep -q G; then
 					scaletype="multiply"
 				fi
 			fi
@@ -1624,7 +1634,7 @@ Menu_AllowanceUnit(){
 				elif [ "$scaletype" = "divide" ]; then
 					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 				fi
-				BandwidthAllowance update "$(echo "$bandwidthallowance")" noreset
+				BandwidthAllowance update "$bandwidthallowance" noreset
 			fi
 		fi
 	fi
@@ -1909,6 +1919,12 @@ case "$1" in
 	uninstall)
 		Check_Lock
 		Menu_Uninstall
+		exit 0
+	;;
+	v2)
+		SCRIPT_BRANCH="vnstat2"
+		SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
+		Update_Version force
 		exit 0
 	;;
 	develop)
