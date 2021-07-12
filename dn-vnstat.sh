@@ -1104,7 +1104,7 @@ BandwidthAllowance(){
 AllowanceStartDay(){
 	case "$1" in
 		update)
-			sed -i 's/^MonthRotate.*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
+			sed -i 's/^MonthRotate .*$/MonthRotate '"$2"'/' "$SCRIPT_DIR/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
