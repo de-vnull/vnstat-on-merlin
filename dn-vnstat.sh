@@ -177,7 +177,7 @@ Update_Version(){
 		elif [ "$isupdate" = "md5" ]; then
 			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available - $serverver" "$PASS"
 		fi
-		
+
 		if [ "$isupdate" != "false" ]; then
 			printf "\\n${BOLD}Do you want to continue with the update? (y/n)${CLEARFORMAT}  "
 			read -r confirm
