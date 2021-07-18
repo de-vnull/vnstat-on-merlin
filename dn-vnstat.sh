@@ -1384,7 +1384,7 @@ Check_Bandwidth_Usage(){
 		usagestring="You have used ${bandwidthused}$(AllowanceUnit check) of data this cycle; the next cycle starts on day $(AllowanceStartDay check) of the month."
 	else
 		bandwidthpercentage=$(echo "$bandwidthused $userLimit" | awk '{printf("%.2f\n", $1*100/$2);}')
-		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) cycle allowance, the cycle starts on day $(AllowanceStartDay check) of the month"
+		usagestring="You have used ${bandwidthpercentage}% (${bandwidthused}$(AllowanceUnit check)) of your ${userLimit}$(AllowanceUnit check) cycle allowance; the next cycle starts on day $(AllowanceStartDay check) of the month."
 	fi
 	
 	[ -z "$1" ] && Print_Output false "$usagestring"
