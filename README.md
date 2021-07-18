@@ -1,9 +1,10 @@
-# vnstat-on-merlin - _Release - R1_
+# vnstat-on-merlin - _Release - R1 and R2_
 
 # README #
 
 ### See changelog for details ###
-* This is the first release - R1
+* This documentation includes the first release (R1) based on vnStat 1.18 and the second release (R2) based on vnStat 2.6.
+* MIPS-based routers will stay on R1 since vnStat 2.x is not available for the platform.
 
 ### What is this repository for? ###
 
@@ -20,24 +21,22 @@
  
    - My thanks to @Martineau for the initial scripts that got the ball rolling.
  
-    - And this wouldn't be possible without the vnstat and vnstati applications, so my thanks to Teemu Toivola (and who has provided feedback to Jack and I during development of R1 and beyond).
+    - And this wouldn't be possible without the vnstat and vnstati applications, so my thanks to Teemu Toivola (and who has provided feedback to Jack and me during development of R1 and beyond).
 
 ### Notes about data use, units and monitoring ###
 
-* vnStat-on-Merlin uses the Entware version of vnStat, currently version 1.18. This is an older version of the application. Jack and I have been in correspondence with the author of the program and have been working to get the Entware version updated. This version has certain limitations, some described here: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md .
-	- Primarily you should be aware that vnStat 1.18 collects data in GiB/TiB, which is base-1024, whereas most ISPs track usage in GB/TB, which is base-1000.
-        - The data-limit monitoring offered by vnStat-on-Merlin (R1 and later) will do the calculation in GB/TB (base 1000), so you will notice a difference in the numbers reported in the charts vs the data-limit calculations.
+* vnStat-on-Merlin R1 (in the 'Legacy' branch) uses the Entware version of vnStat, currently version 1.18. This is an older version of the application. This version has certain limitations, described here: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md .
+* vnStat-on-Merlin R2 uses the Entware version of vnStat2, currently version 2.7. This is a recent release of the software. It is supported by ARM and AARCH architectures only.
 * vnStat-on-Merlin data-use and data-limit reporting __should be considered a guide__, an approximation of actual use. __vnStat-reported totals may or may not match that reported by your provider__, your cycle may start and stop on a different day of the month, a partial month (especially the first month) or the data use reported could be affected by variables such as hardware acceleration, settings that bypass the TCP/IP stack or as mundane as scheduled reboots. __You must conduct proper due diligence to determine if the usage reported by vnStat aligns with your provider.__
 
 
-### Version ###
-* Version: 1.0.0
-* Also known as R1
+### Versions ###
+* Version: 1.0.2 - also known as R1 - all architectures are supported
+* Version: 2.0.0 - also known as R2 - ARM and AARCH architectures are supported
 
 ### How do I get set up? ###
 
-* Initial installation and update from Beta 3
-
+* R1 installation and update from Beta 3
 	- A full, scripted install is available through `amtm`, the Asuswrt-Merlin Terminal Menu, version 3.1.9 or later.
         - You may need to update amtm (`amtm` > `uu`)
         - A CLI command is available on the vnStat-on-Merlin github portal below, but should not be required.
@@ -45,12 +44,21 @@
         - See below if coming from an earlier version.
     		- During an update, custom settings in `vnstat.conf` are retained. However you are encouraged to compare the default version (copied into the install folder) against your current configuration.
 
+* R2 installation and update from R1 - choose one of the following procedures:
+	- Running `amtm` and installing from the menu will identify the architecture of the router and install the proper version
+	- Choosing `u` update from within the vnStat-on-Merlin menu will identify the architecture of the router and install the proper version
+	- Clicking the `Update` button from within the vnStat-on-Merlin UI will identify the architecture of the router and install the proper version
+		- Upgrading from R1 to R2 will __erase any custom vnstat configurations__. You may need to redo any custom settings (e.g., date formats).
+
 ### Minimum requirements ###
 
-* AsusWRT Merlin version 384.19 or later. 
-	- Tested on 386.1 beta 1-5 and 386.1 and 1_2 release versions. 
+* AsusWRT Merlin version 384.19 or later for __R1__.
+	- R1 has been tested on 384.19 through 386.2_6 release version.
 	- Earlier versions (384-series only) may likewise function; kindly report any further experiences (include router model and firmware version).
 	- Initial testing on John's fork appears to demonstrate expected functionality. Kindly report any further experiences (include router model and firmware version).
+* AsusWRT Merlin version 386.1 or later for __R2__. 
+	- R2 has been tested on 386.2_6 release version.
+	- No version of John's fork have been tested (no supported hardware available) - please report success/failure.
 	- Hardware tested during development includes RT-AC66U_B1, RT-AC68U, RT-AC86U, RT-AX86U and RT-N66U.
 * Dependencies:
 	- Diversion and Entware.
@@ -59,7 +67,7 @@
 		- Please test Diversion email (`amtm > 1 - Diversion > c - Communication > 5 - Edit email settings, send testmail` > follow steps to set up and test) before enabling the vnStat on Merlin usage email.
 		- Once email is set up, Diversion does not need to be running if you don't use it (`amtm > 1 - Diversion > d - Diversion > 1 - disable`), but should remain installed.
 
-* Database configuration
+* Database configuration - _pre-R1 ("Legacy") installs only_
 	- Unlike in the alpha/beta1/manual installations, there is no separate database configuration required. Existing database files will not be deleted.
 		- If you have a custom location for your database files (legacy of the manual and alpha builds), you will need to either update vnstat.conf with those locations, or re-initialize the database in the standard location (losing history), or copy your database files to the standard location. See below for detailed steps on backing up and restoring your database files.
 
@@ -95,24 +103,26 @@
 ![Email_text](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/Txt-daily.PNG)
 
 
-### Upgrade from a manual install or alpha or beta 1 ###
+### Upgrade from a manual install or alpha or beta 1 - R1 (Legacy) branch only ###
 
-* The beta 3 version and later was re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
-* The installer for later versions (beta 3 and later) automatically performs this uninstall. __Database files will be left intact on the device.__
-* If you don't want to migrate to the new version, you can abort the install (but extensive testing has demonstrated this update to be be straightforward).
+* The R1 beta 3 version and later was re-written from the ground up, and therefore any previous installations (manual or automated) need to be removed.
+* The R1 installer for later versions (beta 3 and later) automatically performs this uninstall. __Database files will be left intact on the device.__
+* If you don't want to migrate to the R1 version from the manual install (pre-R1), you can abort the install (but extensive testing has demonstrated this update to be be straightforward).
 
 
 ### Miscellaneous notes ###
 
 * The vnstats UI page may require a hard refresh (`CTRL+F5` or equivalent) to see the latest stats. The page does not cache, but depending on the browser this auto cache clear may or may not be honored, or may require some time to elapse. This refresh issue has been mostly addressed in R1 and later.
-* Export and import of data usage tracking is possible, even across architectures (tested ARM <-> MIPS and ARM <-> AARCH). See instructions below. 
-* There is also the ability to export the data for review within other programs (`vnstat --dumpdb`). 
+* Export and import of data usage tracking is possible for __Version R1 only__, even across architectures (tested ARM <-> MIPS and ARM <-> AARCH). See instructions below. __Export and import functions have been removed in vnStat 2.x and are therefore not available in R2.__
+* There is also the ability to export the data for review within other programs (`vnstat --dumpdb`) - __R1 only__. 
 * It has been reported that with _hardware acceleration_ implemented, the data counts provided by vnstat are no more accurate than the built-in tools (which is to say, not accurate).
 * For the __day of month reset__ attribute in the menu (0.9.5 and later) and vnstat.conf: the count does not reset until the following month; described here: https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#MonthRotate .
 
 
 
-### Non-UI configuration steps ###
+### Non-UI configuration steps - vnStat command line only ###
+
+* Note: the below has been tested with vnStat 1.18; these _may_ work with vnStat 2.x (vnstat2 in the Entware repository) but _has not been tested_.
 
 * Install instructions for the __non-UI__ (CLI via SSH) version of vnStat - for vnStat Entware-hosted version 1.18 only
 	- No additional steps are required. Usage should be recorded automatically circa every 300 seconds to the db file.
@@ -124,7 +134,7 @@
 	- The Enware application `vnstat` can be run without any UI, 100% from the CLI via ssh.
 		- In this use case, requirements are simply to install (via Entware) the vnstat executable.
 		- __Note: if running vnstat solely from the CLI (SSH), there is no need to install via the UI install script.__ 
-		- Install from the CLI using the command `opkg install vnstat`.
+		- Install from the CLI using the command `opkg install vnstat` for version 1.18 (or `opkg install vnstat2` for version 2.x).
 
 * If you want to run vnstat without the UI, __are running Diversion__, and still wish to have a daily email, follow these steps:
 
@@ -157,7 +167,7 @@ cru a vnstat_daily "59 23 * * * /opt/bin/vnstat -u && sh /jffs/scripts/vnstat-st
 
 ![CLI](https://github.com/de-vnull/vnstat-on-merlin/blob/main/images/vnstat-cli-red.PNG)
 
-### Returning the default theme and rate columns ###
+### Returning the default theme and rate columns - R1 only ###
 
 To restore the default vnstat colors and rate columns, edit `vnstat.conf` (via the `dn-vnstat` script), make the following changes. 
 
