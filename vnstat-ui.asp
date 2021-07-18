@@ -12,50 +12,15 @@
 <link rel="stylesheet" type="text/css" href="index_style.css">
 <link rel="stylesheet" type="text/css" href="form_style.css">
 <style>
-p {
-  font-weight: bolder;
-}
-
-thead.collapsible-jquery {
-  color: white;
-  padding: 0px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  cursor: pointer;
-}
-
-input.settingvalue {
-  margin-left: 3px !important;
-}
-
-label.settingvalue {
-  margin-right: 10px !important;
-  vertical-align: top !important;
-}
-
-.invalid {
-  background-color: darkred !important;
-}
-
-.removespacing {
-  padding-left: 0px !important;
-  margin-left: 0px !important;
-  margin-bottom: 5px !important;
-  text-align: center !important;
-}
-
-.usagehint {
-  color: #FFFF00 !important;
-}
-
-div.vnstat {
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-}
+p{font-weight:bolder}thead.collapsible-jquery{color:#fff;padding:0;width:100%;border:none;text-align:left;outline:none;cursor:pointer}.SettingsTable{text-align:left}.SettingsTable input{text-align:left;margin-left:3px!important}.SettingsTable input.savebutton{text-align:center;margin-top:5px;margin-bottom:5px;border-right:solid 1px #000;border-left:solid 1px #000;border-bottom:solid 1px #000}.SettingsTable td.savebutton{border-right:solid 1px #000;border-left:solid 1px #000;border-bottom:solid 1px #000;background-color:#4d595d}.SettingsTable .cronbutton{text-align:center;min-width:50px;width:50px;height:23px;vertical-align:middle}.SettingsTable select{margin-left:3px!important}.SettingsTable label{margin-right:10px!important;vertical-align:top!important}.SettingsTable th{background-color:#1F2D35!important;background:#2F3A3E!important;border-bottom:none!important;border-top:none!important;font-size:12px!important;color:#fff!important;padding:4px!important;font-weight:bolder!important;padding:0!important}.SettingsTable th.sectionheader{padding-left:10px!important;border-right:solid 1px #000!important;border-left:solid 1px #000!important}.SettingsTable td{word-wrap:break-word!important;overflow-wrap:break-word!important;border-right:none;border-left:none}.SettingsTable span.settingname{background-color:#1F2D35!important;background:#2F3A3E!important}.SettingsTable td.settingname{border-right:solid 1px #000;border-left:solid 1px #000;background-color:#1F2D35!important;background:#2F3A3E!important;width:35%!important}.SettingsTable td.settingvalue{text-align:left!important;border-right:solid 1px #000}.SettingsTable th:first-child{border-left:none}.SettingsTable th:last-child{border-right:none}.SettingsTable .invalid{background-color:#8b0000!important}.SettingsTable .disabled{background-color:#CCC!important;color:#888!important}.removespacing{padding-left:0!important;margin-left:0!important;margin-bottom:5px!important;text-align:center!important}.usagehint{color:#FF0!important}div.vnstat{background-repeat:no-repeat!important;background-position:center!important}
 </style>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/jquery.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/moment.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/chart.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/hammerjs.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/chartjs-plugin-zoom.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/chartjs-plugin-annotation.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ext/shared-jy/d3.js"></script>
 <script language="JavaScript" type="text/javascript" src="/state.js"></script>
 <script language="JavaScript" type="text/javascript" src="/general.js"></script>
 <script language="JavaScript" type="text/javascript" src="/popup.js"></script>
@@ -65,20 +30,19 @@ div.vnstat {
 <script language="JavaScript" type="text/javascript" src="/tmmenu.js"></script>
 <script language="JavaScript" type="text/javascript" src="/client_function.js"></script>
 <script language="JavaScript" type="text/javascript" src="/validator.js"></script>
-<script language="JavaScript" type="text/javascript" src="/ext/dn-vnstat/vnstatusage.js"></script>
 <script>
 var custom_settings;
 function LoadCustomSettings(){
 	custom_settings = <% get_custom_settings(); %>;
 	for (var prop in custom_settings){
 		if(Object.prototype.hasOwnProperty.call(custom_settings, prop)){
-			if(prop.indexOf("dnvnstat") != -1 && prop.indexOf("dnvnstat_version") == -1){
-				eval("delete custom_settings."+prop)
+			if(prop.indexOf('dnvnstat') != -1 && prop.indexOf('dnvnstat_version') == -1){
+				eval('delete custom_settings.'+prop)
 			}
 		}
 	}
 }
-var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsByTagName("a"),b=0;b<a.length;b++)a[b].onmouseout=nd;return hinttext=thresholdstring,overlib(hinttext,0,0)}function Validate_AllowanceStartDay(a){var b=a.name,c=1*a.value;return 28<c||1>c?($j(a).addClass("invalid"),!1):($j(a).removeClass("invalid"),!0)}function Validate_DataAllowance(a){var b=a.name,c=1*a.value;return 0>c||0==a.value.length||c==NaN||"."==a.value?($j(a).addClass("invalid"),!1):($j(a).removeClass("invalid"),!0)}function Format_DataAllowance(a){var b=a.name,c=1*a.value;return!(0>c||0==a.value.length||c==NaN||"."==a.value)&&(a.value=parseFloat(a.value).toFixed(2),!0)}function ScaleDataAllowance(){"T"==document.form.dnvnstat_allowanceunit.value?document.form.dnvnstat_dataallowance.value=1*document.form.dnvnstat_dataallowance.value/1e3:"G"==document.form.dnvnstat_allowanceunit.value&&(document.form.dnvnstat_dataallowance.value=1e3*(1*document.form.dnvnstat_dataallowance.value)),Format_DataAllowance(document.form.dnvnstat_dataallowance)}function GetCookie(a,b){var c;if(null!=(c=cookie.get("cookie_"+a)))return cookie.get("cookie_"+a);return"string"==b?"":"number"==b?0:void 0}function SetCookie(a,b){cookie.set("cookie_"+a,b,3650)}function ScriptUpdateLayout(){var a=GetVersionNumber("local"),b=GetVersionNumber("server");$j("#dnvnstat_version_local").text(a),a!=b&&"N/A"!=b&&($j("#dnvnstat_version_server").text("Updated version available: "+b),showhide("btnChkUpdate",!1),showhide("dnvnstat_version_server",!0),showhide("btnDoUpdate",!0))}function update_status(){$j.ajax({url:"/ext/dn-vnstat/detect_update.js",dataType:"script",timeout:3e3,error:function(){setTimeout(update_status,1e3)},success:function(){"InProgress"==updatestatus?setTimeout(update_status,1e3):(document.getElementById("imgChkUpdate").style.display="none",showhide("dnvnstat_version_server",!0),"None"==updatestatus?($j("#dnvnstat_version_server").text("No update available"),showhide("btnChkUpdate",!0),showhide("btnDoUpdate",!1)):($j("#dnvnstat_version_server").text("Updated version available: "+updatestatus),showhide("btnChkUpdate",!1),showhide("btnDoUpdate",!0)))}})}function CheckUpdate(){showhide("btnChkUpdate",!1),document.formScriptActions.action_script.value="start_dn-vnstatcheckupdate",document.formScriptActions.submit(),document.getElementById("imgChkUpdate").style.display="",setTimeout(update_status,2e3)}function DoUpdate(){document.form.action_script.value="start_dn-vnstatdoupdate",document.form.action_wait.value=15,showLoading(),document.form.submit()}function GetVersionNumber(a){var b;return"local"==a?b=custom_settings.dnvnstat_version_local:"server"==a&&(b=custom_settings.dnvnstat_version_server),"undefined"==typeof b||null==b?"N/A":b}$j.fn.serializeObject=function(){var b=custom_settings,c=this.serializeArray();return $j.each(c,function(){void 0!==b[this.name]&&-1!=this.name.indexOf("dnvnstat")&&-1==this.name.indexOf("version")?(!b[this.name].push&&(b[this.name]=[b[this.name]]),b[this.name].push(this.value||"")):-1!=this.name.indexOf("dnvnstat")&&-1==this.name.indexOf("version")&&(b[this.name]=this.value||"")}),b};function SaveConfig(){document.getElementById("amng_custom").value=JSON.stringify($j("form").serializeObject()),document.form.action_script.value="start_dn-vnstatconfig",document.form.action_wait.value=15,showLoading(),document.form.submit()}function get_conf_file(){$j.ajax({url:"/ext/dn-vnstat/config.htm",dataType:"text",timeout:1e3,error:function(){setTimeout(get_conf_file,1e3)},success:function(data){var configdata=data.split("\n");configdata=configdata.filter(Boolean);for(var i=0;i<configdata.length;i++)eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value=configdata[i].split("=")[1].replace(/(\r\n|\n|\r)/gm,"");get_vnstatconf_file()}})}function get_vnstatconf_file(){$j.ajax({url:"/ext/dn-vnstat/vnstatconf.htm",dataType:"text",timeout:1e3,error:function(){setTimeout(get_vnstatconf_file,1e3)},success:function(data){var configdata=data.split("\n");configdata=configdata.filter(Boolean);for(var i=0;i<configdata.length;i++)configdata[i].startsWith("MonthRotate")&&(eval("document.form.dnvnstat_"+configdata[i].split(" ")[0].toLowerCase()).value=configdata[i].split(" ")[1].replace(/(\r\n|\n|\r)/gm,""))}})}function loadVnStatOutput(){$j.ajax({url:"/ext/dn-vnstat/vnstatoutput.htm",dataType:"text",error:function(){setTimeout(loadVnStatOutput,5e3)},success:function(a){document.getElementById("VnStatOuput").innerHTML=a}})}function ShowHideDataUsageWarning(a){a?(document.getElementById("datausagewarning").style.display="",document.getElementById("scripttitle").style.marginLeft="166px"):(document.getElementById("datausagewarning").style.display="none",document.getElementById("scripttitle").style.marginLeft="0px")}function UpdateText(){$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: "+daterefeshed),$j("#spandatausage").html(usagestring),$j("#spanrealdatausage").html(realusagestring),ShowHideDataUsageWarning(usagethreshold)}function UpdateImages(){for(var a=["s","h","d","t","m"],b=new Date().getTime(),c=0;c<a.length;c++)document.getElementById("img_"+a[c]).style.backgroundImage="url(/ext/dn-vnstat/images/.vnstat_"+a[c]+".htm?cachebuster="+b+")"}function UpdateStats(){showhide("btnUpdateStats",!1),document.formScriptActions.action_script.value="start_dn-vnstat",document.formScriptActions.submit(),document.getElementById("vnstatupdate_text").innerHTML="Updating bandwidth usage and vnstat data...",showhide("imgVnStatUpdate",!0),showhide("vnstatupdate_text",!0),setTimeout(update_vnstat,2e3)}function update_vnstat(){$j.ajax({url:"/ext/dn-vnstat/detect_vnstat.js",dataType:"script",timeout:1e3,error:function(){setTimeout(update_vnstat,1e3)},success:function(){"InProgress"==vnstatstatus?setTimeout(update_vnstat,1e3):"Done"==vnstatstatus&&(reload_js("/ext/dn-vnstat/vnstatusage.js"),UpdateText(),UpdateImages(),loadVnStatOutput(),document.getElementById("vnstatupdate_text").innerHTML="",showhide("imgVnStatUpdate",!1),showhide("vnstatupdate_text",!1),showhide("btnUpdateStats",!0))}})}function reload_js(a){$j("script[src=\""+a+"\"]").remove(),$j("<script>").attr("src",a+"?cachebuster="+new Date().getTime()).appendTo("head")}function AddEventHandlers(){$j(".collapsible-jquery").off("click").on("click",function(){$j(this).siblings().toggle("fast",function(){"none"==$j(this).css("display")?SetCookie($j(this).siblings()[0].id,"collapsed"):SetCookie($j(this).siblings()[0].id,"expanded")})}),$j(".collapsible-jquery").each(function(){"collapsed"==GetCookie($j(this)[0].id,"string")?$j(this).siblings().toggle(!1):$j(this).siblings().toggle(!0)})}function SetCurrentPage(){document.form.next_page.value=window.location.pathname.substring(1),document.form.current_page.value=window.location.pathname.substring(1)}function initial(){SetCurrentPage(),LoadCustomSettings(),ScriptUpdateLayout(),show_menu(),get_conf_file(),AddEventHandlers(),UpdateText(),UpdateImages(),loadVnStatOutput()}function reload(){location.reload(!0)}
+var $j=jQuery.noConflict(),maxNoCharts=12,currentNoCharts=0,ShowLines=GetCookie("ShowLines","string"),ShowFill=GetCookie("ShowFill","string");""==ShowFill&&(ShowFill="origin");var DragZoom=!0,ChartPan=!1;Chart.defaults.global.defaultFontColor="#CCC",Chart.Tooltip.positioners.cursor=function(a,b){return b};var dataintervallist=["fiveminute","hour","day"],chartlist=["daily","weekly","monthly"],timeunitlist=["hour","day","day"],intervallist=[24,7,30],bordercolourlist=["#c5c5ce","#0ec009","#956222","#38959d"],backgroundcolourlist=["rgba(197,197,206,0.5)","rgba(14,192,9,0.5)","rgba(149,98,34,0.5)","rgba(56,149,157,0.5)"],chartobjlist=["Chart_DataUsage","Chart_CompareUsage"];function keyHandler(a){82==a.keyCode?($j(document).off("keydown"),ResetZoom()):68==a.keyCode?($j(document).off("keydown"),ToggleDragZoom(document.form.btnDragZoom)):70==a.keyCode?($j(document).off("keydown"),ToggleFill()):76==a.keyCode&&($j(document).off("keydown"),ToggleLines())}$j(document).keydown(function(a){keyHandler(a)}),$j(document).keyup(function(){$j(document).keydown(function(a){keyHandler(a)})});function UsageHint(){for(var a=document.getElementsByTagName("a"),b=0;b<a.length;b++)a[b].onmouseout=nd;return hinttext=thresholdstring,overlib(hinttext,0,0)}function Validate_AllowanceStartDay(a){var b=a.name,c=1*a.value;return 28<c||1>c?($j(a).addClass("invalid"),!1):($j(a).removeClass("invalid"),!0)}function Validate_DataAllowance(a){var b=a.name,c=1*a.value;return 0>c||0==a.value.length||c==NaN||"."==a.value?($j(a).addClass("invalid"),!1):($j(a).removeClass("invalid"),!0)}function Format_DataAllowance(a){var b=a.name,c=1*a.value;return!(0>c||0==a.value.length||c==NaN||"."==a.value)&&(a.value=parseFloat(a.value).toFixed(2),!0)}function ScaleDataAllowance(){"T"==document.form.dnvnstat_allowanceunit.value?document.form.dnvnstat_dataallowance.value=1*document.form.dnvnstat_dataallowance.value/1e3:"G"==document.form.dnvnstat_allowanceunit.value&&(document.form.dnvnstat_dataallowance.value=1e3*(1*document.form.dnvnstat_dataallowance.value)),Format_DataAllowance(document.form.dnvnstat_dataallowance)}function GetCookie(a,b){if(null!=cookie.get("cookie_"+a))return cookie.get("cookie_"+a);return"string"==b?"":"number"==b?0:void 0}function SetCookie(a,b){cookie.set("cookie_"+a,b,3650)}function ScriptUpdateLayout(){var a=GetVersionNumber("local"),b=GetVersionNumber("server");$j("#dnvnstat_version_local").text(a),a!=b&&"N/A"!=b&&($j("#dnvnstat_version_server").text("Updated version available: "+b),showhide("btnChkUpdate",!1),showhide("dnvnstat_version_server",!0),showhide("btnDoUpdate",!0))}function update_status(){$j.ajax({url:"/ext/dn-vnstat/detect_update.js",dataType:"script",error:function(){setTimeout(update_status,1e3)},success:function(){"InProgress"==updatestatus?setTimeout(update_status,1e3):(document.getElementById("imgChkUpdate").style.display="none",showhide("dnvnstat_version_server",!0),"None"==updatestatus?($j("#dnvnstat_version_server").text("No update available"),showhide("btnChkUpdate",!0),showhide("btnDoUpdate",!1)):($j("#dnvnstat_version_server").text("Updated version available: "+updatestatus),showhide("btnChkUpdate",!1),showhide("btnDoUpdate",!0)))}})}function CheckUpdate(){showhide("btnChkUpdate",!1),document.formScriptActions.action_script.value="start_dn-vnstatcheckupdate",document.formScriptActions.submit(),document.getElementById("imgChkUpdate").style.display="",setTimeout(update_status,2e3)}function DoUpdate(){document.form.action_script.value="start_dn-vnstatdoupdate",document.form.action_wait.value=15,showLoading(),document.form.submit()}function GetVersionNumber(a){var b;return"local"==a?b=custom_settings.dnvnstat_version_local:"server"==a&&(b=custom_settings.dnvnstat_version_server),"undefined"==typeof b||null==b?"N/A":b}$j.fn.serializeObject=function(){var b=custom_settings,c=this.serializeArray();return $j.each(c,function(){void 0!==b[this.name]&&-1!=this.name.indexOf("dnvnstat")&&-1==this.name.indexOf("version")?(!b[this.name].push&&(b[this.name]=[b[this.name]]),b[this.name].push(this.value||"")):-1!=this.name.indexOf("dnvnstat")&&-1==this.name.indexOf("version")&&(b[this.name]=this.value||"")}),b};function SaveConfig(){document.getElementById("amng_custom").value=JSON.stringify($j("form").serializeObject()),document.form.action_script.value="start_dn-vnstatconfig",document.form.action_wait.value=15,showLoading(),document.form.submit()}function get_conf_file(){$j.ajax({url:"/ext/dn-vnstat/config.htm",dataType:"text",error:function(){setTimeout(get_conf_file,1e3)},success:function(data){var configdata=data.split("\n");configdata=configdata.filter(Boolean);for(var i=0;i<configdata.length;i++)eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value=configdata[i].split("=")[1].replace(/(\r\n|\n|\r)/gm,"");get_vnstatconf_file()}})}function get_vnstatconf_file(){$j.ajax({url:"/ext/dn-vnstat/vnstatconf.htm",dataType:"text",error:function(){setTimeout(get_vnstatconf_file,1e3)},success:function(data){var configdata=data.split("\n");configdata=configdata.filter(Boolean);for(var i=0;i<configdata.length;i++)configdata[i].startsWith("MonthRotate ")&&(eval("document.form.dnvnstat_"+configdata[i].split(" ")[0].toLowerCase()).value=configdata[i].split(" ")[1].replace(/(\r\n|\n|\r)/gm,""))}})}function loadVnStatOutput(){$j.ajax({url:"/ext/dn-vnstat/vnstatoutput.htm",dataType:"text",error:function(){setTimeout(loadVnStatOutput,5e3)},success:function(a){document.getElementById("VnStatOuput").innerHTML=a}})}function get_vnstatusage_file(){$j.ajax({url:"/ext/dn-vnstat/vnstatusage.js",dataType:"script",error:function(){setTimeout(get_vnstatusage_file,1e3)},success:function(){UpdateText()}})}function ShowHideDataUsageWarning(a){a?(document.getElementById("datausagewarning").style.display="",document.getElementById("scripttitle").style.marginLeft="166px"):(document.getElementById("datausagewarning").style.display="none",document.getElementById("scripttitle").style.marginLeft="0px")}function UpdateText(){$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: "+daterefeshed),$j("#spandatausage").html(usagestring),ShowHideDataUsageWarning(usagethreshold)}function UpdateImages(){for(var a=["s","hg","d","t","m"],b=new Date().getTime(),c=0;c<a.length;c++)document.getElementById("img_"+a[c]).style.backgroundImage="url(/ext/dn-vnstat/images/.vnstat_"+a[c]+".htm?cachebuster="+b+")"}function UpdateStats(){showhide("btnUpdateStats",!1),document.formScriptActions.action_script.value="start_dn-vnstat",document.formScriptActions.submit(),document.getElementById("vnstatupdate_text").innerHTML="Updating bandwidth usage and vnstat data...",showhide("imgVnStatUpdate",!0),showhide("vnstatupdate_text",!0),setTimeout(update_vnstat,2e3)}function update_vnstat(){$j.ajax({url:"/ext/dn-vnstat/detect_vnstat.js",dataType:"script",error:function(){setTimeout(update_vnstat,1e3)},success:function(){"InProgress"==vnstatstatus?setTimeout(update_vnstat,1e3):"LOCKED"==vnstatstatus?(document.getElementById("vnstatupdate_text").innerHTML="vnstat update already in progress",showhide("imgVnStatUpdate",!1),showhide("vnstatupdate_text",!0),showhide("btnUpdateStats",!0)):"Done"==vnstatstatus&&(get_vnstatusage_file(),UpdateImages(),loadVnStatOutput(),currentNoCharts=0,RedrawAllCharts(),document.getElementById("vnstatupdate_text").innerHTML="",showhide("imgVnStatUpdate",!1),showhide("vnstatupdate_text",!1),showhide("btnUpdateStats",!0))}})}function AddEventHandlers(){$j(".collapsible-jquery").off("click").on("click",function(){$j(this).siblings().toggle("fast",function(){"none"==$j(this).css("display")?SetCookie($j(this).siblings()[0].id,"collapsed"):SetCookie($j(this).siblings()[0].id,"expanded")})}),$j(".collapsible-jquery").each(function(){"collapsed"==GetCookie($j(this)[0].id,"string")?$j(this).siblings().toggle(!1):$j(this).siblings().toggle(!0)})}function SetCurrentPage(){document.form.next_page.value=window.location.pathname.substring(1),document.form.current_page.value=window.location.pathname.substring(1)}function initial(){SetCurrentPage(),LoadCustomSettings(),ScriptUpdateLayout(),show_menu(),get_conf_file(),AddEventHandlers(),get_vnstatusage_file(),UpdateImages(),loadVnStatOutput(),$j("#Time_Format").val(GetCookie("Time_Format","number")),RedrawAllCharts()}function reload(){location.reload(!0)}function Draw_Chart_NoData(a,b){document.getElementById("divChart_"+a).width="730",document.getElementById("divChart_"+a).height="500",document.getElementById("divChart_"+a).style.width="730px",document.getElementById("divChart_"+a).style.height="500px";var c=document.getElementById("divChart_"+a).getContext("2d");c.save(),c.textAlign="center",c.textBaseline="middle",c.font="normal normal bolder 48px Arial",c.fillStyle="white",c.fillText(b,365,250),c.restore()}function Draw_Chart(a){var b=$j("#"+a+"_Unit option:selected").text(),c="Received",d="Sent",e=2;("B"==b||"KB"==b)&&(e=0);var f=getChartPeriod($j("#"+a+"_Period option:selected").val()),g=getChartInterval($j("#"+a+"_Interval option:selected").val()),h=getChartUnitMultiplier($j("#"+a+"_Unit option:selected").val()),i=timeunitlist[$j("#"+a+"_Period option:selected").val()],j=intervallist[$j("#"+a+"_Period option:selected").val()],k=moment(),l=null,m=moment().startOf("hour").subtract(j,i+"s").subtract(30,"minutes"),n="bar",o=window[a+"_"+g+"_"+f];if("undefined"==typeof o||null===o)return void Draw_Chart_NoData(a,"No data to display");if(0==o.length)return void Draw_Chart_NoData(a,"No data to display");var p=[],q=[];for(let b=0;b<o.length;b++)p[o[b].Metric]||(q.push(o[b].Metric),p[o[b].Metric]=1);var r=o.filter(function(a){return a.Metric==c}).map(function(a){return{x:a.Time,y:a.Value/h}}),s=o.filter(function(a){return a.Metric==d}).map(function(a){return{x:a.Time,y:a.Value/h}}),t=window["Chart_"+a],u=getTimeFormat($j("#Time_Format option:selected").val(),"axis"),v=getTimeFormat($j("#Time_Format option:selected").val(),"tooltip");"fiveminute"==g&&(n="line"),"hour"==g&&(l=moment().startOf("hour").add(1,"hours"),k=l),"day"==g&&(l=moment().endOf("day").subtract(9,"hours"),m=moment().startOf("day").subtract(j-1,i+"s").subtract(12,"hours"),k=l),"daily"==f&&"day"==g&&(i="day",j=1,l=moment().endOf("day").subtract(9,"hours"),m=moment().startOf("day").subtract(12,"hours"),k=l),t!=null&&t.destroy();var w=document.getElementById("divChart_"+a).getContext("2d"),x={segmentShowStroke:!1,segmentStrokeColor:"#000",animationEasing:"easeOutQuart",animationSteps:100,maintainAspectRatio:!1,animateScale:!0,hover:{mode:"point"},legend:{display:!0,position:"top",reverse:!1,onClick:function(a,b){var c=b.datasetIndex,d=this.chart,e=d.getDatasetMeta(c);if(e.hidden=null===e.hidden?!d.data.datasets[c].hidden:null,"line"==ShowLines){var f="";if(!0!=e.hidden&&(f="line"),"Received"==d.data.datasets[c].label)for(aindex=0;3>aindex;aindex++)d.options.annotation.annotations[aindex].type=f;else if("Sent"==d.data.datasets[c].label)for(aindex=3;6>aindex;aindex++)d.options.annotation.annotations[aindex].type=f}d.update()}},title:{display:!0,text:"Data Usage"},tooltips:{callbacks:{title:function(a){return"day"==g?moment(a[0].xLabel,"X").format("YYYY-MM-DD"):moment(a[0].xLabel,"X").format(v)},label:function(a,c){return round(c.datasets[a.datasetIndex].data[a.index].y,e).toFixed(e)+" "+b}},itemSort:function(c,a){return a.datasetIndex-c.datasetIndex},mode:"point",position:"cursor",intersect:!0},scales:{xAxes:[{type:"time",gridLines:{display:!0,color:"#282828"},ticks:{min:m,max:l,display:!0},time:{parser:"X",unit:i,stepSize:1,displayFormats:u}}],yAxes:[{type:getChartScale($j("#"+a+"_Scale option:selected").val()),gridLines:{display:!1,color:"#282828"},scaleLabel:{display:!1,labelString:b},id:"left-y-axis",position:"left",ticks:{display:!0,beginAtZero:!0,labels:{index:["min","max"],removeEmptyLines:!0},userCallback:LogarithmicFormatter}}]},plugins:{zoom:{pan:{enabled:ChartPan,mode:"xy",rangeMin:{x:m,y:0},rangeMax:{x:k}},zoom:{enabled:!0,drag:DragZoom,mode:"xy",rangeMin:{x:m,y:0},rangeMax:{x:k},speed:.1}}},annotation:{drawTime:"afterDatasetsDraw",annotations:[{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(r),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+c+"="+round(getAverage(r),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(r,"y","max",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+c+"="+round(getLimit(r,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(r,"y","min",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+c+"="+round(getLimit(r,"y","min",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(s),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+d+"="+round(getAverage(s),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(s,"y","max",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+d+"="+round(getLimit(s,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(s,"y","min",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+d+"="+round(getLimit(s,"y","min",!0),e).toFixed(e)+b}}]}},y={datasets:getDataSets(o,q,h)};t=new Chart(w,{type:n,options:x,data:y}),window["Chart_"+a]=t}function Draw_Chart_Summary(a){var b=$j("#"+a+"_Unit option:selected").text(),c="Received",d="Sent",e=2;("B"==b||"KB"==b)&&(e=0);var f=getChartUnitMultiplier($j("#"+a+"_Unit option:selected").val()),g=window[a+"_WeekSummary"];if("undefined"==typeof g||null===g)return void Draw_Chart_NoData(a,"No data to display");if(0==g.length)return void Draw_Chart_NoData(a,"No data to display");var h=[],j=[];for(let b=0;b<g.length;b++)h[g[b].Metric]||(j.push(g[b].Metric),h[g[b].Metric]=1);var k=g.filter(function(a){return a.Metric==c}).map(function(a){return a.Value/f}),l=g.filter(function(a){return a.Metric==d}).map(function(a){return a.Value/f});k.reverse(),l.reverse(),h=[];var m=[];for(let b=0;b<g.length;b++)h[g[b].Time]||(m.push(g[b].Time),h[g[b].Time]=1);m.reverse();var n=window["Chart_"+a];n!=null&&n.destroy();var o=document.getElementById("divChart_"+a).getContext("2d"),p={segmentShowStroke:!1,segmentStrokeColor:"#000",animationEasing:"easeOutQuart",animationSteps:100,maintainAspectRatio:!1,animateScale:!0,hover:{mode:"point"},legend:{display:!0,position:"top",reverse:!1,onClick:function(a,b){var c=b.datasetIndex,d=this.chart,e=d.getDatasetMeta(c);if(e.hidden=null===e.hidden?!d.data.datasets[c].hidden:null,"line"==ShowLines){var f="";if(!0!=e.hidden&&(f="line"),"Received"==d.data.datasets[c].label)for(aindex=0;3>aindex;aindex++)d.options.annotation.annotations[aindex].type=f;else if("Sent"==d.data.datasets[c].label)for(aindex=3;6>aindex;aindex++)d.options.annotation.annotations[aindex].type=f}d.update()}},title:{display:!0,text:"Summary Usage"},tooltips:{callbacks:{title:function(a,b){return b.datasets[a[0].datasetIndex].label},label:function(a,c){return round(c.datasets[a.datasetIndex].data[a.index].y,e).toFixed(e)+" "+b}},itemSort:function(c,a){return a.datasetIndex-c.datasetIndex},mode:"point",position:"cursor",intersect:!0},scales:{xAxes:[{type:"category",gridLines:{display:!0,color:"#282828"},ticks:{display:!0}}],yAxes:[{type:getChartScale($j("#"+a+"_Scale option:selected").val()),gridLines:{display:!1,color:"#282828"},scaleLabel:{display:!1,labelString:b},id:"left-y-axis",position:"left",ticks:{display:!0,beginAtZero:!0,labels:{index:["min","max"],removeEmptyLines:!0},userCallback:LogarithmicFormatter}}]},plugins:{zoom:{pan:{enabled:ChartPan,mode:"xy",rangeMin:{y:0}},zoom:{enabled:!0,drag:DragZoom,mode:"xy",rangeMin:{y:0},speed:.1}}},annotation:{drawTime:"afterDatasetsDraw",annotations:[{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(k),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+c+"="+round(getAverage(k),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(k,"y","max",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+c+"="+round(getLimit(k,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(k,"y","min",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+c+"="+round(getLimit(k,"y","min",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(l),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+d+"="+round(getAverage(l),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(l,"y","max",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+d+"="+round(getLimit(l,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(l,"y","min",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+d+"="+round(getLimit(l,"y","min",!0),e).toFixed(e)+b}}]}},q={labels:m,datasets:getDataSets(g,j,f)};n=new Chart(o,{type:"bar",options:p,data:q}),window["Chart_"+a]=n}function Draw_Chart_Compare(a){var b=$j("#"+a+"_Unit option:selected").text(),c="Received",d="Sent",e=2;("B"==b||"KB"==b)&&(e=0);var f=getChartUnitMultiplier($j("#"+a+"_Unit option:selected").val()),g=moment().endOf("day"),h=moment().endOf("day"),i=moment().endOf("day").subtract(7,"days").subtract(12,"hours"),j=window[a+"_WeekThis"];if("undefined"==typeof j||null===j)return void Draw_Chart_NoData(a,"No data to display");if(0==j.length)return void Draw_Chart_NoData(a,"No data to display");var k=window[a+"_WeekPrev"],l=[],m=[];for(let b=0;b<j.length;b++)l[j[b].Metric]||(m.push(j[b].Metric),l[j[b].Metric]=1);var n=j.filter(function(a){return a.Metric==c}).map(function(a){return{x:a.Time,y:a.Value/f}}),o=j.filter(function(a){return a.Metric==d}).map(function(a){return{x:a.Time,y:a.Value/f}}),p=k.filter(function(a){return a.Metric==c}).map(function(a){return{x:a.Time,y:a.Value/f}}),q=k.filter(function(a){return a.Metric==d}).map(function(a){return{x:a.Time,y:a.Value/f}}),r=n.concat(p),s=o.concat(q),t=window["Chart_"+a];t!=null&&t.destroy();var u=document.getElementById("divChart_"+a).getContext("2d"),v={segmentShowStroke:!1,segmentStrokeColor:"#000",animationEasing:"easeOutQuart",animationSteps:100,maintainAspectRatio:!1,animateScale:!0,hover:{mode:"point"},legend:{display:!0,position:"top",reverse:!1,onClick:function(a,b){var c=b.datasetIndex,d=this.chart,e=d.getDatasetMeta(c);if(e.hidden=null===e.hidden?!d.data.datasets[c].hidden:null,"line"==ShowLines){var f="";if(!0!=e.hidden&&(f="line"),"Received"==d.data.datasets[c].label)for(aindex=0;3>aindex;aindex++)d.options.annotation.annotations[aindex].type=f;else if("Sent"==d.data.datasets[c].label)for(aindex=3;6>aindex;aindex++)d.options.annotation.annotations[aindex].type=f}d.update()}},title:{display:!0,text:"Compare Usage"},tooltips:{callbacks:{title:function(a,b){return b.datasets[a[0].datasetIndex].label},label:function(a,c){return round(c.datasets[a.datasetIndex].data[a.index].y,e).toFixed(e)+" "+b}},itemSort:function(c,a){return a.datasetIndex-c.datasetIndex},mode:"point",position:"cursor",intersect:!0},scales:{xAxes:[{type:"time",gridLines:{display:!0,color:"#282828"},ticks:{min:i,max:h,display:!0},time:{parser:"X",unit:"day",stepSize:1,displayFormats:{day:"dddd"}}}],yAxes:[{type:getChartScale($j("#"+a+"_Scale option:selected").val()),gridLines:{display:!1,color:"#282828"},scaleLabel:{display:!1,labelString:b},id:"left-y-axis",position:"left",ticks:{display:!0,beginAtZero:!0,labels:{index:["min","max"],removeEmptyLines:!0},userCallback:LogarithmicFormatter}}]},plugins:{zoom:{pan:{enabled:ChartPan,mode:"xy",rangeMin:{x:i,y:0},rangeMax:{x:g}},zoom:{enabled:!0,drag:DragZoom,mode:"xy",rangeMin:{x:i,y:0},rangeMax:{x:g},speed:.1}}},annotation:{drawTime:"afterDatasetsDraw",annotations:[{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(r),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+c+"="+round(getAverage(r),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(r,"y","max",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+c+"="+round(getLimit(r,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(r,"y","min",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+c+"="+round(getLimit(r,"y","min",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(s),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+d+"="+round(getAverage(s),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(s,"y","max",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+d+"="+round(getLimit(s,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(s,"y","min",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+d+"="+round(getLimit(s,"y","min",!0),e).toFixed(e)+b}}]}},w={datasets:getDataSets_Compare(j,k,m,f)};t=new Chart(u,{type:"bar",options:v,data:w}),window["Chart_"+a]=t}function getDataSets(a,b,c){for(var d,e=[],f=0;f<b.length;f++)d=a.filter(function(a){return a.Metric==b[f]}).map(function(a){return{x:a.Time,y:a.Value/c}}),e.push({label:b[f],data:d,yAxisID:"left-y-axis",borderWidth:1,pointRadius:1,lineTension:0,fill:ShowFill,backgroundColor:backgroundcolourlist[f],borderColor:bordercolourlist[f]});return e}function getDataSets_Compare(a,b,c,e){for(var f,g=[],h=0;h<c.length;h++)f=a.filter(function(a){return a.Metric==c[h]}).map(function(a){return{x:a.Time,y:a.Value/e}}),g.push({label:"Current 7 days - "+c[h],data:f,yAxisID:"left-y-axis",borderWidth:1,pointRadius:1,lineTension:0,fill:ShowFill,backgroundColor:backgroundcolourlist[h],borderColor:bordercolourlist[h]});for(var f,h=0;h<c.length;h++)f=b.filter(function(a){return a.Metric==c[h]}).map(function(a){return{x:a.Time,y:a.Value/e}}),g.push({label:"Previous 7 days - "+c[h],data:f,yAxisID:"left-y-axis",borderWidth:1,pointRadius:1,lineTension:0,fill:ShowFill,backgroundColor:backgroundcolourlist[h+2],borderColor:bordercolourlist[h+2]});return g}function LogarithmicFormatter(a,b,c){var d=this.options.scaleLabel.labelString,e=2;if(("B"==d||"KB"==d)&&(e=0),"logarithmic"!=this.type)return isNaN(a)?a+" "+d:round(a,e).toFixed(e)+" "+d;var f=this.options.ticks.labels||{},g=f.index||["min","max"],h=f.significand||[1,2,5],i=a/Math.pow(10,Math.floor(Chart.helpers.log10(a))),j=!0===f.removeEmptyLines?void 0:"",k="";return 0===b?k="min":b==c.length-1&&(k="max"),"all"===f||-1!==h.indexOf(i)||-1!==g.indexOf(b)||-1!==g.indexOf(k)?0===a?"0 "+d:isNaN(a)?a+" "+d:round(a,e).toFixed(e)+" "+d:j}function getLimit(a,b,c,d){var e,f=0;return e="x"==b?a.map(function(a){return a.x}):a.map(function(a){return"undefined"==typeof a.y||null==a.y||isNaN(a.y)?a:a.y}),e=e.filter(function(a){return!isNaN(a)}),f="max"==c?Math.max.apply(Math,e):Math.min.apply(Math,e),"max"==c&&0==f&&!1==d&&(f=1),f}function getAverage(a){for(var b=0,c=0,d=0;d<a.length;d++)"undefined"==typeof a[d].y||null==a[d].y||isNaN(a[d].y)?isNaN(a[d])?(++c,b+=0):b+=1*a[d]:b+=1*a[d].y;var e=b/(a.length-c);return e}function round(a,b){return+(Math.round(a+"e"+b)+"e-"+b)}function ToggleLines(){""==ShowLines?(ShowLines="line",SetCookie("ShowLines","line")):(ShowLines="",SetCookie("ShowLines",""));for(var a,b=0;b<chartobjlist.length;b++){if(a=window[chartobjlist[b]],"undefined"==typeof a||null===a)return;for(var c=0;c<a.options.annotation.annotations.length;c++)a.options.annotation.annotations[c].type=ShowLines;a.update()}}function ToggleFill(){"origin"==ShowFill?(ShowFill="false",SetCookie("ShowFill","false")):(ShowFill="origin",SetCookie("ShowFill","origin"));for(var a,b=0;b<chartobjlist.length;b++){if(a=window[chartobjlist[b]],"undefined"==typeof a||null===a)return;a.data.datasets[0].fill=ShowFill,a.data.datasets[1].fill=ShowFill,a.update()}}function ToggleDragZoom(a){var b=!0,c=!1,d="";-1==a.value.indexOf("On")?(b=!0,c=!1,DragZoom=!0,ChartPan=!1,d="Drag Zoom On"):(b=!1,c=!0,DragZoom=!1,ChartPan=!0,d="Drag Zoom Off");for(var e,f=0;f<chartobjlist.length;f++){if(e=window[chartobjlist[f]],"undefined"==typeof e||null===e)return;e.options.plugins.zoom.zoom.drag=b,e.options.plugins.zoom.pan.enabled=c,e.update(),a.value=d}}function ResetZoom(){for(var a,b=0;b<chartobjlist.length;b++){if(a=window[chartobjlist[b]],"undefined"==typeof a||null===a)return;a.resetZoom()}}function RedrawAllCharts(){$j("#DataUsage_Interval").val(GetCookie("DataUsage_Interval","number")),changePeriod(document.getElementById("DataUsage_Interval")),$j("#DataUsage_Period").val(GetCookie("DataUsage_Period","number")),$j("#DataUsage_Unit").val(GetCookie("DataUsage_Unit","number")),$j("#DataUsage_Scale").val(GetCookie("DataUsage_Scale","number")),Draw_Chart_NoData("DataUsage","Data loading..."),Draw_Chart_NoData("CompareUsage","Data loading...");for(var a=0;a<chartlist.length;a++)for(var b=0;b<dataintervallist.length;b++)d3.csv("/ext/dn-vnstat/csv/DataUsage_"+dataintervallist[b]+"_"+chartlist[a]+".htm").then(SetGlobalDataset.bind(null,"DataUsage_"+dataintervallist[b]+"_"+chartlist[a]));$j("#CompareUsage_Interval").val(GetCookie("CompareUsage_Interval","number")),$j("#CompareUsage_Unit").val(GetCookie("CompareUsage_Unit","number")),$j("#CompareUsage_Scale").val(GetCookie("CompareUsage_Scale","number")),d3.csv("/ext/dn-vnstat/csv/WeekThis.htm").then(SetGlobalDataset.bind(null,"CompareUsage_WeekThis")),d3.csv("/ext/dn-vnstat/csv/WeekPrev.htm").then(SetGlobalDataset.bind(null,"CompareUsage_WeekPrev")),d3.csv("/ext/dn-vnstat/csv/WeekSummary.htm").then(SetGlobalDataset.bind(null,"CompareUsage_WeekSummary"))}function SetGlobalDataset(a,b){window[a]=b,currentNoCharts++,currentNoCharts==maxNoCharts&&(Draw_Chart("DataUsage"),"week"==getSummaryInterval($j("#CompareUsage_Interval option:selected").val())?Draw_Chart_Summary("CompareUsage"):"day"==getSummaryInterval($j("#CompareUsage_Interval option:selected").val())&&Draw_Chart_Compare("CompareUsage"))}function getTimeFormat(a,b){var c;return"axis"==b?0==a?c={millisecond:"HH:mm:ss.SSS",second:"HH:mm:ss",minute:"HH:mm",hour:"HH:mm"}:1==a&&(c={millisecond:"h:mm:ss.SSS A",second:"h:mm:ss A",minute:"h:mm A",hour:"h A"}):"tooltip"==b&&(0==a?c="YYYY-MM-DD HH:mm:ss":1==a&&(c="YYYY-MM-DD h:mm:ss A")),c}function getChartPeriod(a){var b="daily";return 0==a?b="daily":1==a?b="weekly":2==a&&(b="monthly"),b}function getChartUnitMultiplier(a){return Math.pow(1e3,a)}function getChartScale(a){var b="";return 0==a?b="linear":1==a&&(b="logarithmic"),b}function getChartInterval(a){var b="fiveminute";return 0==a?b="fiveminute":1==a?b="hour":2==a&&(b="day"),b}function getSummaryInterval(a){var b="day";return 0==a?b="day":1==a&&(b="week"),b}function changeAllCharts(a){value=1*a.value,SetCookie(a.id,value),Draw_Chart("DataUsage"),"week"==getSummaryInterval($j("#"+name+"_Interval option:selected").val())?Draw_Chart_Compare("CompareUsage"):"day"==getSummaryInterval($j("#"+name+"_Interval option:selected").val())&&Draw_Chart_Summary("CompareUsage")}function changeChart(a){value=1*a.value,name=a.id.substring(0,a.id.lastIndexOf("_")),SetCookie(a.id,value),"DataUsage"==name?Draw_Chart(name):"CompareUsage"==name&&"week"==getSummaryInterval($j("#"+name+"_Interval option:selected").val())?Draw_Chart_Summary(name):"CompareUsage"==name&&"day"==getSummaryInterval($j("#"+name+"_Interval option:selected").val())&&Draw_Chart_Compare(name)}function changePeriod(a){value=1*a.value,name=a.id.substring(0,a.id.indexOf("_")),2==value?$j("select[id=\""+name+"_Period\"] option:contains(24)").text("Today"):$j("select[id=\""+name+"_Period\"] option:contains(\"Today\")").text("Last 24 hours")}
 </script>
 </head>
 <body onload="initial();" onunload="return unload_body();">
@@ -117,7 +81,7 @@ var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsBy
 <div style="height:30px;width:24px;overflow:hidden;float:right;"><a class="hintstyle usagehint" href="javascript:void(0);" onclick="UsageHint();"><img src="/images/New_ui/notification.png" style=""></a></div>
 </div>
 <div>&nbsp;</div>
-<div class="formfonttitle" id="scripttitle" style="text-align:center;margin-left:166px;">Vnstat on Merlin</div>
+<div class="formfonttitle" id="scripttitle" style="text-align:center;margin-left:166px;">vnStat-on-Merlin</div>
 <div id="statstitle" style="text-align:center;">This page last refreshed:</div>
 <div style="margin:10px 0 10px 5px;" class="splitLine"></div>
 <div class="formfontdesc">vnStat is a Linux data usage reporting tool.</div>
@@ -149,12 +113,12 @@ var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsBy
 </tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
-<table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_config">
+<table width="100%" border="1" align="center" cellpadding="2" cellspacing="0" bordercolor="#6b8fa3" class="FormTable SettingsTable" style="border:0px;" id="table_config">
 <thead class="collapsible-jquery" id="scriptconfig">
 <tr><td colspan="2">Configuration (click to expand/collapse)</td></tr>
 </thead>
 <tr class="even" id="rowenabledailyemail">
-<th width="40%">Enable daily summary emails</th>
+<td class="settingname">Enable daily summary emails</td>
 <td class="settingvalue">
 <input type="radio" name="dnvnstat_dailyemail" id="dnvnstat_dailyemail_html" class="input" value="html">
 <label for="dnvnstat_dailyemail_html" class="settingvalue">HTML</label>
@@ -165,7 +129,7 @@ var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsBy
 </td>
 </tr>
 <tr class="even" id="rowenableusageemail">
-<th width="40%">Enable data usage warning emails</th>
+<td class="settingname">Enable data usage warning emails</td>
 <td class="settingvalue">
 <input type="radio" name="dnvnstat_usageemail" id="dnvnstat_usageemail_true" class="input" value="true">
 <label for="dnvnstat_usageemail_true" class="settingvalue">Enabled</label>
@@ -174,36 +138,54 @@ var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsBy
 </td>
 </tr>
 <tr class="even" id="rowdataallowance">
-<th width="40%">Bandwidth allowance for data usage warnings
+<td class="settingname">Bandwidth allowance for data usage warnings
 <br />
 <a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Data-limits" target="_blank" style="color:#FFCC00;">More info</a>
-</th>
+</td>
 <td class="settingvalue">
 <input autocomplete="off" type="text" maxlength="8" class="input_12_table removespacing" name="dnvnstat_dataallowance" value="1200.00" onkeypress="return validator.isNumberFloat(this, event)" onkeyup="Validate_DataAllowance(this)" onblur="Validate_DataAllowance(this);Format_DataAllowance(this)" />
 &nbsp;<span id="spandefaultallowance" style="color:#FFCC00;">(0: unlimited)</span>
 </td>
 </tr>
 <tr class="even" id="rowallowanceunit">
-<th width="40%">Unit for bandwidth allowance</th>
+<td class="settingname">Unit for bandwidth allowance</td>
 <td class="settingvalue">
 <input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_g" class="input" value="G" onchange="ScaleDataAllowance();" checked>
-<label for="dnvnstat_allowanceunit_g" id="label_allowanceunit_g" class="settingvalue">GB</label>
+<label for="dnvnstat_allowanceunit_g" id="label_allowanceunit_g">GB</label>
 <input type="radio" name="dnvnstat_allowanceunit" id="dnvnstat_allowanceunit_t" class="input" value="T" onchange="ScaleDataAllowance();">
-<label for="dnvnstat_allowanceunit_t" id="label_allowanceunit_t" class="settingvalue">TB</label>
+<label for="dnvnstat_allowanceunit_t" id="label_allowanceunit_t">TB</label>
 </td>
 </tr>
 <tr class="even" id="rowmonthrotate">
-<th width="40%">Start day for bandwidth allowance cycle<br />
+<td class="settingname">Start day for bandwidth allowance cycle<br />
 <a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#MonthRotate" target="_blank" style="color:#FFCC00;">More info</a>
-</th>
+</td>
 <td class="settingvalue">Day&nbsp;
 <input autocomplete="off" type="text" maxlength="2" class="input_3_table removespacing" name="dnvnstat_monthrotate" value="1" onkeypress="return validator.isNumber(this, event)" onkeyup="Validate_AllowanceStartDay(this)" onblur="Validate_AllowanceStartDay(this)" />
 &nbsp;of month&nbsp;<span style="color:#FFCC00;">(between 1 and 28, default: 1)</span>
 </td>
 </tr>
+<tr class="even" id="rowtimeoutput">
+<td class="settingname">Time Output Mode<br/><span style="color:#FFCC00;background:#2F3A3E;">(for CSV export)</span></td>
+<td class="settingvalue">
+<input type="radio" name="dnvnstat_outputtimemode" id="dnvnstat_timeoutput_non-unix" class="input" value="non-unix" checked>
+<label for="dnvnstat_timeoutput_non-unix">Non-Unix</label>
+<input type="radio" name="dnvnstat_outputtimemode" id="dnvnstat_timeoutput_unix" class="input" value="unix">
+<label for="dnvnstat_timeoutput_unix">Unix</label>
+</td>
+</tr>
+<tr class="even" id="rowstorageloc">
+<td class="settingname">Data Storage Location</td>
+<td class="settingvalue">
+<input type="radio" name="dnvnstat_storagelocation" id="dnvnstat_storageloc_jffs" class="input" value="jffs" checked>
+<label for="dnvnstat_storageloc_jffs">JFFS</label>
+<input type="radio" name="dnvnstat_storagelocation" id="dnvnstat_storageloc_usb" class="input" value="usb">
+<label for="dnvnstat_storageloc_usb">USB</label>
+</td>
+</tr>
 <tr class="apply_gen" valign="top" height="35px">
-<td colspan="2" style="background-color:rgb(77, 89, 93);">
-<input type="button" onclick="SaveConfig();" value="Save" class="button_gen" name="button">
+<td class="savebutton" colspan="2" style="background-color:rgb(77, 89, 93);">
+<input type="button" onclick="SaveConfig();" value="Save" class="button_gen savebutton" name="button">
 </td>
 </tr>
 </table>
@@ -213,18 +195,19 @@ var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsBy
 <tr><td colspan="2">Monthly usage (click to expand/collapse)</td></tr>
 </thead>
 <tr>
-<th width="20%">Data usage for current cycle</th>
-<td>
-<span id="spandatausage" style="color:#FFFFFF;"></span>
+<th width="20%">Data usage for current cycle
 <br />
-<span id="spanrealdatausage" style="color:#FFFFFF;font-style:italic;"></span>&nbsp;&nbsp;<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units" target="_blank" style="color:#FFCC00;">More info</a>
-</td>
+<a href="https://github.com/de-vnull/vnstat-on-merlin/blob/main/more-info.md#Units" target="_blank" style="color:#FFCC00;">More info</a>
+</th>
+<td><span id="spandatausage" style="color:#FFFFFF;"></span></td>
 </tr>
-<tr><td colspan="2" align="center" style="padding: 0px;">
+<tr>
+<td colspan="2" align="center" style="padding: 0px;">
 <div id="img_m" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_m.htm');">
 <img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_m.png" alt="Monthly"/>
 </div>
-</td></tr>
+</td>
+</tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
@@ -243,10 +226,135 @@ var $j=jQuery.noConflict();function UsageHint(){for(var a=document.getElementsBy
 <tr><td colspan="2">Hourly usage (click to expand/collapse)</td></tr>
 </thead>
 <tr><td colspan="2" align="center" style="padding: 0px;">
-<div id="img_h" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_h.htm');">
-<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_h.png" alt="Hourly" />
+<div id="img_hg" class="vnstat" style="background-image:url('/ext/dn-vnstat/images/.vnstat_hg.htm');">
+<img style="visibility:hidden;" src="/ext/dn-vnstat/images/vnstat_hg.png" alt="Hourly" />
 </div>
 </td></tr>
+</table>
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable" style="border:0px;" id="table_buttons2">
+<thead class="collapsible-jquery" id="charttools">
+<tr><td colspan="2">Chart Display Options (click to expand/collapse)</td></tr>
+</thead>
+<tr>
+<th width="20%"><span style="color:#FFFFFF;background:#2F3A3E;">Time format</span><br /><span style="color:#FFCC00;background:#2F3A3E;">(for tooltips and Last 24h chart axis)</span></th>
+<td>
+<select style="width:100px" class="input_option" onchange="changeAllCharts(this)" id="Time_Format">
+<option value="0">24h</option>
+<option value="1">12h</option>
+</select>
+</td>
+</tr>
+<tr class="apply_gen" valign="top">
+<td colspan="2" style="background-color:rgb(77, 89, 93);">
+<input type="button" onclick="ToggleDragZoom(this);" value="Drag Zoom On" class="button_gen" name="btnDragZoom">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="button" onclick="ResetZoom();" value="Reset Zoom" class="button_gen" name="btnResetZoom">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="button" onclick="ToggleLines();" value="Toggle Lines" class="button_gen" name="btnToggleLines">
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="button" onclick="ToggleFill();" value="Toggle Fill" class="button_gen" name="btnToggleFill">
+</td>
+</tr>
+</table>
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+<thead class="collapsible-jquery" id="chart_DataUsage">
+<tr>
+<td colspan="2">Data Usage (click to expand/collapse)</td>
+</tr>
+</thead>
+<tr class="even">
+<th width="40%">Data interval</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this);changePeriod(this);" id="DataUsage_Interval">
+<option value="0">5 minutes</option>
+<option value="1">Hours</option>
+<option value="2">Days</option>
+</select>
+</td>
+</tr>
+<tr class="even">
+<th width="40%">Period to display</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_Period">
+<option value="0">Last 24 hours</option>
+<option value="1">Last 7 days</option>
+<option value="2">Last 30 days</option>
+</select>
+</td>
+</tr>
+<tr class="even">
+<th width="40%">Unit for data usage</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_Unit">
+<option value="0">B</option>
+<option value="1">KB</option>
+<option value="2">MB</option>
+<option value="3">GB</option>
+<option value="4">TB</option>
+</select>
+</td>
+</tr>
+<tr class="even">
+<th width="40%">Scale type</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="DataUsage_Scale">
+<option value="0">Linear</option>
+<option value="1">Logarithmic</option>
+</select>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center" style="padding: 0px;">
+<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divChart_DataUsage" height="500" /></div>
+</td>
+</tr>
+</table>
+
+
+<div style="line-height:10px;">&nbsp;</div>
+<table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
+<thead class="collapsible-jquery" id="chart_CompareUsage">
+<tr>
+<td colspan="2">Compare Usage (click to expand/collapse)</td>
+</tr>
+</thead>
+<tr class="even">
+<th width="40%">Data interval</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="CompareUsage_Interval">
+<option value="0">Days</option>
+<option value="1">Weeks</option>
+</select>
+</td>
+</tr>
+<tr class="even">
+<th width="40%">Unit for data usage</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="CompareUsage_Unit">
+<option value="0">B</option>
+<option value="1">KB</option>
+<option value="2">MB</option>
+<option value="3">GB</option>
+<option value="4">TB</option>
+</select>
+</td>
+</tr>
+<tr class="even">
+<th width="40%">Scale type</th>
+<td>
+<select style="width:150px" class="input_option" onchange="changeChart(this)" id="CompareUsage_Scale">
+<option value="0">Linear</option>
+<option value="1">Logarithmic</option>
+</select>
+</td>
+</tr>
+<tr>
+<td colspan="2" align="center" style="padding: 0px;">
+<div style="background-color:#2f3e44;border-radius:10px;width:730px;height:500px;padding-left:5px;"><canvas id="divChart_CompareUsage" height="500" /></div>
+</td>
+</tr>
 </table>
 <div style="line-height:10px;">&nbsp;</div>
 <table width="100%" border="1" align="center" cellpadding="4" cellspacing="0" bordercolor="#6b8fa3" class="FormTable">
@@ -282,7 +390,7 @@ Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 </td>
 </tr>
 </table>
-<p align="right"><small><i>dev_null & Jack Yaz - https://github.com/de-vnull/vnstat-on-merlin</i></small></td>
+<p align="right"><small><i>vnStat-on-Merlin: concept by dev_null & implemented by Jack Yaz - <a href="https://github.com/de-vnull/vnstat-on-merlin" target="_blank" style="color:#FFCC00;">vnStat-on-Merlin Github</a></i></small></td>
 </tr>
 </tbody>
 </table>

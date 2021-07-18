@@ -1,28 +1,20 @@
 #!/bin/sh
 # shellcheck disable=SC2034
-readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 
 if [ -f /opt/etc/init.d/S32vnstat ]; then
 	/opt/etc/init.d/S32vnstat stop
 	rm -f /opt/etc/init.d/S32vnstat
 fi
 
-if [ "$1" = "start" ] || [ "$1" = "restart" ]; then
-	if [ -f "$SCRIPT_DIR/vnstat.conf" ]; then
-		IFACE="$(grep "Interface " "$SCRIPT_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-		logger -st "vnstat" "Starting monitoring for interface $IFACE"
-	else
-		logger -st "vnstat" "Configuration file missing - $SCRIPT_DIR/vnstat.conf - please check"
-		exit 1
-	fi
-	
-	if [ "$(nvram get ntp_ready)" -eq 0 ]; then
-		logger -st "vnstat" "NTP not synced, exiting"
-		exit 1
-	fi
-	
-	[ "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ] || vnstat --config "$SCRIPT_DIR/vnstat.conf" -u -i "$IFACE"
+if [ -f /opt/etc/init.d/S32vnstat2 ]; then
+	/opt/etc/init.d/S32vnstat2 stop
+	rm -f /opt/etc/init.d/S32vnstat2
+fi
+
+if [ -f "/opt/share/dn-vnstat.d/config" ]; then
+	SCRIPT_STORAGE_DIR="/opt/share/dn-vnstat.d"
+else
+	SCRIPT_STORAGE_DIR="/jffs/addons/dn-vnstat.d"
 fi
 
 TZ=$(cat /etc/TZ)
@@ -30,9 +22,40 @@ export TZ
 
 ENABLED=yes
 PROCS=vnstatd
-ARGS="-d --config $SCRIPT_DIR/vnstat.conf"
+ARGS="-d --noadd --config $SCRIPT_STORAGE_DIR/vnstat.conf"
 PREARGS=""
 DESC="$PROCS"
 PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+if [ "$1" = "start" ] || [ "$1" = "restart" ]; then
+	if [ -f "$SCRIPT_STORAGE_DIR/vnstat.conf" ]; then
+		IFACE="$(grep "Interface " "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+		logger -st vnstat "Starting monitoring for interface $IFACE"
+	else
+		logger -st vnstat "Configuration file missing - $SCRIPT_STORAGE_DIR/vnstat.conf - please check"
+		exit 1
+	fi
+	
+	if [ "$(nvram get ntp_ready)" -eq 0 ]; then
+		logger -st vnstat "NTP not synced, exiting"
+		exit 1
+	fi
+	
+	if [ "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
+		if ! vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" -i "$IFACE" >/dev/null 2>&1; then
+			if [ "$(ls -A /opt/var/lib/vnstat | wc -l)" -gt 0 ]; then
+				vnstatd -d --config "$SCRIPT_STORAGE_DIR/vnstat.conf" >/dev/null 2>&1
+			else
+				vnstatd $ARGS >/dev/null 2>&1
+				vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" --add -i "$IFACE" >/dev/null 2>&1
+			fi
+			killall vnstatd >/dev/null 2>&1
+		fi
+	else
+		vnstatd $ARGS >/dev/null 2>&1
+		vnstat --config "$SCRIPT_STORAGE_DIR/vnstat.conf" --add -i "$IFACE" >/dev/null 2>&1
+		killall vnstatd >/dev/null 2>&1
+	fi
+fi
 
 . /opt/etc/init.d/rc.func
