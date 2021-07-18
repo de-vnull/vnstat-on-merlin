@@ -3,7 +3,8 @@
 # Release versions - R1 and R2 #
 
 * R1 is the original vnStat-on-Merlin, which uses vnstat version 1.18, and is available for all platforms (MIPs, ARM, AARCH64). A legacy branch will provide support for MIPs routers but all others will be migrated to R2.
-* R2 is the update to vnStat-on-Merlin, and uses vnstat version 2.x, but is available only for ARM and AARCH64. This will become the primary branch for all other supported routers.
+* R2 is the update to vnStat-on-Merlin, and uses vnstat version 2.x, but is available only for ARM and AARCH64. This will become the primary branch for supported routers.
+  - The vnStat 2.x package does not exist for MIPS, so these routers will be kept on the R1 "Legacy" branch, with existing functionality but without the interactive charts.
 
 # Data-limits
 
@@ -22,6 +23,8 @@ The `Bandwidth allowance` should be entered as __GB/TB__, and the calculations f
 
 The units reported by vnstat 2.6, upon which vnstat-on-Merlin R2 is based, calculate usage in base-1000, which is what ISP data counts typically use. Therefore no additional calculation step is required to properly display GB/TB usage in R2.
 
+  - Existing data is converted during upgrade from R1 to R2.
+
 # MonthRotate
 
 * In a post, the author of vnStat (Teemu Toivola) provied more detail on the `MonthRotate` setting found in vnstat.conf:
@@ -38,6 +41,4 @@ The units reported by vnstat 2.6, upon which vnstat-on-Merlin R2 is based, calcu
 * You should consider the usage as the __start of the cycle__ rather than __end of cycle__, which may be more familiar billing- and accountability-wise.
 * In the United States, Comcast/Xfinity begins measurement on the 1st of the month in all markets, so no adjustment from the default is required.
 
-# Time-output-mode #
 
-* Placeholder.
