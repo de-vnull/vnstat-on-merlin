@@ -153,7 +153,7 @@ Update_Check(){
 		doupdate="version"
 		Set_Version_Custom_Settings server "$serverver"
 		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
-			echo 'var updatestatus = "'"$serverver"' - WARNING: MAJOR UPGRADE TO VNSTAT2. VNSTAT.CONF WILL BE RESET WHEN UPDATING FROM V1 TO V2";'  > "$SCRIPT_WEB_DIR/detect_update.js"
+			echo 'var updatestatus = "'"$serverver"' - WARNING: MAJOR VERSION UPGRADE. EXISTING CONFIGURATION WILL BE RESET WHEN UPDATING FROM R1 TO R2.";'  > "$SCRIPT_WEB_DIR/detect_update.js"
 		else
 			echo 'var updatestatus = "'"$serverver"'";'  > "$SCRIPT_WEB_DIR/detect_update.js"
 		fi
@@ -190,7 +190,7 @@ Update_Version(){
 		fi
 		
 		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
-			Print_Output true "WARNING: MAJOR UPGRADE TO VNSTAT2. VNSTAT.CONF WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
+			Print_Output true "WARNING: MAJOR VERSION UPGRADE. EXISTING CONFIGURATION WILL BE RESET WHEN UPDATING FROM R1 TO R2." "$WARN"
 		fi
 		
 		if [ "$isupdate" != "false" ]; then
@@ -265,7 +265,7 @@ Update_Version(){
 		localver=$(grep "SCRIPT_VERSION=" "/jffs/scripts/$SCRIPT_NAME" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		if echo "$localver" | grep -m1 -qoE 'v1{1,2}([.][0-9]{1,2})([.][0-9]{1,2})' && echo "$serverver" | grep -m1 -qoE 'v2{1,2}([.][0-9]{1,2})([.][0-9]{1,2})'; then
-			Print_Output true "WARNING: MAJOR UPGRADE TO VNSTAT2. VNSTAT.CONF WILL BE RESET WHEN UPDATING FROM V1 TO V2" "$WARN"
+			Print_Output true "WARNING: MAJOR VERSION UPGRADE. EXISTING CONFIGURATION WILL BE RESET WHEN UPDATING FROM R1 TO R2." "$WARN"
 			Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 			SCRIPT_BRANCH="vnstat2"
 			SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
