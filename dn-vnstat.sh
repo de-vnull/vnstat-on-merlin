@@ -773,6 +773,9 @@ ScriptStorageLocation(){
 			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf.bak" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf.default" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
 			mv "/jffs/addons/$SCRIPT_NAME.d/.vnstatusage" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.txt" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/.v2upgraded" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/jffs/addons/$SCRIPT_NAME.d/v1" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			SCRIPT_CONF="/opt/share/$SCRIPT_NAME.d/config"
 			ScriptStorageLocation load
@@ -788,6 +791,9 @@ ScriptStorageLocation(){
 			mv "/opt/share/$SCRIPT_NAME.d/vnstat.conf.bak" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME.d/vnstat.conf.default" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
 			mv "/opt/share/$SCRIPT_NAME.d/.vnstatusage" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/vnstat.txt" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/.v2upgraded" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv "/opt/share/$SCRIPT_NAME.d/v1" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			SCRIPT_CONF="/jffs/addons/$SCRIPT_NAME.d/config"
 			ScriptStorageLocation load
@@ -1436,15 +1442,16 @@ Process_Upgrade(){
 	if [ ! -f "$SCRIPT_STORAGE_DIR/.v2upgraded" ]; then
 		/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
 		touch /opt/etc/vnstat.conf
+		mkdir -p "$SCRIPT_STORAGE_DIR/v1"
 		if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
 			if [ ! -d "$SCRIPT_STORAGE_DIR" ]; then
 				mkdir -p "$SCRIPT_STORAGE_DIR"
 			fi
-			$VNSTAT_COMMAND --exportdb > "$SCRIPT_STORAGE_DIR/vnstat-data.bak"
+			$VNSTAT_COMMAND --exportdb > "$SCRIPT_STORAGE_DIR/v1/vnstat-data.bak"
 		fi
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" 2>/dev/null
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.bak" "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" 2>/dev/null
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default" "$SCRIPT_STORAGE_DIR/vnstat.conf.default.v1" 2>/dev/null
+		mv "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" 2>/dev/null
+		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.bak" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.bak" 2>/dev/null
+		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.default" 2>/dev/null
 		opkg update
 		opkg remove --autoremove vnstati
 		opkg remove --autoremove vnstat
@@ -1452,7 +1459,7 @@ Process_Upgrade(){
 		rm -f /opt/etc/vnstat.conf
 		
 		Update_File vnstat.conf
-		interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" | awk '{print $2}' | sed 's/"//g')"
+		interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 		sed -i 's/^Interface .*$/Interface "'"$interface"'"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 		
 		opkg install vnstat2
@@ -1473,6 +1480,11 @@ Process_Upgrade(){
 		else
 			Print_Output false "vnstatd not running, please check system log" "$ERR"
 		fi
+	fi
+	if [ ! -d "$SCRIPT_STORAGE_DIR/v1" ]; then
+		mkdir -p "$SCRIPT_STORAGE_DIR/v1"
+		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" 2>/dev/null
+		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default.v1" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.default" 2>/dev/null
 	fi
 }
 
