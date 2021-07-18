@@ -2227,6 +2227,7 @@ case "$1" in
 		Generate_Stats silent
 		Check_Bandwidth_Usage silent
 		Generate_CSVs
+		Clear_Lock
 		exit 0
 	;;
 	uninstall)
