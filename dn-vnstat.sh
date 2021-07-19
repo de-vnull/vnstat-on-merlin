@@ -465,9 +465,12 @@ Conf_Exists(){
 		if ! grep -q "STORAGELOCATION" "$SCRIPT_CONF"; then
 			echo "STORAGELOCATION=jffs" >> "$SCRIPT_CONF"
 		fi
+		if ! grep -q "ENFORCEALLOWANCE" "$SCRIPT_CONF"; then
+			echo "ENFORCEALLOWANCE=true" >> "$SCRIPT_CONF"
+		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "ENFORCEALLOWANCE=true"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }
@@ -1426,6 +1429,27 @@ Check_Bandwidth_Usage(){
 	fi
 	printf "var usagestring = \"%s\";\\n" "$usagestring" >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
+}
+
+Enforce_Data_Allowance(){
+	case "$1" in
+		create)
+			ACTIONS="-D -I"
+		;;
+		delete)
+			ACTIONS="-D"
+		;;
+	esac
+	
+	IFACE_WAN="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	for ACTION in $ACTIONS; do
+		iptables "$ACTION" FORWARD -i "$IFACE_WAN" -j REJECT
+		iptables "$ACTION" FORWARD -i tun1+ -j REJECT
+		iptables "$ACTION" FORWARD -i tun2+ -j REJECT
+		iptables "$ACTION" FORWARD -o "$IFACE_WAN" -j REJECT
+		iptables "$ACTION" FORWARD -o tun1+ -j REJECT
+		iptables "$ACTION" FORWARD -o tun2+ -j REJECT
+	done
 }
 
 Process_Upgrade(){
