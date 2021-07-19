@@ -2184,7 +2184,9 @@ case "$1" in
 	;;
 	service_event)
 		if [ "$2" = "start" ] && [ "$3" = "$SCRIPT_NAME" ]; then
+			rm -f /tmp/detect_vnstat.js
 			Check_Lock webui
+			sleep 3
 			echo 'var vnstatstatus = "InProgress";' > /tmp/detect_vnstat.js
 			Generate_Images silent
 			Generate_Stats silent
