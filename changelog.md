@@ -1,5 +1,27 @@
 # Changelog #
 
+Note: R1 runs on all supported architectures (ARM, AARCH, MIPS). R2 runs only on ARM and AARCH. This is due to the availability of vnStat 2.x in the Entware repository.
+
+# Version R2 (based on vnStat 2.x) #
+
+### v 2.0.0 - 18-Jul-2021 ###
+
+* Moves supported router architectures (ARM and AARCH) to vnStat 2.x.
+  - Upgrade to vnStat 2.x branch (v 2.7 at release of R2)
+  - Data usage is reported in megabytes (base-1000), so no correction is necessary to monitor against ISP bandwidth usage
+  - Minor changes in the built-in charts, including a "shadow" to the daily and monthly usage with projected usage
+  - Interactive charts created by Jack Yaz
+        - Data usage, by minutes, hours and days
+        - Data use comparisons (current week vs previous week, by day of week)
+        - Data use trends (current week, previous week, two weeks prior) -
+  - Minor changes to the text-based daily reports. These now focus on the most recent periods (last day, previous week, recent 6 months) and include yearly use.
+  - Option to save data/configurations to USB rather than JFFS
+        
+# Version R1 (based on vnStat 1.18) #
+
+### v 1.0.2 - 11-Jul-2021 ###
+* Minor fixes to correct an error which manifested itself as an "arithmetic error"; additional hot-fix to mitigate a related error.
+
 ### v 1.0.1 - 11-Apr-2021 ###
 * New format for monthly total in output listing: i.e., `yyyy-mm (dd)` where dd is the start of the cycle in a given period
 * Add "Router Friendly Name" to email subject line (can be modified in Diversion email set-up)
