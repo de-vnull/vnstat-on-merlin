@@ -20,6 +20,7 @@ p{font-weight:bolder}thead.collapsible-jquery{color:#fff;padding:0;width:100%;bo
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/hammerjs.js"></script>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/chartjs-plugin-zoom.js"></script>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/chartjs-plugin-annotation.js"></script>
+<script language="JavaScript" type="text/javascript" src="ext/shared-jy/chartjs-plugin-trendline.js"></script>
 <script language="JavaScript" type="text/javascript" src="/ext/shared-jy/d3.js"></script>
 <script language="JavaScript" type="text/javascript" src="/state.js"></script>
 <script language="JavaScript" type="text/javascript" src="/general.js"></script>
@@ -42,7 +43,1797 @@ function LoadCustomSettings(){
 		}
 	}
 }
-var $j=jQuery.noConflict(),maxNoCharts=12,currentNoCharts=0,ShowLines=GetCookie("ShowLines","string"),ShowFill=GetCookie("ShowFill","string");""==ShowFill&&(ShowFill="origin");var DragZoom=!0,ChartPan=!1;Chart.defaults.global.defaultFontColor="#CCC",Chart.Tooltip.positioners.cursor=function(a,b){return b};var dataintervallist=["fiveminute","hour","day"],chartlist=["daily","weekly","monthly"],timeunitlist=["hour","day","day"],intervallist=[24,7,30],bordercolourlist=["#c5c5ce","#0ec009","#956222","#38959d"],backgroundcolourlist=["rgba(197,197,206,0.5)","rgba(14,192,9,0.5)","rgba(149,98,34,0.5)","rgba(56,149,157,0.5)"],chartobjlist=["Chart_DataUsage","Chart_CompareUsage"];function keyHandler(a){82==a.keyCode?($j(document).off("keydown"),ResetZoom()):68==a.keyCode?($j(document).off("keydown"),ToggleDragZoom(document.form.btnDragZoom)):70==a.keyCode?($j(document).off("keydown"),ToggleFill()):76==a.keyCode&&($j(document).off("keydown"),ToggleLines())}$j(document).keydown(function(a){keyHandler(a)}),$j(document).keyup(function(){$j(document).keydown(function(a){keyHandler(a)})});function UsageHint(){for(var a=document.getElementsByTagName("a"),b=0;b<a.length;b++)a[b].onmouseout=nd;return hinttext=thresholdstring,overlib(hinttext,0,0)}function Validate_AllowanceStartDay(a){var b=a.name,c=1*a.value;return 28<c||1>c?($j(a).addClass("invalid"),!1):($j(a).removeClass("invalid"),!0)}function Validate_DataAllowance(a){var b=a.name,c=1*a.value;return 0>c||0==a.value.length||c==NaN||"."==a.value?($j(a).addClass("invalid"),!1):($j(a).removeClass("invalid"),!0)}function Format_DataAllowance(a){var b=a.name,c=1*a.value;return!(0>c||0==a.value.length||c==NaN||"."==a.value)&&(a.value=parseFloat(a.value).toFixed(2),!0)}function ScaleDataAllowance(){"T"==document.form.dnvnstat_allowanceunit.value?document.form.dnvnstat_dataallowance.value=1*document.form.dnvnstat_dataallowance.value/1e3:"G"==document.form.dnvnstat_allowanceunit.value&&(document.form.dnvnstat_dataallowance.value=1e3*(1*document.form.dnvnstat_dataallowance.value)),Format_DataAllowance(document.form.dnvnstat_dataallowance)}function GetCookie(a,b){if(null!=cookie.get("cookie_"+a))return cookie.get("cookie_"+a);return"string"==b?"":"number"==b?0:void 0}function SetCookie(a,b){cookie.set("cookie_"+a,b,3650)}function ScriptUpdateLayout(){var a=GetVersionNumber("local"),b=GetVersionNumber("server");$j("#dnvnstat_version_local").text(a),a!=b&&"N/A"!=b&&($j("#dnvnstat_version_server").text("Updated version available: "+b),showhide("btnChkUpdate",!1),showhide("dnvnstat_version_server",!0),showhide("btnDoUpdate",!0))}function update_status(){$j.ajax({url:"/ext/dn-vnstat/detect_update.js",dataType:"script",error:function(){setTimeout(update_status,1e3)},success:function(){"InProgress"==updatestatus?setTimeout(update_status,1e3):(document.getElementById("imgChkUpdate").style.display="none",showhide("dnvnstat_version_server",!0),"None"==updatestatus?($j("#dnvnstat_version_server").text("No update available"),showhide("btnChkUpdate",!0),showhide("btnDoUpdate",!1)):($j("#dnvnstat_version_server").text("Updated version available: "+updatestatus),showhide("btnChkUpdate",!1),showhide("btnDoUpdate",!0)))}})}function CheckUpdate(){showhide("btnChkUpdate",!1),document.formScriptActions.action_script.value="start_dn-vnstatcheckupdate",document.formScriptActions.submit(),document.getElementById("imgChkUpdate").style.display="",setTimeout(update_status,2e3)}function DoUpdate(){document.form.action_script.value="start_dn-vnstatdoupdate",document.form.action_wait.value=15,showLoading(),document.form.submit()}function GetVersionNumber(a){var b;return"local"==a?b=custom_settings.dnvnstat_version_local:"server"==a&&(b=custom_settings.dnvnstat_version_server),"undefined"==typeof b||null==b?"N/A":b}$j.fn.serializeObject=function(){var b=custom_settings,c=this.serializeArray();return $j.each(c,function(){void 0!==b[this.name]&&-1!=this.name.indexOf("dnvnstat")&&-1==this.name.indexOf("version")?(!b[this.name].push&&(b[this.name]=[b[this.name]]),b[this.name].push(this.value||"")):-1!=this.name.indexOf("dnvnstat")&&-1==this.name.indexOf("version")&&(b[this.name]=this.value||"")}),b};function SaveConfig(){document.getElementById("amng_custom").value=JSON.stringify($j("form").serializeObject()),document.form.action_script.value="start_dn-vnstatconfig",document.form.action_wait.value=15,showLoading(),document.form.submit()}function get_conf_file(){$j.ajax({url:"/ext/dn-vnstat/config.htm",dataType:"text",error:function(){setTimeout(get_conf_file,1e3)},success:function(data){var configdata=data.split("\n");configdata=configdata.filter(Boolean);for(var i=0;i<configdata.length;i++)eval("document.form.dnvnstat_"+configdata[i].split("=")[0].toLowerCase()).value=configdata[i].split("=")[1].replace(/(\r\n|\n|\r)/gm,"");get_vnstatconf_file()}})}function get_vnstatconf_file(){$j.ajax({url:"/ext/dn-vnstat/vnstatconf.htm",dataType:"text",error:function(){setTimeout(get_vnstatconf_file,1e3)},success:function(data){var configdata=data.split("\n");configdata=configdata.filter(Boolean);for(var i=0;i<configdata.length;i++)configdata[i].startsWith("MonthRotate ")&&(eval("document.form.dnvnstat_"+configdata[i].split(" ")[0].toLowerCase()).value=configdata[i].split(" ")[1].replace(/(\r\n|\n|\r)/gm,""))}})}function loadVnStatOutput(){$j.ajax({url:"/ext/dn-vnstat/vnstatoutput.htm",dataType:"text",error:function(){setTimeout(loadVnStatOutput,5e3)},success:function(a){document.getElementById("VnStatOuput").innerHTML=a}})}function get_vnstatusage_file(){$j.ajax({url:"/ext/dn-vnstat/vnstatusage.js",dataType:"script",error:function(){setTimeout(get_vnstatusage_file,1e3)},success:function(){UpdateText()}})}function ShowHideDataUsageWarning(a){a?(document.getElementById("datausagewarning").style.display="",document.getElementById("scripttitle").style.marginLeft="166px"):(document.getElementById("datausagewarning").style.display="none",document.getElementById("scripttitle").style.marginLeft="0px")}function UpdateText(){$j("#statstitle").html("The statistics and graphs on this page were last refreshed at: "+daterefeshed),$j("#spandatausage").html(usagestring),ShowHideDataUsageWarning(usagethreshold)}function UpdateImages(){for(var a=["s","hg","d","t","m"],b=new Date().getTime(),c=0;c<a.length;c++)document.getElementById("img_"+a[c]).style.backgroundImage="url(/ext/dn-vnstat/images/.vnstat_"+a[c]+".htm?cachebuster="+b+")"}function UpdateStats(){showhide("btnUpdateStats",!1),document.formScriptActions.action_script.value="start_dn-vnstat",document.formScriptActions.submit(),document.getElementById("vnstatupdate_text").innerHTML="Updating bandwidth usage and vnstat data...",showhide("imgVnStatUpdate",!0),showhide("vnstatupdate_text",!0),setTimeout(update_vnstat,2e3)}function update_vnstat(){$j.ajax({url:"/ext/dn-vnstat/detect_vnstat.js",dataType:"script",error:function(){setTimeout(update_vnstat,1e3)},success:function(){"InProgress"==vnstatstatus?setTimeout(update_vnstat,1e3):"LOCKED"==vnstatstatus?(document.getElementById("vnstatupdate_text").innerHTML="vnstat update already in progress",showhide("imgVnStatUpdate",!1),showhide("vnstatupdate_text",!0),showhide("btnUpdateStats",!0)):"Done"==vnstatstatus&&(get_vnstatusage_file(),UpdateImages(),loadVnStatOutput(),currentNoCharts=0,RedrawAllCharts(),document.getElementById("vnstatupdate_text").innerHTML="",showhide("imgVnStatUpdate",!1),showhide("vnstatupdate_text",!1),showhide("btnUpdateStats",!0))}})}function AddEventHandlers(){$j(".collapsible-jquery").off("click").on("click",function(){$j(this).siblings().toggle("fast",function(){"none"==$j(this).css("display")?SetCookie($j(this).siblings()[0].id,"collapsed"):SetCookie($j(this).siblings()[0].id,"expanded")})}),$j(".collapsible-jquery").each(function(){"collapsed"==GetCookie($j(this)[0].id,"string")?$j(this).siblings().toggle(!1):$j(this).siblings().toggle(!0)})}function SetCurrentPage(){document.form.next_page.value=window.location.pathname.substring(1),document.form.current_page.value=window.location.pathname.substring(1)}function initial(){SetCurrentPage(),LoadCustomSettings(),ScriptUpdateLayout(),show_menu(),get_conf_file(),AddEventHandlers(),get_vnstatusage_file(),UpdateImages(),loadVnStatOutput(),$j("#Time_Format").val(GetCookie("Time_Format","number")),RedrawAllCharts()}function reload(){location.reload(!0)}function Draw_Chart_NoData(a,b){document.getElementById("divChart_"+a).width="730",document.getElementById("divChart_"+a).height="500",document.getElementById("divChart_"+a).style.width="730px",document.getElementById("divChart_"+a).style.height="500px";var c=document.getElementById("divChart_"+a).getContext("2d");c.save(),c.textAlign="center",c.textBaseline="middle",c.font="normal normal bolder 48px Arial",c.fillStyle="white",c.fillText(b,365,250),c.restore()}function Draw_Chart(a){var b=$j("#"+a+"_Unit option:selected").text(),c="Received",d="Sent",e=2;("B"==b||"KB"==b)&&(e=0);var f=getChartPeriod($j("#"+a+"_Period option:selected").val()),g=getChartInterval($j("#"+a+"_Interval option:selected").val()),h=getChartUnitMultiplier($j("#"+a+"_Unit option:selected").val()),i=timeunitlist[$j("#"+a+"_Period option:selected").val()],j=intervallist[$j("#"+a+"_Period option:selected").val()],k=moment(),l=null,m=moment().startOf("hour").subtract(j,i+"s").subtract(30,"minutes"),n="bar",o=window[a+"_"+g+"_"+f];if("undefined"==typeof o||null===o)return void Draw_Chart_NoData(a,"No data to display");if(0==o.length)return void Draw_Chart_NoData(a,"No data to display");var p=[],q=[];for(let b=0;b<o.length;b++)p[o[b].Metric]||(q.push(o[b].Metric),p[o[b].Metric]=1);var r=o.filter(function(a){return a.Metric==c}).map(function(a){return{x:a.Time,y:a.Value/h}}),s=o.filter(function(a){return a.Metric==d}).map(function(a){return{x:a.Time,y:a.Value/h}}),t=window["Chart_"+a],u=getTimeFormat($j("#Time_Format option:selected").val(),"axis"),v=getTimeFormat($j("#Time_Format option:selected").val(),"tooltip");"fiveminute"==g&&(n="line"),"hour"==g&&(l=moment().startOf("hour").add(1,"hours"),k=l),"day"==g&&(l=moment().endOf("day").subtract(9,"hours"),m=moment().startOf("day").subtract(j-1,i+"s").subtract(12,"hours"),k=l),"daily"==f&&"day"==g&&(i="day",j=1,l=moment().endOf("day").subtract(9,"hours"),m=moment().startOf("day").subtract(12,"hours"),k=l),t!=null&&t.destroy();var w=document.getElementById("divChart_"+a).getContext("2d"),x={segmentShowStroke:!1,segmentStrokeColor:"#000",animationEasing:"easeOutQuart",animationSteps:100,maintainAspectRatio:!1,animateScale:!0,hover:{mode:"point"},legend:{display:!0,position:"top",reverse:!1,onClick:function(a,b){var c=b.datasetIndex,d=this.chart,e=d.getDatasetMeta(c);if(e.hidden=null===e.hidden?!d.data.datasets[c].hidden:null,"line"==ShowLines){var f="";if(!0!=e.hidden&&(f="line"),"Received"==d.data.datasets[c].label)for(aindex=0;3>aindex;aindex++)d.options.annotation.annotations[aindex].type=f;else if("Sent"==d.data.datasets[c].label)for(aindex=3;6>aindex;aindex++)d.options.annotation.annotations[aindex].type=f}d.update()}},title:{display:!0,text:"Data Usage"},tooltips:{callbacks:{title:function(a){return"day"==g?moment(a[0].xLabel,"X").format("YYYY-MM-DD"):moment(a[0].xLabel,"X").format(v)},label:function(a,c){return round(c.datasets[a.datasetIndex].data[a.index].y,e).toFixed(e)+" "+b}},itemSort:function(c,a){return a.datasetIndex-c.datasetIndex},mode:"point",position:"cursor",intersect:!0},scales:{xAxes:[{type:"time",gridLines:{display:!0,color:"#282828"},ticks:{min:m,max:l,display:!0},time:{parser:"X",unit:i,stepSize:1,displayFormats:u}}],yAxes:[{type:getChartScale($j("#"+a+"_Scale option:selected").val()),gridLines:{display:!1,color:"#282828"},scaleLabel:{display:!1,labelString:b},id:"left-y-axis",position:"left",ticks:{display:!0,beginAtZero:!0,labels:{index:["min","max"],removeEmptyLines:!0},userCallback:LogarithmicFormatter}}]},plugins:{zoom:{pan:{enabled:ChartPan,mode:"xy",rangeMin:{x:m,y:0},rangeMax:{x:k}},zoom:{enabled:!0,drag:DragZoom,mode:"xy",rangeMin:{x:m,y:0},rangeMax:{x:k},speed:.1}}},annotation:{drawTime:"afterDatasetsDraw",annotations:[{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(r),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+c+"="+round(getAverage(r),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(r,"y","max",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+c+"="+round(getLimit(r,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(r,"y","min",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+c+"="+round(getLimit(r,"y","min",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(s),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+d+"="+round(getAverage(s),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(s,"y","max",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+d+"="+round(getLimit(s,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(s,"y","min",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+d+"="+round(getLimit(s,"y","min",!0),e).toFixed(e)+b}}]}},y={datasets:getDataSets(o,q,h)};t=new Chart(w,{type:n,options:x,data:y}),window["Chart_"+a]=t}function Draw_Chart_Summary(a){var b=$j("#"+a+"_Unit option:selected").text(),c="Received",d="Sent",e=2;("B"==b||"KB"==b)&&(e=0);var f=getChartUnitMultiplier($j("#"+a+"_Unit option:selected").val()),g=window[a+"_WeekSummary"];if("undefined"==typeof g||null===g)return void Draw_Chart_NoData(a,"No data to display");if(0==g.length)return void Draw_Chart_NoData(a,"No data to display");var h=[],j=[];for(let b=0;b<g.length;b++)h[g[b].Metric]||(j.push(g[b].Metric),h[g[b].Metric]=1);var k=g.filter(function(a){return a.Metric==c}).map(function(a){return a.Value/f}),l=g.filter(function(a){return a.Metric==d}).map(function(a){return a.Value/f});k.reverse(),l.reverse(),h=[];var m=[];for(let b=0;b<g.length;b++)h[g[b].Time]||(m.push(g[b].Time),h[g[b].Time]=1);m.reverse();var n=window["Chart_"+a];n!=null&&n.destroy();var o=document.getElementById("divChart_"+a).getContext("2d"),p={segmentShowStroke:!1,segmentStrokeColor:"#000",animationEasing:"easeOutQuart",animationSteps:100,maintainAspectRatio:!1,animateScale:!0,hover:{mode:"point"},legend:{display:!0,position:"top",reverse:!1,onClick:function(a,b){var c=b.datasetIndex,d=this.chart,e=d.getDatasetMeta(c);if(e.hidden=null===e.hidden?!d.data.datasets[c].hidden:null,"line"==ShowLines){var f="";if(!0!=e.hidden&&(f="line"),"Received"==d.data.datasets[c].label)for(aindex=0;3>aindex;aindex++)d.options.annotation.annotations[aindex].type=f;else if("Sent"==d.data.datasets[c].label)for(aindex=3;6>aindex;aindex++)d.options.annotation.annotations[aindex].type=f}d.update()}},title:{display:!0,text:"Summary Usage"},tooltips:{callbacks:{title:function(a,b){return b.datasets[a[0].datasetIndex].label},label:function(a,c){return round(c.datasets[a.datasetIndex].data[a.index].y,e).toFixed(e)+" "+b}},itemSort:function(c,a){return a.datasetIndex-c.datasetIndex},mode:"point",position:"cursor",intersect:!0},scales:{xAxes:[{type:"category",gridLines:{display:!0,color:"#282828"},ticks:{display:!0}}],yAxes:[{type:getChartScale($j("#"+a+"_Scale option:selected").val()),gridLines:{display:!1,color:"#282828"},scaleLabel:{display:!1,labelString:b},id:"left-y-axis",position:"left",ticks:{display:!0,beginAtZero:!0,labels:{index:["min","max"],removeEmptyLines:!0},userCallback:LogarithmicFormatter}}]},plugins:{zoom:{pan:{enabled:ChartPan,mode:"xy",rangeMin:{y:0}},zoom:{enabled:!0,drag:DragZoom,mode:"xy",rangeMin:{y:0},speed:.1}}},annotation:{drawTime:"afterDatasetsDraw",annotations:[{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(k),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+c+"="+round(getAverage(k),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(k,"y","max",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+c+"="+round(getLimit(k,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(k,"y","min",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+c+"="+round(getLimit(k,"y","min",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(l),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+d+"="+round(getAverage(l),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(l,"y","max",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+d+"="+round(getLimit(l,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(l,"y","min",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+d+"="+round(getLimit(l,"y","min",!0),e).toFixed(e)+b}}]}},q={labels:m,datasets:getDataSets(g,j,f)};n=new Chart(o,{type:"bar",options:p,data:q}),window["Chart_"+a]=n}function Draw_Chart_Compare(a){var b=$j("#"+a+"_Unit option:selected").text(),c="Received",d="Sent",e=2;("B"==b||"KB"==b)&&(e=0);var f=getChartUnitMultiplier($j("#"+a+"_Unit option:selected").val()),g=moment().endOf("day"),h=moment().endOf("day"),i=moment().endOf("day").subtract(7,"days").subtract(12,"hours"),j=window[a+"_WeekThis"];if("undefined"==typeof j||null===j)return void Draw_Chart_NoData(a,"No data to display");if(0==j.length)return void Draw_Chart_NoData(a,"No data to display");var k=window[a+"_WeekPrev"],l=[],m=[];for(let b=0;b<j.length;b++)l[j[b].Metric]||(m.push(j[b].Metric),l[j[b].Metric]=1);var n=j.filter(function(a){return a.Metric==c}).map(function(a){return{x:a.Time,y:a.Value/f}}),o=j.filter(function(a){return a.Metric==d}).map(function(a){return{x:a.Time,y:a.Value/f}}),p=k.filter(function(a){return a.Metric==c}).map(function(a){return{x:a.Time,y:a.Value/f}}),q=k.filter(function(a){return a.Metric==d}).map(function(a){return{x:a.Time,y:a.Value/f}}),r=n.concat(p),s=o.concat(q),t=window["Chart_"+a];t!=null&&t.destroy();var u=document.getElementById("divChart_"+a).getContext("2d"),v={segmentShowStroke:!1,segmentStrokeColor:"#000",animationEasing:"easeOutQuart",animationSteps:100,maintainAspectRatio:!1,animateScale:!0,hover:{mode:"point"},legend:{display:!0,position:"top",reverse:!1,onClick:function(a,b){var c=b.datasetIndex,d=this.chart,e=d.getDatasetMeta(c);if(e.hidden=null===e.hidden?!d.data.datasets[c].hidden:null,"line"==ShowLines){var f="";if(!0!=e.hidden&&(f="line"),"Received"==d.data.datasets[c].label)for(aindex=0;3>aindex;aindex++)d.options.annotation.annotations[aindex].type=f;else if("Sent"==d.data.datasets[c].label)for(aindex=3;6>aindex;aindex++)d.options.annotation.annotations[aindex].type=f}d.update()}},title:{display:!0,text:"Compare Usage"},tooltips:{callbacks:{title:function(a,b){return b.datasets[a[0].datasetIndex].label},label:function(a,c){return round(c.datasets[a.datasetIndex].data[a.index].y,e).toFixed(e)+" "+b}},itemSort:function(c,a){return a.datasetIndex-c.datasetIndex},mode:"point",position:"cursor",intersect:!0},scales:{xAxes:[{type:"time",gridLines:{display:!0,color:"#282828"},ticks:{min:i,max:h,display:!0},time:{parser:"X",unit:"day",stepSize:1,displayFormats:{day:"dddd"}}}],yAxes:[{type:getChartScale($j("#"+a+"_Scale option:selected").val()),gridLines:{display:!1,color:"#282828"},scaleLabel:{display:!1,labelString:b},id:"left-y-axis",position:"left",ticks:{display:!0,beginAtZero:!0,labels:{index:["min","max"],removeEmptyLines:!0},userCallback:LogarithmicFormatter}}]},plugins:{zoom:{pan:{enabled:ChartPan,mode:"xy",rangeMin:{x:i,y:0},rangeMax:{x:g}},zoom:{enabled:!0,drag:DragZoom,mode:"xy",rangeMin:{x:i,y:0},rangeMax:{x:g},speed:.1}}},annotation:{drawTime:"afterDatasetsDraw",annotations:[{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(r),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+c+"="+round(getAverage(r),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(r,"y","max",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+c+"="+round(getLimit(r,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(r,"y","min",!0),borderColor:bordercolourlist[0],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+c+"="+round(getLimit(r,"y","min",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getAverage(s),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"center",enabled:!0,xAdjust:0,yAdjust:0,content:"Avg. "+d+"="+round(getAverage(s),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(s,"y","max",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"right",enabled:!0,xAdjust:15,yAdjust:0,content:"Max. "+d+"="+round(getLimit(s,"y","max",!0),e).toFixed(e)+b}},{type:ShowLines,mode:"horizontal",scaleID:"left-y-axis",value:getLimit(s,"y","min",!0),borderColor:bordercolourlist[1],borderWidth:1,borderDash:[5,5],label:{backgroundColor:"rgba(0,0,0,0.3)",fontFamily:"sans-serif",fontSize:10,fontStyle:"bold",fontColor:"#fff",xPadding:6,yPadding:6,cornerRadius:6,position:"left",enabled:!0,xAdjust:15,yAdjust:0,content:"Min. "+d+"="+round(getLimit(s,"y","min",!0),e).toFixed(e)+b}}]}},w={datasets:getDataSets_Compare(j,k,m,f)};t=new Chart(u,{type:"bar",options:v,data:w}),window["Chart_"+a]=t}function getDataSets(a,b,c){for(var d,e=[],f=0;f<b.length;f++)d=a.filter(function(a){return a.Metric==b[f]}).map(function(a){return{x:a.Time,y:a.Value/c}}),e.push({label:b[f],data:d,yAxisID:"left-y-axis",borderWidth:1,pointRadius:1,lineTension:0,fill:ShowFill,backgroundColor:backgroundcolourlist[f],borderColor:bordercolourlist[f]});return e}function getDataSets_Compare(a,b,c,e){for(var f,g=[],h=0;h<c.length;h++)f=a.filter(function(a){return a.Metric==c[h]}).map(function(a){return{x:a.Time,y:a.Value/e}}),g.push({label:"Current 7 days - "+c[h],data:f,yAxisID:"left-y-axis",borderWidth:1,pointRadius:1,lineTension:0,fill:ShowFill,backgroundColor:backgroundcolourlist[h],borderColor:bordercolourlist[h]});for(var f,h=0;h<c.length;h++)f=b.filter(function(a){return a.Metric==c[h]}).map(function(a){return{x:a.Time,y:a.Value/e}}),g.push({label:"Previous 7 days - "+c[h],data:f,yAxisID:"left-y-axis",borderWidth:1,pointRadius:1,lineTension:0,fill:ShowFill,backgroundColor:backgroundcolourlist[h+2],borderColor:bordercolourlist[h+2]});return g}function LogarithmicFormatter(a,b,c){var d=this.options.scaleLabel.labelString,e=2;if(("B"==d||"KB"==d)&&(e=0),"logarithmic"!=this.type)return isNaN(a)?a+" "+d:round(a,e).toFixed(e)+" "+d;var f=this.options.ticks.labels||{},g=f.index||["min","max"],h=f.significand||[1,2,5],i=a/Math.pow(10,Math.floor(Chart.helpers.log10(a))),j=!0===f.removeEmptyLines?void 0:"",k="";return 0===b?k="min":b==c.length-1&&(k="max"),"all"===f||-1!==h.indexOf(i)||-1!==g.indexOf(b)||-1!==g.indexOf(k)?0===a?"0 "+d:isNaN(a)?a+" "+d:round(a,e).toFixed(e)+" "+d:j}function getLimit(a,b,c,d){var e,f=0;return e="x"==b?a.map(function(a){return a.x}):a.map(function(a){return"undefined"==typeof a.y||null==a.y||isNaN(a.y)?a:a.y}),e=e.filter(function(a){return!isNaN(a)}),f="max"==c?Math.max.apply(Math,e):Math.min.apply(Math,e),"max"==c&&0==f&&!1==d&&(f=1),f}function getAverage(a){for(var b=0,c=0,d=0;d<a.length;d++)"undefined"==typeof a[d].y||null==a[d].y||isNaN(a[d].y)?isNaN(a[d])?(++c,b+=0):b+=1*a[d]:b+=1*a[d].y;var e=b/(a.length-c);return e}function round(a,b){return+(Math.round(a+"e"+b)+"e-"+b)}function ToggleLines(){""==ShowLines?(ShowLines="line",SetCookie("ShowLines","line")):(ShowLines="",SetCookie("ShowLines",""));for(var a,b=0;b<chartobjlist.length;b++){if(a=window[chartobjlist[b]],"undefined"==typeof a||null===a)return;for(var c=0;c<a.options.annotation.annotations.length;c++)a.options.annotation.annotations[c].type=ShowLines;a.update()}}function ToggleFill(){"origin"==ShowFill?(ShowFill="false",SetCookie("ShowFill","false")):(ShowFill="origin",SetCookie("ShowFill","origin"));for(var a,b=0;b<chartobjlist.length;b++){if(a=window[chartobjlist[b]],"undefined"==typeof a||null===a)return;a.data.datasets[0].fill=ShowFill,a.data.datasets[1].fill=ShowFill,a.update()}}function ToggleDragZoom(a){var b=!0,c=!1,d="";-1==a.value.indexOf("On")?(b=!0,c=!1,DragZoom=!0,ChartPan=!1,d="Drag Zoom On"):(b=!1,c=!0,DragZoom=!1,ChartPan=!0,d="Drag Zoom Off");for(var e,f=0;f<chartobjlist.length;f++){if(e=window[chartobjlist[f]],"undefined"==typeof e||null===e)return;e.options.plugins.zoom.zoom.drag=b,e.options.plugins.zoom.pan.enabled=c,e.update(),a.value=d}}function ResetZoom(){for(var a,b=0;b<chartobjlist.length;b++){if(a=window[chartobjlist[b]],"undefined"==typeof a||null===a)return;a.resetZoom()}}function RedrawAllCharts(){$j("#DataUsage_Interval").val(GetCookie("DataUsage_Interval","number")),changePeriod(document.getElementById("DataUsage_Interval")),$j("#DataUsage_Period").val(GetCookie("DataUsage_Period","number")),$j("#DataUsage_Unit").val(GetCookie("DataUsage_Unit","number")),$j("#DataUsage_Scale").val(GetCookie("DataUsage_Scale","number")),Draw_Chart_NoData("DataUsage","Data loading..."),Draw_Chart_NoData("CompareUsage","Data loading...");for(var a=0;a<chartlist.length;a++)for(var b=0;b<dataintervallist.length;b++)d3.csv("/ext/dn-vnstat/csv/DataUsage_"+dataintervallist[b]+"_"+chartlist[a]+".htm").then(SetGlobalDataset.bind(null,"DataUsage_"+dataintervallist[b]+"_"+chartlist[a]));$j("#CompareUsage_Interval").val(GetCookie("CompareUsage_Interval","number")),$j("#CompareUsage_Unit").val(GetCookie("CompareUsage_Unit","number")),$j("#CompareUsage_Scale").val(GetCookie("CompareUsage_Scale","number")),d3.csv("/ext/dn-vnstat/csv/WeekThis.htm").then(SetGlobalDataset.bind(null,"CompareUsage_WeekThis")),d3.csv("/ext/dn-vnstat/csv/WeekPrev.htm").then(SetGlobalDataset.bind(null,"CompareUsage_WeekPrev")),d3.csv("/ext/dn-vnstat/csv/WeekSummary.htm").then(SetGlobalDataset.bind(null,"CompareUsage_WeekSummary"))}function SetGlobalDataset(a,b){window[a]=b,currentNoCharts++,currentNoCharts==maxNoCharts&&(Draw_Chart("DataUsage"),"week"==getSummaryInterval($j("#CompareUsage_Interval option:selected").val())?Draw_Chart_Summary("CompareUsage"):"day"==getSummaryInterval($j("#CompareUsage_Interval option:selected").val())&&Draw_Chart_Compare("CompareUsage"))}function getTimeFormat(a,b){var c;return"axis"==b?0==a?c={millisecond:"HH:mm:ss.SSS",second:"HH:mm:ss",minute:"HH:mm",hour:"HH:mm"}:1==a&&(c={millisecond:"h:mm:ss.SSS A",second:"h:mm:ss A",minute:"h:mm A",hour:"h A"}):"tooltip"==b&&(0==a?c="YYYY-MM-DD HH:mm:ss":1==a&&(c="YYYY-MM-DD h:mm:ss A")),c}function getChartPeriod(a){var b="daily";return 0==a?b="daily":1==a?b="weekly":2==a&&(b="monthly"),b}function getChartUnitMultiplier(a){return Math.pow(1e3,a)}function getChartScale(a){var b="";return 0==a?b="linear":1==a&&(b="logarithmic"),b}function getChartInterval(a){var b="fiveminute";return 0==a?b="fiveminute":1==a?b="hour":2==a&&(b="day"),b}function getSummaryInterval(a){var b="day";return 0==a?b="day":1==a&&(b="week"),b}function changeAllCharts(a){value=1*a.value,SetCookie(a.id,value),Draw_Chart("DataUsage"),"week"==getSummaryInterval($j("#"+name+"_Interval option:selected").val())?Draw_Chart_Compare("CompareUsage"):"day"==getSummaryInterval($j("#"+name+"_Interval option:selected").val())&&Draw_Chart_Summary("CompareUsage")}function changeChart(a){value=1*a.value,name=a.id.substring(0,a.id.lastIndexOf("_")),SetCookie(a.id,value),"DataUsage"==name?Draw_Chart(name):"CompareUsage"==name&&"week"==getSummaryInterval($j("#"+name+"_Interval option:selected").val())?Draw_Chart_Summary(name):"CompareUsage"==name&&"day"==getSummaryInterval($j("#"+name+"_Interval option:selected").val())&&Draw_Chart_Compare(name)}function changePeriod(a){value=1*a.value,name=a.id.substring(0,a.id.indexOf("_")),2==value?$j("select[id=\""+name+"_Period\"] option:contains(24)").text("Today"):$j("select[id=\""+name+"_Period\"] option:contains(\"Today\")").text("Last 24 hours")}
+var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
+var maxNoCharts = 12;
+var currentNoCharts = 0;
+
+var ShowLines = GetCookie('ShowLines','string');
+var ShowFill = GetCookie('ShowFill','string');
+if(ShowFill == ''){
+	ShowFill = 'origin';
+}
+
+var DragZoom = true;
+var ChartPan = false;
+
+Chart.defaults.global.defaultFontColor = '#CCC';
+Chart.Tooltip.positioners.cursor = function(chartElements,coordinates){
+	return coordinates;
+};
+
+var dataintervallist = ['fiveminute','hour','day'];
+var chartlist = ['daily','weekly','monthly'];
+var timeunitlist = ['hour','day','day'];
+var intervallist = [24,7,30];
+var bordercolourlist= ['#c5c5ce','#0ec009','#956222','#38959d'];
+var backgroundcolourlist = ['rgba(197,197,206,0.5)','rgba(14,192,9,0.5)','rgba(149,98,34,0.5)','rgba(56,149,157,0.5)'];
+var trendcolourlist = ['rgba(197,197,206,0.8)','rgba(14,192,9,0.8)','rgba(149,98,34,0.5)','rgba(56,149,157,0.8)'];
+var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage'];
+
+function keyHandler(e){
+	if(e.keyCode == 82){
+		$j(document).off('keydown');
+		ResetZoom();
+	}
+	else if(e.keyCode == 68){
+		$j(document).off('keydown');
+		ToggleDragZoom(document.form.btnDragZoom);
+	}
+	else if(e.keyCode == 70){
+		$j(document).off('keydown');
+		ToggleFill();
+	}
+	else if(e.keyCode == 76){
+		$j(document).off('keydown');
+		ToggleLines();
+	}
+}
+
+$j(document).keydown(function(e){keyHandler(e);});
+$j(document).keyup(function(e){
+	$j(document).keydown(function(e){
+		keyHandler(e);
+	});
+});
+
+function UsageHint(){
+	var tag_name= document.getElementsByTagName('a');
+	for(var i = 0; i<tag_name.length; i++){
+		tag_name[i].onmouseout=nd;
+	}
+	hinttext=thresholdstring;
+	return overlib(hinttext,0,0);
+}
+
+function Validate_AllowanceStartDay(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue > 28 || inputvalue < 1){
+		$j(forminput).addClass('invalid');
+		return false;
+	}
+	else{
+		$j(forminput).removeClass('invalid');
+		return true;
+	}
+}
+
+function Validate_DataAllowance(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue < 0 || forminput.value.length == 0 || inputvalue == NaN || forminput.value == '.'){
+		$j(forminput).addClass('invalid');
+		return false;
+	}
+	else{
+		$j(forminput).removeClass('invalid');
+		return true;
+	}
+}
+
+function Format_DataAllowance(forminput){
+	var inputname = forminput.name;
+	var inputvalue = forminput.value*1;
+	
+	if(inputvalue < 0 || forminput.value.length == 0 || inputvalue == NaN || forminput.value == '.'){
+		return false;
+	}
+	else{
+		forminput.value=parseFloat(forminput.value).toFixed(2);
+		return true;
+	}
+}
+
+function ScaleDataAllowance(){
+	if(document.form.dnvnstat_allowanceunit.value == 'T'){
+		document.form.dnvnstat_dataallowance.value = document.form.dnvnstat_dataallowance.value*1 / 1000;
+	}
+	else if(document.form.dnvnstat_allowanceunit.value == 'G'){
+		document.form.dnvnstat_dataallowance.value = document.form.dnvnstat_dataallowance.value*1 * 1000;
+	}
+	Format_DataAllowance(document.form.dnvnstat_dataallowance);
+}
+
+function GetCookie(cookiename,returntype){
+	if(cookie.get('cookie_'+cookiename) != null){
+		return cookie.get('cookie_'+cookiename);
+	}
+	else{
+		if(returntype == 'string'){
+			return '';
+		}
+		else if(returntype == 'number'){
+			return 0;
+		}
+	}
+}
+
+function SetCookie(cookiename,cookievalue){
+	cookie.set('cookie_'+cookiename,cookievalue,10 * 365);
+}
+
+function ScriptUpdateLayout(){
+	var localver = GetVersionNumber('local');
+	var serverver = GetVersionNumber('server');
+	$j('#dnvnstat_version_local').text(localver);
+	
+	if(localver != serverver && serverver != 'N/A'){
+		$j('#dnvnstat_version_server').text('Updated version available: '+serverver);
+		showhide('btnChkUpdate',false);
+		showhide('dnvnstat_version_server',true);
+		showhide('btnDoUpdate',true);
+	}
+}
+
+function update_status(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/detect_update.js',
+		dataType: 'script',
+		error: function(xhr){
+			setTimeout(update_status,1000);
+		},
+		success: function(){
+			if(updatestatus == 'InProgress'){
+				setTimeout(update_status,1000);
+			}
+			else{
+				document.getElementById('imgChkUpdate').style.display = 'none';
+				showhide('dnvnstat_version_server',true);
+				if(updatestatus != 'None'){
+					$j('#dnvnstat_version_server').text('Updated version available: '+updatestatus);
+					showhide('btnChkUpdate',false);
+					showhide('btnDoUpdate',true);
+				}
+				else{
+					$j('#dnvnstat_version_server').text('No update available');
+					showhide('btnChkUpdate',true);
+					showhide('btnDoUpdate',false);
+				}
+			}
+		}
+	});
+}
+
+function CheckUpdate(){
+	showhide('btnChkUpdate',false);
+	document.formScriptActions.action_script.value = 'start_dn-vnstatcheckupdate';
+	document.formScriptActions.submit();
+	document.getElementById('imgChkUpdate').style.display = '';
+	setTimeout(update_status,2000);
+}
+
+function DoUpdate(){
+	document.form.action_script.value = 'start_dn-vnstatdoupdate';
+	document.form.action_wait.value = 15;
+	showLoading();
+	document.form.submit();
+}
+
+function GetVersionNumber(versiontype){
+	var versionprop;
+	if(versiontype == 'local'){
+		versionprop = custom_settings.dnvnstat_version_local;
+	}
+	else if(versiontype == 'server'){
+		versionprop = custom_settings.dnvnstat_version_server;
+	}
+	
+	if(typeof versionprop == 'undefined' || versionprop == null){
+		return 'N/A';
+	}
+	else{
+		return versionprop;
+	}
+}
+
+$j.fn.serializeObject = function(){
+	var o = custom_settings;
+	var a = this.serializeArray();
+	$j.each(a,function(){
+		if (o[this.name] !== undefined && this.name.indexOf('dnvnstat') != -1 && this.name.indexOf('version') == -1){
+			if (!o[this.name].push){
+				o[this.name] = [o[this.name]];
+			}
+			o[this.name].push(this.value || '');
+		} else if (this.name.indexOf('dnvnstat') != -1 && this.name.indexOf('version') == -1){
+			o[this.name] = this.value || '';
+		}
+	});
+	return o;
+};
+
+function SaveConfig(){
+	document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
+	document.form.action_script.value = 'start_dn-vnstatconfig';
+	document.form.action_wait.value = 15;
+	showLoading();
+	document.form.submit();
+}
+
+function get_conf_file(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/config.htm',
+		dataType: 'text',
+		error: function(xhr){
+			setTimeout(get_conf_file,1000);
+		},
+		success: function(data){
+			var configdata=data.split('\n');
+			configdata = configdata.filter(Boolean);
+			for (var i = 0; i < configdata.length; i++){
+				if(configdata[i].split('=')[0]=="ENFORCEALLOWANCE"){continue;}
+				eval('document.form.dnvnstat_'+configdata[i].split('=')[0].toLowerCase()).value = configdata[i].split('=')[1].replace(/(\r\n|\n|\r)/gm,'');
+			}
+			get_vnstatconf_file();
+		}
+	});
+}
+
+function get_vnstatconf_file(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/vnstatconf.htm',
+		dataType: 'text',
+		error: function(xhr){
+			setTimeout(get_vnstatconf_file,1000);
+		},
+		success: function(data){
+			var configdata=data.split('\n');
+			configdata = configdata.filter(Boolean);
+			for (var i = 0; i < configdata.length; i++){
+				if(configdata[i].startsWith('MonthRotate ')){
+					eval('document.form.dnvnstat_'+configdata[i].split(' ')[0].toLowerCase()).value = configdata[i].split(' ')[1].replace(/(\r\n|\n|\r)/gm,'');
+				}
+			}
+		}
+	});
+}
+
+function loadVnStatOutput(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/vnstatoutput.htm',
+		dataType: 'text',
+		error: function(xhr){
+			setTimeout(loadVnStatOutput,5000);
+		},
+		success: function(data){
+			document.getElementById('VnStatOuput').innerHTML=data;
+		}
+	});
+}
+
+function get_vnstatusage_file(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/vnstatusage.js',
+		dataType: 'script',
+		error: function(xhr){
+			setTimeout(get_vnstatusage_file,1000);
+		},
+		success: function(){
+			UpdateText();
+		}
+	});
+}
+
+function ShowHideDataUsageWarning(showusage){
+	if(showusage){
+		document.getElementById('datausagewarning').style.display = '';
+		document.getElementById('scripttitle').style.marginLeft = '166px';
+	}
+	else{
+		document.getElementById('datausagewarning').style.display = 'none';
+		document.getElementById('scripttitle').style.marginLeft = '0px';
+	}
+}
+
+function UpdateText(){
+	$j('#statstitle').html('The statistics and graphs on this page were last refreshed at: '+daterefeshed);
+	$j('#spandatausage').html(usagestring);
+	ShowHideDataUsageWarning(usagethreshold);
+}
+
+function UpdateImages(){
+	var images=['s','hg','d','t','m'];
+	var datestring = new Date().getTime();
+	for(var index = 0; index < images.length; index++){
+		document.getElementById('img_'+images[index]).style.backgroundImage='url(/ext/dn-vnstat/images/.vnstat_'+images[index]+'.htm?cachebuster='+datestring+')';
+	}
+}
+
+function UpdateStats(){
+	showhide('btnUpdateStats',false);
+	document.formScriptActions.action_script.value='start_dn-vnstat';
+	document.formScriptActions.submit();
+	document.getElementById('vnstatupdate_text').innerHTML = 'Updating bandwidth usage and vnstat data...';
+	showhide('imgVnStatUpdate',true);
+	showhide('vnstatupdate_text',true);
+	setTimeout(update_vnstat,5000);
+}
+
+function update_vnstat(){
+	$j.ajax({
+		url: '/ext/dn-vnstat/detect_vnstat.js',
+		dataType: 'script',
+		error: function(xhr){
+			setTimeout(update_vnstat,1000);
+		},
+		success: function(){
+			if(vnstatstatus == 'InProgress'){
+				setTimeout(update_vnstat,1000);
+			}
+			else if(vnstatstatus == 'LOCKED'){
+				document.getElementById('vnstatupdate_text').innerHTML = 'vnstat update already in progress';
+				showhide('imgVnStatUpdate',false);
+				showhide('vnstatupdate_text',true);
+				showhide('btnUpdateStats',true);
+			}
+			else if(vnstatstatus == 'Done'){
+				get_vnstatusage_file();
+				UpdateImages();
+				loadVnStatOutput();
+				currentNoCharts = 0;
+				RedrawAllCharts();
+				document.getElementById('vnstatupdate_text').innerHTML = '';
+				showhide('imgVnStatUpdate',false);
+				showhide('vnstatupdate_text',false);
+				showhide('btnUpdateStats',true);
+			}
+		}
+	});
+}
+
+function AddEventHandlers(){
+	$j('.collapsible-jquery').off('click').on('click',function(){
+		$j(this).siblings().toggle('fast',function(){
+			if($j(this).css('display') == 'none'){
+				SetCookie($j(this).siblings()[0].id,'collapsed');
+			}
+			else{
+				SetCookie($j(this).siblings()[0].id,'expanded');
+			}
+		})
+	});
+	
+	$j('.collapsible-jquery').each(function(index,element){
+		if(GetCookie($j(this)[0].id,'string') == 'collapsed'){
+			$j(this).siblings().toggle(false);
+		}
+		else{
+			$j(this).siblings().toggle(true);
+		}
+	});
+}
+
+function SetCurrentPage(){
+	document.form.next_page.value = window.location.pathname.substring(1);
+	document.form.current_page.value = window.location.pathname.substring(1);
+}
+
+function initial(){
+	SetCurrentPage();
+	LoadCustomSettings();
+	ScriptUpdateLayout();
+	show_menu();
+	get_conf_file();
+	AddEventHandlers();
+	get_vnstatusage_file();
+	UpdateImages();
+	loadVnStatOutput();
+	$j('#Time_Format').val(GetCookie('Time_Format','number'));
+	RedrawAllCharts();
+}
+
+function reload(){
+	location.reload(true);
+}
+
+function Draw_Chart_NoData(txtchartname,texttodisplay){
+	document.getElementById('divChart_'+txtchartname).width='730';
+	document.getElementById('divChart_'+txtchartname).height='500';
+	document.getElementById('divChart_'+txtchartname).style.width='730px';
+	document.getElementById('divChart_'+txtchartname).style.height='500px';
+	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
+	ctx.save();
+	ctx.textAlign = 'center';
+	ctx.textBaseline = 'middle';
+	ctx.font = 'normal normal bolder 48px Arial';
+	ctx.fillStyle = 'white';
+	ctx.fillText(texttodisplay,365,250);
+	ctx.restore();
+}
+
+function Draw_Chart(txtchartname){
+	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
+	var txttitle = 'Data Usage';
+	var metric0 = 'Received';
+	var metric1 = 'Sent';
+	
+	var decimals = 2;
+	if(txtunity == 'B' || txtunity == 'KB'){
+		decimals = 0;
+	}
+	
+	var chartperiod = getChartPeriod($j('#'+txtchartname+'_Period option:selected').val());
+	var chartinterval = getChartInterval($j('#'+txtchartname+'_Interval option:selected').val());
+	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
+	var txtunitx = timeunitlist[$j('#'+txtchartname+'_Period option:selected').val()];
+	var numunitx = intervallist[$j('#'+txtchartname+'_Period option:selected').val()];
+	var zoompanxaxismax = moment();
+	var chartxaxismax = null;
+	var chartxaxismin = moment().startOf('hour').subtract(numunitx,txtunitx+'s').subtract(30,'minutes');
+	var charttype = 'bar';
+	var dataobject = window[txtchartname+'_'+chartinterval+'_'+chartperiod];
+	if(typeof dataobject === 'undefined' || dataobject === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	if(dataobject.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	
+	var unique = [];
+	var chartTrafficTypes = [];
+	for(let i = 0; i < dataobject.length; i++){
+		if(!unique[dataobject[i].Metric]){
+			chartTrafficTypes.push(dataobject[i].Metric);
+			unique[dataobject[i].Metric] = 1;
+		}
+	}
+	
+	var chartData0 = dataobject.filter(function(item){
+		return item.Metric == metric0;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartData1 = dataobject.filter(function(item){
+		return item.Metric == metric1;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var objchartname=window['Chart_'+txtchartname];
+	
+	var timeaxisformat = getTimeFormat($j('#Time_Format option:selected').val(),'axis');
+	var timetooltipformat = getTimeFormat($j('#Time_Format option:selected').val(),'tooltip');
+	
+	if(chartinterval == 'fiveminute'){
+		charttype = 'line';
+	}
+	
+	if(chartinterval == 'hour'){
+		chartxaxismax = moment().startOf('hour').add(1,'hours');
+		zoompanxaxismax = chartxaxismax;
+	}
+	
+	if(chartinterval == 'day'){
+		chartxaxismax = moment().endOf('day').subtract(9,'hours');
+		chartxaxismin = moment().startOf('day').subtract(numunitx-1,txtunitx+'s').subtract(12,'hours');
+		zoompanxaxismax = chartxaxismax;
+	}
+
+	if(chartperiod == 'daily' && chartinterval == 'day'){
+		txtunitx = 'day';
+		numunitx = 1;
+		chartxaxismax = moment().endOf('day').subtract(9,'hours');
+		chartxaxismin = moment().startOf('day').subtract(12,'hours');
+		zoompanxaxismax = chartxaxismax;
+	}
+	
+	if(objchartname != undefined) objchartname.destroy();
+	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
+	var chartOptions = {
+		segmentShowStroke : false,
+		segmentStrokeColor : '#000',
+		animationEasing : 'easeOutQuart',
+		animationSteps : 100,
+		maintainAspectRatio: false,
+		animateScale : true,
+		hover: { mode: 'point' },
+		legend: {
+			display: true,
+			position: 'top',
+			reverse: false,
+			onClick: function (e,legendItem){
+				var index = legendItem.datasetIndex;
+				var ci = this.chart;
+				var meta = ci.getDatasetMeta(index);
+				
+				meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+				
+				if(ShowLines == 'line'){
+					var annotationline = '';
+					if(meta.hidden != true){
+						annotationline = 'line';
+					}
+					
+					if(ci.data.datasets[index].label == 'Received'){
+						for(aindex = 0; aindex < 3; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+					else if(ci.data.datasets[index].label == 'Sent'){
+						for(aindex = 3; aindex < 6; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+				}
+				
+				ci.update();
+			}
+		},
+		title: { display: true,text: txttitle },
+		tooltips: {
+			callbacks: {
+					title: function (tooltipItem,data){
+						if(chartinterval == 'day'){
+							return moment(tooltipItem[0].xLabel,'X').format('YYYY-MM-DD');
+						}
+						else{
+							return moment(tooltipItem[0].xLabel,'X').format(timetooltipformat);
+						}
+					},
+					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals)+' '+txtunitytip;}
+				},
+			itemSort: function(a,b){
+				return b.datasetIndex - a.datasetIndex;
+			},
+			mode: 'point',
+			position: 'cursor',
+			intersect: true
+		},
+		scales: {
+			xAxes: [{
+				type: 'time',
+				gridLines: { display: true,color: '#282828' },
+				ticks: {
+					min: chartxaxismin,
+					max: chartxaxismax,
+					display: true
+				},
+				time: {
+					parser: 'X',
+					unit: txtunitx,
+					stepSize: 1,
+					displayFormats: timeaxisformat
+				}
+			}],
+			yAxes: [{
+				type: getChartScale($j('#'+txtchartname+'_Scale option:selected').val()),
+				gridLines: { display: false,color: '#282828' },
+				scaleLabel: { display: false,labelString: txtunity },
+				id: 'left-y-axis',
+				position: 'left',
+				ticks: {
+					display: true,
+					beginAtZero: true,
+					labels: {
+						index:  ['min','max'],
+						removeEmptyLines: true,
+					},
+					userCallback: LogarithmicFormatter
+				},
+			}]
+		},
+		plugins: {
+			zoom: {
+				pan: {
+					enabled: ChartPan,
+					mode: 'xy',
+					rangeMin: {
+						x: chartxaxismin,
+						y: 0
+					},
+					rangeMax: {
+						x: zoompanxaxismax//,
+						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
+					},
+				},
+				zoom: {
+					enabled: true,
+					drag: DragZoom,
+					mode: 'xy',
+					rangeMin: {
+						x: chartxaxismin,
+						y: 0
+					},
+					rangeMax: {
+						x: zoompanxaxismax//,
+						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
+					},
+					speed: 0.1
+				},
+			},
+		},
+		annotation: {
+			drawTime: 'afterDatasetsDraw',
+			annotations: [{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartData0),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric0+'='+round(getAverage(chartData0),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData0,'y','max',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric0+'='+round(getLimit(chartData0,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData0,'y','min',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric0+'='+round(getLimit(chartData0,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartData1),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric1+'='+round(getAverage(chartData1),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData1,'y','max',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric1+'='+round(getLimit(chartData1,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData1,'y','min',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric1+'='+round(getLimit(chartData1,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			}
+		]}
+	};
+	var chartDataset = {
+		datasets: getDataSets(dataobject,chartTrafficTypes,chartunitmultiplier)
+	};
+	objchartname = new Chart(ctx,{
+		type: charttype,
+		options: chartOptions,
+		data: chartDataset
+	});
+	window['Chart_'+txtchartname]=objchartname;
+}
+
+
+function Draw_Chart_Summary(txtchartname){
+	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
+	var txttitle = 'Summary Usage';
+	var metric0 = 'Received';
+	var metric1 = 'Sent';
+	
+	var decimals = 2;
+	if(txtunity == 'B' || txtunity == 'KB'){
+		decimals = 0;
+	}
+	
+	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
+	var charttype = 'bar';
+	var dataobject0 = window[txtchartname+'_WeekSummary'];
+	if(typeof dataobject0 === 'undefined' || dataobject0 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	if(dataobject0.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	
+	var unique = [];
+	var chartTrafficTypes = [];
+	for(let i = 0; i < dataobject0.length; i++){
+		if(!unique[dataobject0[i].Metric]){
+			chartTrafficTypes.push(dataobject0[i].Metric);
+			unique[dataobject0[i].Metric] = 1;
+		}
+	}
+	
+	var chartData0 = dataobject0.filter(function(item){
+		return item.Metric == metric0;
+	}).map(function(d){return d.Value/chartunitmultiplier});
+	
+	var chartData1 = dataobject0.filter(function(item){
+		return item.Metric == metric1;
+	}).map(function(d){return d.Value/chartunitmultiplier});
+	
+	chartData0.reverse();
+	chartData1.reverse();
+	
+	unique = [];
+	var chartLabels = [];
+	for(let i = 0; i < dataobject0.length; i++){
+		if(!unique[dataobject0[i].Time]){
+			chartLabels.push(dataobject0[i].Time);
+			unique[dataobject0[i].Time] = 1;
+		}
+	}
+	
+	chartLabels.reverse();
+	
+	var objchartname=window['Chart_'+txtchartname];
+	
+	if(objchartname != undefined) objchartname.destroy();
+	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
+	var chartOptions = {
+		segmentShowStroke : false,
+		segmentStrokeColor : '#000',
+		animationEasing : 'easeOutQuart',
+		animationSteps : 100,
+		maintainAspectRatio: false,
+		animateScale : true,
+		hover: { mode: 'point' },
+		legend: {
+			display: true,
+			position: 'top',
+			reverse: false,
+			onClick: function (e,legendItem){
+				var index = legendItem.datasetIndex;
+				var ci = this.chart;
+				var meta = ci.getDatasetMeta(index);
+				
+				meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+				
+				if(ShowLines == 'line'){
+					var annotationline = '';
+					if(meta.hidden != true){
+						annotationline = 'line';
+					}
+					
+					if(ci.data.datasets[index].label == 'Received'){
+						for(aindex = 0; aindex < 3; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+					else if(ci.data.datasets[index].label == 'Sent'){
+						for(aindex = 3; aindex < 6; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+				}
+				
+				ci.update();
+			}
+		},
+		title: { display: true,text: txttitle },
+		tooltips: {
+			callbacks: {
+					title: function (tooltipItem,data){
+						return data.datasets[tooltipItem[0].datasetIndex].label;
+					},
+					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals)+' '+txtunitytip;}
+				},
+			itemSort: function(a,b){
+				return b.datasetIndex - a.datasetIndex;
+			},
+			mode: 'point',
+			position: 'cursor',
+			intersect: true
+		},
+		scales: {
+			xAxes: [{
+				type: 'category',
+				gridLines: { display: true,color: '#282828' },
+				ticks: {
+					display: true
+				}
+			}],
+			yAxes: [{
+				type: getChartScale($j('#'+txtchartname+'_Scale option:selected').val()),
+				gridLines: { display: false,color: '#282828' },
+				scaleLabel: { display: false,labelString: txtunity },
+				id: 'left-y-axis',
+				position: 'left',
+				ticks: {
+					display: true,
+					beginAtZero: true,
+					labels: {
+						index:  ['min','max'],
+						removeEmptyLines: true,
+					},
+					userCallback: LogarithmicFormatter
+				},
+			}]
+		},
+		plugins: {
+			zoom: {
+				pan: {
+					enabled: ChartPan,
+					mode: 'xy',
+					rangeMin: {
+						y: 0
+					}
+				},
+				zoom: {
+					enabled: true,
+					drag: DragZoom,
+					mode: 'xy',
+					rangeMin: {
+						y: 0
+					},
+					speed: 0.1
+				}
+			},
+		},
+		annotation: {
+			drawTime: 'afterDatasetsDraw',
+			annotations: [{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartData0),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric0+'='+round(getAverage(chartData0),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData0,'y','max',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric0+'='+round(getLimit(chartData0,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData0,'y','min',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric0+'='+round(getLimit(chartData0,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartData1),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric1+'='+round(getAverage(chartData1),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData1,'y','max',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric1+'='+round(getLimit(chartData1,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartData1,'y','min',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric1+'='+round(getLimit(chartData1,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			}
+		]}
+	};
+	var chartDataset = {
+		labels: chartLabels,
+		datasets: getDataSets(dataobject0,chartTrafficTypes,chartunitmultiplier)
+	};
+	objchartname = new Chart(ctx,{
+		type: charttype,
+		options: chartOptions,
+		data: chartDataset
+	});
+	window['Chart_'+txtchartname]=objchartname;
+}
+
+function Draw_Chart_Compare(txtchartname){
+	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
+	var txttitle = 'Compare Usage';
+	var metric0 = 'Received';
+	var metric1 = 'Sent';
+	
+	var decimals = 2;
+	if(txtunity == 'B' || txtunity == 'KB'){
+		decimals = 0;
+	}
+	
+	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
+	var txtunitx = 'day';
+	var zoompanxaxismax = moment().endOf('day');
+	var chartxaxismax = moment().endOf('day');
+	var chartxaxismin = moment().endOf('day').subtract(7,'days').subtract(12,'hours');
+	var charttype = 'bar';
+	var dataobject0 = window[txtchartname+'_WeekThis'];
+	if(typeof dataobject0 === 'undefined' || dataobject0 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	if(dataobject0.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	
+	var dataobject1 = window[txtchartname+'_WeekPrev'];
+	
+	var unique = [];
+	var chartTrafficTypes = [];
+	for(let i = 0; i < dataobject0.length; i++){
+		if(!unique[dataobject0[i].Metric]){
+			chartTrafficTypes.push(dataobject0[i].Metric);
+			unique[dataobject0[i].Metric] = 1;
+		}
+	}
+	
+	var chartData0 = dataobject0.filter(function(item){
+		return item.Metric == metric0;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartData1 = dataobject0.filter(function(item){
+		return item.Metric == metric1;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartData2 = dataobject1.filter(function(item){
+		return item.Metric == metric0;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartData3 = dataobject1.filter(function(item){
+		return item.Metric == metric1;
+	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	
+	var chartDataRx = chartData0.concat(chartData2);
+	var chartDataTx = chartData1.concat(chartData3);
+	
+	var objchartname=window['Chart_'+txtchartname];
+	
+	if(objchartname != undefined) objchartname.destroy();
+	var ctx = document.getElementById('divChart_'+txtchartname).getContext('2d');
+	var chartOptions = {
+		segmentShowStroke : false,
+		segmentStrokeColor : '#000',
+		animationEasing : 'easeOutQuart',
+		animationSteps : 100,
+		maintainAspectRatio: false,
+		animateScale : true,
+		hover: { mode: 'point' },
+		legend: {
+			display: true,
+			position: 'top',
+			reverse: false,
+			onClick: function (e,legendItem){
+				var index = legendItem.datasetIndex;
+				var ci = this.chart;
+				var meta = ci.getDatasetMeta(index);
+				
+				meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+				
+				if(ShowLines == 'line'){
+					var annotationline = '';
+					if(meta.hidden != true){
+						annotationline = 'line';
+					}
+					
+					if(ci.data.datasets[index].label == 'Received'){
+						for(aindex = 0; aindex < 3; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+					else if(ci.data.datasets[index].label == 'Sent'){
+						for(aindex = 3; aindex < 6; aindex++){
+							ci.options.annotation.annotations[aindex].type=annotationline;
+						}
+					}
+				}
+				
+				ci.update();
+			}
+		},
+		title: { display: true,text: txttitle },
+		tooltips: {
+			callbacks: {
+					title: function (tooltipItem,data){
+						return data.datasets[tooltipItem[0].datasetIndex].label;
+					},
+					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals)+' '+txtunitytip;}
+				},
+			itemSort: function(a,b){
+				return b.datasetIndex - a.datasetIndex;
+			},
+			mode: 'point',
+			position: 'cursor',
+			intersect: true
+		},
+		scales: {
+			xAxes: [{
+				type: 'time',
+				gridLines: { display: true,color: '#282828' },
+				ticks: {
+					min: chartxaxismin,
+					max: chartxaxismax,
+					display: true
+				},
+				time: {
+					parser: 'X',
+					unit: txtunitx,
+					stepSize: 1,
+					displayFormats: {day: 'dddd'}
+				}
+			}],
+			yAxes: [{
+				type: getChartScale($j('#'+txtchartname+'_Scale option:selected').val()),
+				gridLines: { display: false,color: '#282828' },
+				scaleLabel: { display: false,labelString: txtunity },
+				id: 'left-y-axis',
+				position: 'left',
+				ticks: {
+					display: true,
+					beginAtZero: true,
+					labels: {
+						index:  ['min','max'],
+						removeEmptyLines: true,
+					},
+					userCallback: LogarithmicFormatter
+				},
+			}]
+		},
+		plugins: {
+			zoom: {
+				pan: {
+					enabled: ChartPan,
+					mode: 'xy',
+					rangeMin: {
+						x: chartxaxismin,
+						y: 0
+					},
+					rangeMax: {
+						x: zoompanxaxismax//,
+						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
+					},
+				},
+				zoom: {
+					enabled: true,
+					drag: DragZoom,
+					mode: 'xy',
+					rangeMin: {
+						x: chartxaxismin,
+						y: 0
+					},
+					rangeMax: {
+						x: zoompanxaxismax//,
+						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
+					},
+					speed: 0.1
+				},
+			},
+		},
+		annotation: {
+			drawTime: 'afterDatasetsDraw',
+			annotations: [{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartDataRx),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric0+'='+round(getAverage(chartDataRx),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartDataRx,'y','max',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric0+'='+round(getLimit(chartDataRx,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartDataRx,'y','min',true),
+				borderColor: bordercolourlist[0],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric0+'='+round(getLimit(chartDataRx,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'avgline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getAverage(chartDataTx),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'center',
+					enabled: true,
+					xAdjust: 0,
+					yAdjust: 0,
+					content: 'Avg. '+metric1+'='+round(getAverage(chartDataTx),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'maxline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartDataTx,'y','max',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'right',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Max. '+metric1+'='+round(getLimit(chartDataTx,'y','max',true),decimals).toFixed(decimals)+txtunity,
+				}
+			},
+			{
+				//id: 'minline',
+				type: ShowLines,
+				mode: 'horizontal',
+				scaleID: 'left-y-axis',
+				value: getLimit(chartDataTx,'y','min',true),
+				borderColor: bordercolourlist[1],
+				borderWidth: 1,
+				borderDash: [5,5],
+				label: {
+					backgroundColor: 'rgba(0,0,0,0.3)',
+					fontFamily: 'sans-serif',
+					fontSize: 10,
+					fontStyle: 'bold',
+					fontColor: '#fff',
+					xPadding: 6,
+					yPadding: 6,
+					cornerRadius: 6,
+					position: 'left',
+					enabled: true,
+					xAdjust: 15,
+					yAdjust: 0,
+					content: 'Min. '+metric1+'='+round(getLimit(chartDataTx,'y','min',true),decimals).toFixed(decimals)+txtunity,
+				}
+			}
+		]}
+	};
+	var chartDataset = {
+		datasets: getDataSets_Compare(dataobject0,dataobject1,chartTrafficTypes,chartunitmultiplier)
+	};
+	objchartname = new Chart(ctx,{
+		type: charttype,
+		options: chartOptions,
+		data: chartDataset
+	});
+	window['Chart_'+txtchartname]=objchartname;
+}
+
+function getDataSets(objdata,objTrafficTypes,chartunitmultiplier){
+	var datasets = [];
+	
+	for(var i = 0; i < objTrafficTypes.length; i++){
+		var traffictypedata = objdata.filter(function(item){
+			return item.Metric == objTrafficTypes[i];
+		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+		
+		datasets.push({label: objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i],trendlineLinear: {style: trendcolourlist[i],lineStyle: "line",width: 5}});
+	}
+	return datasets;
+}
+
+function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultiplier){
+	var datasets = [];
+	
+	for(var i = 0; i < objTrafficTypes.length; i++){
+		var traffictypedata = objdata0.filter(function(item){
+			return item.Metric == objTrafficTypes[i];
+		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+		
+		datasets.push({ label: 'Current 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i],trendlineLinear: {style: trendcolourlist[i],lineStyle: "line",width: 5}});
+	}
+	for(var i = 0; i < objTrafficTypes.length; i++){
+		var traffictypedata = objdata1.filter(function(item){
+			return item.Metric == objTrafficTypes[i];
+		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+		
+		datasets.push({ label: 'Previous 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i+2],borderColor: bordercolourlist[i+2],trendlineLinear: {style: trendcolourlist[i+2],lineStyle: "line",width: 5}});
+	}
+	
+	return datasets;
+}
+
+function LogarithmicFormatter(tickValue,index,ticks){
+	var unit = this.options.scaleLabel.labelString;
+	var decimals = 2;
+	if(unit == 'B' || unit == 'KB'){
+		decimals = 0;
+	}
+	if(this.type != 'logarithmic'){
+		if(! isNaN(tickValue)){
+			return round(tickValue,decimals).toFixed(decimals)+' '+unit;
+		}
+		else{
+			return tickValue+' '+unit;
+		}
+	}
+	else{
+		var labelOpts =  this.options.ticks.labels || {};
+		var labelIndex = labelOpts.index || ['min','max'];
+		var labelSignificand = labelOpts.significand || [1,2,5];
+		var significand = tickValue / (Math.pow(10,Math.floor(Chart.helpers.log10(tickValue))));
+		var emptyTick = labelOpts.removeEmptyLines === true ? undefined : '';
+		var namedIndex = '';
+		if(index === 0){
+			namedIndex = 'min';
+		}
+		else if(index === ticks.length - 1){
+			namedIndex = 'max';
+		}
+		if(labelOpts === 'all' || labelSignificand.indexOf(significand) !== -1 || labelIndex.indexOf(index) !== -1 || labelIndex.indexOf(namedIndex) !== -1){
+			if(tickValue === 0){
+				return '0'+' '+unit;
+			}
+			else{
+				if(! isNaN(tickValue)){
+					return round(tickValue,decimals).toFixed(decimals)+' '+unit;
+				}
+				else{
+					return tickValue+' '+unit;
+				}
+			}
+		}
+		return emptyTick;
+	}
+};
+
+function getLimit(datasetname,axis,maxmin,isannotation){
+	var limit = 0;
+	var values;
+	if(axis == 'x'){
+		values = datasetname.map(function(o){ return o.x } );
+	}
+	else{
+		values = datasetname.map(function(o){
+			if(typeof o.y === 'undefined' || o.y == null || isNaN(o.y)){
+				return o;
+			}
+			else{
+				return o.y;
+			}
+		});
+	}
+	
+	values = values.filter(function(item){return ! isNaN(item);});
+	
+	if(maxmin == 'max'){
+		limit=Math.max.apply(Math,values);
+	}
+	else{
+		limit=Math.min.apply(Math,values);
+	}
+	if(maxmin == 'max' && limit == 0 && isannotation == false){
+		limit = 1;
+	}
+	return limit;
+}
+
+function getAverage(datasetname){
+	var total = 0;
+	var modifier = 0;
+	
+	for(var i = 0; i < datasetname.length; i++){
+		if(typeof datasetname[i].y === 'undefined' || datasetname[i].y == null || isNaN(datasetname[i].y)){
+			if(isNaN(datasetname[i])){
+				modifier=modifier+1;
+				total += 0;
+			}
+			else{
+				total += (datasetname[i]*1);
+			}
+		}
+		else{
+			total += (datasetname[i].y*1);
+		}
+	}
+	var avg = total / (datasetname.length - modifier);
+	return avg;
+}
+
+function round(value,decimals){
+	return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
+function ToggleLines(){
+	if(ShowLines == ''){
+		ShowLines = 'line';
+		SetCookie('ShowLines','line');
+	}
+	else{
+		ShowLines = '';
+		SetCookie('ShowLines','');
+	}
+	
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		for(var i2 = 0; i2 < chartobj.options.annotation.annotations.length; i2++){
+			chartobj.options.annotation.annotations[i2].type=ShowLines;
+		}
+		chartobj.update();
+	}
+}
+
+function ToggleFill(){
+	if(ShowFill == 'origin'){
+		ShowFill = 'false';
+		SetCookie('ShowFill','false');
+	}
+	else{
+		ShowFill = 'origin';
+		SetCookie('ShowFill','origin');
+	}
+	
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.data.datasets[0].fill=ShowFill;
+		chartobj.data.datasets[1].fill=ShowFill;
+		chartobj.update();
+	}
+}
+
+function ToggleDragZoom(button){
+	var drag = true;
+	var pan = false;
+	var buttonvalue = '';
+	if(button.value.indexOf('On') != -1){
+		drag = false;
+		pan = true;
+		DragZoom = false;
+		ChartPan = true;
+		buttonvalue = 'Drag Zoom Off';
+	}
+	else{
+		drag = true;
+		pan = false;
+		DragZoom = true;
+		ChartPan = false;
+		buttonvalue = 'Drag Zoom On';
+	}
+	
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.options.plugins.zoom.zoom.drag = drag;
+		chartobj.options.plugins.zoom.pan.enabled = pan;
+		chartobj.update();
+		button.value = buttonvalue;
+	}
+}
+
+function ResetZoom(){
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		chartobj.resetZoom();
+	}
+}
+
+function RedrawAllCharts(){
+	$j('#DataUsage_Interval').val(GetCookie('DataUsage_Interval','number'));
+	changePeriod(document.getElementById('DataUsage_Interval'));
+	$j('#DataUsage_Period').val(GetCookie('DataUsage_Period','number'));
+	$j('#DataUsage_Unit').val(GetCookie('DataUsage_Unit','number'));
+	$j('#DataUsage_Scale').val(GetCookie('DataUsage_Scale','number'));
+	Draw_Chart_NoData('DataUsage','Data loading...');
+	Draw_Chart_NoData('CompareUsage','Data loading...');
+	for(var i = 0; i < chartlist.length; i++){
+		for(var i2 = 0; i2 < dataintervallist.length; i2++){
+			d3.csv('/ext/dn-vnstat/csv/DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,'DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]));
+		}
+	}
+	$j('#CompareUsage_Interval').val(GetCookie('CompareUsage_Interval','number'));
+	$j('#CompareUsage_Unit').val(GetCookie('CompareUsage_Unit','number'));
+	$j('#CompareUsage_Scale').val(GetCookie('CompareUsage_Scale','number'));
+	d3.csv('/ext/dn-vnstat/csv/WeekThis.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekThis'));
+	d3.csv('/ext/dn-vnstat/csv/WeekPrev.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekPrev'));
+	d3.csv('/ext/dn-vnstat/csv/WeekSummary.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekSummary'));
+}
+
+function SetGlobalDataset(txtchartname,dataobject){
+	window[txtchartname] = dataobject;
+	currentNoCharts++;
+	if(currentNoCharts == maxNoCharts){
+		Draw_Chart('DataUsage');
+		if(getSummaryInterval($j('#CompareUsage_Interval option:selected').val()) == 'week'){
+			Draw_Chart_Summary('CompareUsage');
+		}
+		else if(getSummaryInterval($j('#CompareUsage_Interval option:selected').val()) == 'day'){
+			Draw_Chart_Compare('CompareUsage');
+		}
+	}
+}
+
+function getTimeFormat(value,format){
+	var timeformat;
+	
+	if(format == 'axis'){
+		if(value == 0){
+			timeformat = {
+				millisecond: 'HH:mm:ss.SSS',
+				second: 'HH:mm:ss',
+				minute: 'HH:mm',
+				hour: 'HH:mm'
+			}
+		}
+		else if(value == 1){
+			timeformat = {
+				millisecond: 'h:mm:ss.SSS A',
+				second: 'h:mm:ss A',
+				minute: 'h:mm A',
+				hour: 'h A'
+			}
+		}
+	}
+	else if(format == 'tooltip'){
+		if(value == 0){
+			timeformat = 'YYYY-MM-DD HH:mm:ss';
+		}
+		else if(value == 1){
+			timeformat = 'YYYY-MM-DD h:mm:ss A';
+		}
+	}
+	
+	return timeformat;
+}
+
+function getChartPeriod(period){
+	var chartperiod = 'daily';
+	if(period == 0) chartperiod = 'daily';
+	else if(period == 1) chartperiod = 'weekly';
+	else if(period == 2) chartperiod = 'monthly';
+	return chartperiod;
+}
+
+function getChartUnitMultiplier(period){
+	return Math.pow(1000,period);
+}
+
+function getChartScale(scale){
+	var chartscale = '';
+	if(scale == 0){
+		chartscale = 'linear';
+	}
+	else if(scale == 1){
+		chartscale = 'logarithmic';
+	}
+	return chartscale;
+}
+
+function getChartInterval(layout){
+	var charttype = 'fiveminute';
+	if(layout == 0) charttype = 'fiveminute';
+	else if(layout == 1) charttype = 'hour';
+	else if(layout == 2) charttype = 'day';
+	return charttype;
+}
+
+function getSummaryInterval(layout){
+	var charttype = 'day';
+	if(layout == 0) charttype = 'day';
+	else if(layout == 1) charttype = 'week';
+	return charttype;
+}
+
+function changeAllCharts(e){
+	value = e.value * 1;
+	SetCookie(e.id,value);
+	Draw_Chart('DataUsage');
+	if(getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'week'){
+		Draw_Chart_Compare('CompareUsage');
+	}
+	else if(getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'day'){
+		Draw_Chart_Summary('CompareUsage');
+	}
+}
+
+function changeChart(e){
+	value = e.value * 1;
+	name = e.id.substring(0,e.id.lastIndexOf('_'));
+	SetCookie(e.id,value);
+	if(name == 'DataUsage'){
+		Draw_Chart(name);
+	}
+	else if(name == 'CompareUsage' && getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'week'){
+		Draw_Chart_Summary(name);
+	}
+	else if(name == 'CompareUsage' && getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'day'){
+		Draw_Chart_Compare(name);
+	}
+}
+
+function changePeriod(e){
+	value = e.value * 1;
+	name = e.id.substring(0,e.id.indexOf('_'));
+	if(value == 2){
+		$j('select[id="'+name+'_Period"] option:contains(24)').text('Today');
+	}
+	else{
+		$j('select[id="'+name+'_Period"] option:contains("Today")').text('Last 24 hours');
+	}
+}
+
 </script>
 </head>
 <body onload="initial();" onunload="return unload_body();">
