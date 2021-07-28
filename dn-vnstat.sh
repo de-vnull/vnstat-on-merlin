@@ -1369,11 +1369,10 @@ Check_Bandwidth_Usage(){
 	rawbandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.month[-1] | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
 	
-	scalefactor=$((1000*1000*1000))
+	bandwidthused=$(echo "$rawbandwidthused" | awk '{printf("%.2f\n", $1/(1000*1000*1000));}')
 	if AllowanceUnit check | grep -q T; then
-		scalefactor=$((1000*1000*1000))
+		bandwidthused=$(echo "$rawbandwidthused" | awk '{printf("%.2f\n", $1/(1000*1000*1000*1000));}')
 	fi
-	bandwidthused=$(echo "$rawbandwidthused $scalefactor" | awk '{printf("%.2f\n", $1/$2);}')
 	
 	bandwidthpercentage=""
 	usagestring=""
