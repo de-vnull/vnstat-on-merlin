@@ -1454,27 +1454,6 @@ Check_Bandwidth_Usage(){
 	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 }
 
-Enforce_Data_Allowance(){
-	case "$1" in
-		create)
-			ACTIONS="-D -I"
-		;;
-		delete)
-			ACTIONS="-D"
-		;;
-	esac
-	
-	IFACE_WAN="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-	for ACTION in $ACTIONS; do
-		iptables "$ACTION" FORWARD -i "$IFACE_WAN" -j REJECT
-		iptables "$ACTION" FORWARD -i tun1+ -j REJECT
-		iptables "$ACTION" FORWARD -i tun2+ -j REJECT
-		iptables "$ACTION" FORWARD -o "$IFACE_WAN" -j REJECT
-		iptables "$ACTION" FORWARD -o tun1+ -j REJECT
-		iptables "$ACTION" FORWARD -o tun2+ -j REJECT
-	done
-}
-
 Process_Upgrade(){
 	if [ ! -f "$SCRIPT_STORAGE_DIR/.vnstatusage" ]; then
 		echo "var usagethreshold = false;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
