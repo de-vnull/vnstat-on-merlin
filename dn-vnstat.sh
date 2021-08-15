@@ -443,8 +443,8 @@ Conf_Exists(){
 			sed -i 's/^OutputStyle.*$/OutputStyle 0/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if ! grep -q '^MonthFormat "%Y-%m (%d)"' "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m (%d)"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		if ! grep -q '^MonthFormat "%Y-%m ('"$(AllowanceStartDay check)"')"' "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m ('"$(AllowanceStartDay check)"')"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
 		
