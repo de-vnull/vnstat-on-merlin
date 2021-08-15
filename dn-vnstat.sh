@@ -468,9 +468,12 @@ Conf_Exists(){
 		if ! grep -q "ENFORCEALLOWANCE" "$SCRIPT_CONF"; then
 			echo "ENFORCEALLOWANCE=true" >> "$SCRIPT_CONF"
 		fi
+		if ! grep -q "OUTPUTTIMEMODE" "$SCRIPT_CONF"; then
+			echo "OUTPUTTIMEMODE=unix" >> "$SCRIPT_CONF"
+		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "ENFORCEALLOWANCE=true"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "ENFORCEALLOWANCE=true"; echo "OUTPUTTIMEMODE=unix"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }
@@ -822,6 +825,23 @@ ScriptStorageLocation(){
 	esac
 }
 
+OutputTimeMode(){
+	case "$1" in
+		unix)
+			sed -i 's/^OUTPUTTIMEMODE.*$/OUTPUTTIMEMODE=unix/' "$SCRIPT_CONF"
+			Generate_CSVs
+		;;
+		non-unix)
+			sed -i 's/^OUTPUTTIMEMODE.*$/OUTPUTTIMEMODE=non-unix/' "$SCRIPT_CONF"
+			Generate_CSVs
+		;;
+		check)
+			OUTPUTTIMEMODE=$(grep "OUTPUTTIMEMODE" "$SCRIPT_CONF" | cut -f2 -d"=")
+			echo "$OUTPUTTIMEMODE"
+		;;
+	esac
+}
+
 Generate_CSVs(){
 	renice 15 $$
 	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
@@ -973,7 +993,8 @@ Generate_CSVs(){
 	mkdir -p "$tmpoutputdir"
 	mv "$CSV_OUTPUT_DIR/CompleteResults"*.htm "$tmpoutputdir/."
 	
-	OUTPUTTIMEMODE="non-unix"
+	OUTPUTTIMEMODE="$(OutputTimeMode check)"
+	
 	if [ "$OUTPUTTIMEMODE" = "unix" ]; then
 		find "$tmpoutputdir/" -name '*.htm' -exec sh -c 'i="$1"; mv -- "$i" "${i%.htm}.csv"' _ {} \;
 	elif [ "$OUTPUTTIMEMODE" = "non-unix" ]; then
@@ -1058,9 +1079,9 @@ Generate_Stats(){
 	printf "vnstats as of: %s\\n\\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	{
 		$VNSTAT_COMMAND -h 25 -i "$interface";
-        	$VNSTAT_COMMAND -d 8 -i "$interface";
-        	$VNSTAT_COMMAND -m 6 -i "$interface";
-        	$VNSTAT_COMMAND -y 5 -i "$interface";
+		$VNSTAT_COMMAND -d 8 -i "$interface";
+		$VNSTAT_COMMAND -m 6 -i "$interface";
+		$VNSTAT_COMMAND -y 5 -i "$interface";
 	} >> "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && cat "$VNSTAT_OUTPUT_FILE"
 	[ -z "$1" ] && printf "\\n"
@@ -1088,9 +1109,9 @@ Generate_Email(){
 		elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# new OpenSSL 1.1.x non-converted password
 			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-		elif /usr/sbin/openssl aes-256-cbc "$emailPwEnc" -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+		elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# new OpenSSL 1.1.x converted password with -pbkdf2 flag
-			PASSWORD="$(/usr/sbin/openssl aes-256-cbc "$emailPwEnc" -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+			PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
 		fi
 		
 		emailtype="$1"
@@ -1185,13 +1206,16 @@ Generate_Email(){
 		--ssl-reqd \
 		--user "$USERNAME:$PASSWORD" $SSL_FLAG
 		if [ $? -eq 0 ]; then
+			echo ""
 			[ -z "$5" ] && Print_Output true "Email sent successfully" "$PASS"
 			rm -f /tmp/mail.txt
+			PASSWORD=""
 			return 0
 		else
 			echo ""
 			[ -z "$5" ] && Print_Output true "Email failed to send" "$ERR"
 			rm -f /tmp/mail.txt
+			PASSWORD=""
 			return 1
 		fi
 	fi
@@ -1548,6 +1572,7 @@ MainMenu(){
 	printf "6.    Set start day of cycle for bandwidth allowance\\n      Currently: ${SETTING}%s${CLEARFORMAT}\\n\\n" "Day $(AllowanceStartDay check) of month"
 	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s${CLEARFORMAT}\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
 	printf "v.    Edit vnstat config\\n\\n"
+	printf "t.    Toggle time output mode\\n      Currently ${SETTING}%s${CLEARFORMAT} time values will be used for CSV exports\\n\\n" "$(OutputTimeMode check)"
 	printf "s.    Toggle storage location for stats and config\\n      Current location is ${SETTING}%s${CLEARFORMAT} \\n\\n" "$(ScriptStorageLocation check)"
 	printf "u.    Check for updates\\n"
 	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
@@ -1629,6 +1654,15 @@ MainMenu(){
 				printf "\\n"
 				if Check_Lock menu; then
 					Menu_Edit
+				fi
+				break
+			;;
+			t)
+				printf "\\n"
+				if [ "$(OutputTimeMode check)" = "unix" ]; then
+					OutputTimeMode non-unix
+				elif [ "$(OutputTimeMode check)" = "non-unix" ]; then
+					OutputTimeMode unix
 				fi
 				break
 			;;
