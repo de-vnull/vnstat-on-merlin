@@ -465,15 +465,12 @@ Conf_Exists(){
 		if ! grep -q "STORAGELOCATION" "$SCRIPT_CONF"; then
 			echo "STORAGELOCATION=jffs" >> "$SCRIPT_CONF"
 		fi
-		if ! grep -q "ENFORCEALLOWANCE" "$SCRIPT_CONF"; then
-			echo "ENFORCEALLOWANCE=true" >> "$SCRIPT_CONF"
-		fi
 		if ! grep -q "OUTPUTTIMEMODE" "$SCRIPT_CONF"; then
 			echo "OUTPUTTIMEMODE=unix" >> "$SCRIPT_CONF"
 		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "ENFORCEALLOWANCE=true"; echo "OUTPUTTIMEMODE=unix"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "OUTPUTTIMEMODE=unix"; } > "$SCRIPT_CONF"
 		return 1
 	fi
 }
