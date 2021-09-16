@@ -2205,7 +2205,7 @@ function changePeriod(e){
 </thead>
 <tr>
 <td colspan="2" style="padding: 0px;">
-<textarea cols="65" rows="35" wrap="off" readonly="readonly" id="VnStatOuput" class="textarea_log_table" style="width:738px;font-family:'Courier New',Courier,mono;font-size:11px;border:none;padding:5px;text-align:center;">If you are seeing this message, it means you don't have a vntstat stats file present on your router.
+<textarea cols="65" rows="35" wrap="off" readonly="readonly" disabled id="VnStatOuput" class="textarea_log_table" style="width:738px;font-family:'Courier New',Courier,mono;font-size:11px;border:none;padding:5px;text-align:center;">If you are seeing this message, it means you don't have a vntstat stats file present on your router.
 Please use option 1 at the dn-vnstat CLI menu to create it</textarea>
 </td>
 </tr>
