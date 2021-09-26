@@ -1090,11 +1090,11 @@ Generate_Email(){
 		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
 		Print_Output true "Diversion can be installed using amtm" "$ERR"
 		return 1
-	elif [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2)" = "4.2.0" ] && { [ ! -f /jffs/addons/amtm/mail/emailpw.enc ] || [ ! -f //jffs/addons/amtm/mail/email.conf ]; }; then
+	elif [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -ge 420 ] && { [ ! -f /jffs/addons/amtm/mail/emailpw.enc ] || [ ! -f //jffs/addons/amtm/mail/email.conf ]; }; then
 		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
 		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
 		return 1
-	elif [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2)" != "4.2.0" ] && { [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; }; then
+	elif [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -lt 420 ] && { [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; }; then
 		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
 		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
 		return 1
