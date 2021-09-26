@@ -1101,8 +1101,13 @@ Generate_Email(){
 	else
 		# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
 		# Email settings #
-		. /opt/share/diversion/.conf/email.conf
-		PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
+		if [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -lt 420 ]; then
+			. /opt/share/diversion/.conf/email.conf
+			PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
+		else
+			. /jffs/addons/amtm/mail/email.conf
+			PWENCFILE=/jffs/addons/amtm/mail/emailpw.enc
+		fi
 		PASSWORD=""
 		if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# old OpenSSL 1.0.x
