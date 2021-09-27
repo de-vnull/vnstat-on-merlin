@@ -26,7 +26,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v2.0.1"
+readonly SCRIPT_VERSION="v2.0.2"
 SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -1090,15 +1090,24 @@ Generate_Email(){
 		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
 		Print_Output true "Diversion can be installed using amtm" "$ERR"
 		return 1
-	elif [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; then
+	elif [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -ge 420 ] && { [ ! -f /jffs/addons/amtm/mail/emailpw.enc ] || [ ! -f //jffs/addons/amtm/mail/email.conf ]; }; then
+		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
+		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
+		return 1
+	elif [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -lt 420 ] && { [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; }; then
 		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
 		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
 		return 1
 	else
 		# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
 		# Email settings #
-		. /opt/share/diversion/.conf/email.conf
-		PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
+		if [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -lt 420 ]; then
+			. /opt/share/diversion/.conf/email.conf
+			PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
+		else
+			. /jffs/addons/amtm/mail/email.conf
+			PWENCFILE=/jffs/addons/amtm/mail/emailpw.enc
+		fi
 		PASSWORD=""
 		if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
 			# old OpenSSL 1.0.x
