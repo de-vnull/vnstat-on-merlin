@@ -447,7 +447,7 @@ Conf_Exists(){
 			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if grep "^UseUTC" "$SCRIPT_STORAGE_DIR/vnstat.conf" && ! grep -q "^UseUTC 1" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+		if grep -q "^UseUTC" "$SCRIPT_STORAGE_DIR/vnstat.conf" && ! grep -q "^UseUTC 1" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^UseUTC.*$/UseUTC 1/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
