@@ -139,6 +139,7 @@
 * If you want to run vnstat without the UI, __are running Diversion__, and still wish to have a daily email, follow these steps:
 
 	- Copy __div-email.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/VoM_CLI/scripts) to /jffs/scripts. This script sends vnstat reports by email to one or more users. Uses the email configuration from Diversion.
+	- __ **Note: for `amtm` v 3.2.1 or later, use `div-email-amtm-3-2-1.sh`**__ - rename to `div-email.sh` once copied - this contains the new path to the encrypted password file and path to openssl (required post-3.2.1).
 	- Copy __vnstat-stats.sh__ script from this location (https://github.com/de-vnull/vnstat-on-merlin/tree/VoM_CLI/scripts) to /jffs/scripts. This script concatenates the daily, weekly and monthly usage into a text file which is part of the daily email.
 	- Note: you man need to add the _Equifax_Secure_Certificate_Authority.pem_ file to /jffs/scripts if you get an error message (gmail particularly).
 
