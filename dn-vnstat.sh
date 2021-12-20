@@ -1090,144 +1090,130 @@ Generate_Stats(){
 }
 
 Generate_Email(){
-	if [ ! -f /opt/bin/diversion ]; then
-		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and Diversion is not installed" "$ERR"
-		Print_Output true "Diversion can be installed using amtm" "$ERR"
-		return 1
-	elif [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -ge 420 ] && { [ ! -f /jffs/addons/amtm/mail/emailpw.enc ] || [ ! -f //jffs/addons/amtm/mail/email.conf ]; }; then
-		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
-		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
-		return 1
-	elif [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -lt 420 ] && { [ ! -f /opt/share/diversion/.conf/emailpw.enc ] || [ ! -f /opt/share/diversion/.conf/email.conf ]; }; then
-		Print_Output true "$SCRIPT_NAME relies on Diversion to send email summaries, and email settings have not been configured" "$ERR"
-		Print_Output true "Navigate to amtm > 1 (Diversion) > c (communication) > 5 (edit email settings, test email) to set this up" "$ERR"
-		return 1
+	if [ -f /jffs/addons/amtm/mail/email.conf ] && [ -f /jffs/addons/amtm/mail/emailpw.enc ]; then
+		. /jffs/addons/amtm/mail/email.conf
+		PWENCFILE=/jffs/addons/amtm/mail/emailpw.enc
 	else
-		# Adapted from elorimer snbforum's script leveraging Diversion email credentials - agreed by thelonelycoder as well
-		# Email settings #
-		if [ "$(grep "thisVERSION" /opt/share/diversion/.conf/diversion.conf | cut -d'=' -f2 | sed 's/\.//g')" -lt 420 ]; then
-			. /opt/share/diversion/.conf/email.conf
-			PWENCFILE=/opt/share/diversion/.conf/emailpw.enc
-		else
-			. /jffs/addons/amtm/mail/email.conf
-			PWENCFILE=/jffs/addons/amtm/mail/emailpw.enc
-		fi
-		PASSWORD=""
-		if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-			# old OpenSSL 1.0.x
-			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-		elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-			# new OpenSSL 1.1.x non-converted password
-			PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-		elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
-			# new OpenSSL 1.1.x converted password with -pbkdf2 flag
-			PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
-		fi
-		
-		emailtype="$1"
-		if [ "$emailtype" = "daily" ]; then
-			Print_Output true "Attempting to send summary statistic email"
-			if [ "$(DailyEmail check)" = "text" ];  then
-				# plain text email to send #
-				{
-					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>"
-					echo "To: \"$TO_NAME\" <$TO_ADDRESS>"
-					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")"
-					echo "Date: $(date -R)"
-					echo ""
-					printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
-				} > /tmp/mail.txt
-				cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
-			elif [ "$(DailyEmail check)" = "html" ]; then
-				# html message to send #
-				{
-					echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>"
-					echo "To: \"$TO_NAME\" <$TO_ADDRESS>"
-					echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")"
-					echo "Date: $(date -R)"
-					echo "MIME-Version: 1.0"
-					echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\""
-					echo "hello there"
-					echo ""
-					echo "--MULTIPART-MIXED-BOUNDARY"
-					echo "Content-Type: multipart/related; boundary=\"MULTIPART-RELATED-BOUNDARY\""
-					echo ""
-					echo "--MULTIPART-RELATED-BOUNDARY"
-					echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\""
-				} > /tmp/mail.txt
-				
-				echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
-				echo "<p>$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
-				
-				outputs="s hg d t m"
-				for output in $outputs; do
-					echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
-				done
-				
-				echo "</body></html>" >> /tmp/message.html
-				
-				message_base64="$(openssl base64 -A < /tmp/message.html)"
-				rm -f /tmp/message.html
-				
-				{
-					echo ""
-					echo "--MULTIPART-ALTERNATIVE-BOUNDARY"
-					echo "Content-Type: text/html; charset=utf-8"
-					echo "Content-Transfer-Encoding: base64"
-					echo ""
-					echo "$message_base64"
-					echo ""
-					echo "--MULTIPART-ALTERNATIVE-BOUNDARY--"
-					echo ""
-				} >> /tmp/mail.txt
-				
-				for output in $outputs; do
-					image_base64="$(openssl base64 -A < "$IMAGE_OUTPUT_DIR/vnstat_$output.png")"
-					Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
-				done
-				
-				Encode_Text vnstat.txt "$(cat "$VNSTAT_OUTPUT_FILE")" /tmp/mail.txt
-				
-				{
-					echo "--MULTIPART-RELATED-BOUNDARY--"
-					echo ""
-					echo "--MULTIPART-MIXED-BOUNDARY--"
-				} >> /tmp/mail.txt
-			fi
-		elif [ "$emailtype" = "usage" ]; then
-			[ -z "$5" ] && Print_Output true "Attempting to send bandwidth usage email"
-			usagepercentage="$2"
-			usagestring="$3"
+		Print_Output true "$SCRIPT_NAME relies on amtm to send email summaries and email settings have not been configured" "$ERR"
+		Print_Output true "Navigate to amtm > em (email settings) to set them up" "$ERR"
+		return 1
+	fi
+	
+	PASSWORD=""
+	if /usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+		# old OpenSSL 1.0.x
+		PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+	elif /usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+		# new OpenSSL 1.1.x non-converted password
+		PASSWORD="$(/usr/sbin/openssl aes-256-cbc -d -md md5 -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+	elif /usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi >/dev/null 2>&1 ; then
+		# new OpenSSL 1.1.x converted password with -pbkdf2 flag
+		PASSWORD="$(/usr/sbin/openssl aes-256-cbc $emailPwEnc -d -in "$PWENCFILE" -pass pass:ditbabot,isoi 2>/dev/null)"
+	fi
+	
+	emailtype="$1"
+	if [ "$emailtype" = "daily" ]; then
+		Print_Output true "Attempting to send summary statistic email"
+		if [ "$(DailyEmail check)" = "text" ];  then
 			# plain text email to send #
 			{
 				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>"
 				echo "To: \"$TO_NAME\" <$TO_ADDRESS>"
-				echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")"
+				echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")"
 				echo "Date: $(date -R)"
 				echo ""
+				printf "%s\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
 			} > /tmp/mail.txt
-			printf "%s" "$usagestring" >> /tmp/mail.txt
+			cat "$VNSTAT_OUTPUT_FILE" >>/tmp/mail.txt
+		elif [ "$(DailyEmail check)" = "html" ]; then
+			# html message to send #
+			{
+				echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>"
+				echo "To: \"$TO_NAME\" <$TO_ADDRESS>"
+				echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat-stats as of $(date +"%H.%M on %F")"
+				echo "Date: $(date -R)"
+				echo "MIME-Version: 1.0"
+				echo "Content-Type: multipart/mixed; boundary=\"MULTIPART-MIXED-BOUNDARY\""
+				echo "hello there"
+				echo ""
+				echo "--MULTIPART-MIXED-BOUNDARY"
+				echo "Content-Type: multipart/related; boundary=\"MULTIPART-RELATED-BOUNDARY\""
+				echo ""
+				echo "--MULTIPART-RELATED-BOUNDARY"
+				echo "Content-Type: multipart/alternative; boundary=\"MULTIPART-ALTERNATIVE-BOUNDARY\""
+			} > /tmp/mail.txt
+			
+			echo "<html><body><p>Welcome to your dn-vnstat stats email!</p>" > /tmp/message.html
+			echo "<p>$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')</p>" >> /tmp/message.html
+			
+			outputs="s hg d t m"
+			for output in $outputs; do
+				echo "<p><img src=\"cid:vnstat_$output.png\"></p>" >> /tmp/message.html
+			done
+			
+			echo "</body></html>" >> /tmp/message.html
+			
+			message_base64="$(openssl base64 -A < /tmp/message.html)"
+			rm -f /tmp/message.html
+			
+			{
+				echo ""
+				echo "--MULTIPART-ALTERNATIVE-BOUNDARY"
+				echo "Content-Type: text/html; charset=utf-8"
+				echo "Content-Transfer-Encoding: base64"
+				echo ""
+				echo "$message_base64"
+				echo ""
+				echo "--MULTIPART-ALTERNATIVE-BOUNDARY--"
+				echo ""
+			} >> /tmp/mail.txt
+			
+			for output in $outputs; do
+				image_base64="$(openssl base64 -A < "$IMAGE_OUTPUT_DIR/vnstat_$output.png")"
+				Encode_Image "vnstat_$output.png" "$image_base64" /tmp/mail.txt
+			done
+			
+			Encode_Text vnstat.txt "$(cat "$VNSTAT_OUTPUT_FILE")" /tmp/mail.txt
+			
+			{
+				echo "--MULTIPART-RELATED-BOUNDARY--"
+				echo ""
+				echo "--MULTIPART-MIXED-BOUNDARY--"
+			} >> /tmp/mail.txt
 		fi
-		
-		#Send Email
-		/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
-		--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
-		--upload-file /tmp/mail.txt \
-		--ssl-reqd \
-		--user "$USERNAME:$PASSWORD" $SSL_FLAG
-		if [ $? -eq 0 ]; then
+	elif [ "$emailtype" = "usage" ]; then
+		[ -z "$5" ] && Print_Output true "Attempting to send bandwidth usage email"
+		usagepercentage="$2"
+		usagestring="$3"
+		# plain text email to send #
+		{
+			echo "From: \"$FRIENDLY_ROUTER_NAME\" <$FROM_ADDRESS>"
+			echo "To: \"$TO_NAME\" <$TO_ADDRESS>"
+			echo "Subject: $FRIENDLY_ROUTER_NAME - vnstat data usage $usagepercentage warning - $(date +"%H.%M on %F")"
+			echo "Date: $(date -R)"
 			echo ""
-			[ -z "$5" ] && Print_Output true "Email sent successfully" "$PASS"
-			rm -f /tmp/mail.txt
-			PASSWORD=""
-			return 0
-		else
-			echo ""
-			[ -z "$5" ] && Print_Output true "Email failed to send" "$ERR"
-			rm -f /tmp/mail.txt
-			PASSWORD=""
-			return 1
-		fi
+		} > /tmp/mail.txt
+		printf "%s" "$usagestring" >> /tmp/mail.txt
+	fi
+	
+	#Send Email
+	/usr/sbin/curl -s --show-error --url "$PROTOCOL://$SMTP:$PORT" \
+	--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
+	--upload-file /tmp/mail.txt \
+	--ssl-reqd \
+	--user "$USERNAME:$PASSWORD" $SSL_FLAG
+	if [ $? -eq 0 ]; then
+		echo ""
+		[ -z "$5" ] && Print_Output true "Email sent successfully" "$PASS"
+		rm -f /tmp/mail.txt
+		PASSWORD=""
+		return 0
+	else
+		echo ""
+		[ -z "$5" ] && Print_Output true "Email failed to send" "$ERR"
+		rm -f /tmp/mail.txt
+		PASSWORD=""
+		return 1
 	fi
 }
 
