@@ -447,10 +447,6 @@ Conf_Exists(){
 			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		if grep -q "^UseUTC" "$SCRIPT_STORAGE_DIR/vnstat.conf" && ! grep -q "^UseUTC 1" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^UseUTC.*$/UseUTC 1/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-			restartvnstat="true"
-		fi
 		
 		if [ "$restartvnstat" = "true" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
@@ -1504,8 +1500,8 @@ Process_Upgrade(){
 		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default.v1" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.default" 2>/dev/null
 	fi
 	
-	if ! grep -q "^UseUTC 1" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-		sed -i "/^DatabaseSynchronous/a\\\n# Enable or disable using UTC as timezone in the database for all entries.\n# When enabled, all entries added to the database will use UTC regardless of\n# the configured system timezone. When disabled, the configured system timezone\n# will be used. Changing this setting will not result in already existing data to be modified.\n# 1 = enabled, 0 = disabled.\nUseUTC 1" "$SCRIPT_STORAGE_DIR/vnstat.conf"
+	if ! grep -q "^UseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+		sed -i "/^DatabaseSynchronous/a\\\n# Enable or disable using UTC as timezone in the database for all entries.\n# When enabled, all entries added to the database will use UTC regardless of\n# the configured system timezone. When disabled, the configured system timezone\n# will be used. Changing this setting will not result in already existing data to be modified.\n# 1 = enabled, 0 = disabled.\nUseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"
 		restartvnstat="true"
 	fi
 	
