@@ -917,7 +917,7 @@ Generate_CSVs(){
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_this_${metric}.tmp"
-			echo "SELECT '$metric' Metric,strftime('%s',[date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-7 day'));"
+			echo "SELECT '$metric' Metric,strftime('%s',[date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
 		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
 			sleep 1
@@ -926,7 +926,7 @@ Generate_CSVs(){
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_prev_${metric}.tmp"
-			echo "SELECT '$metric' Metric,strftime('%s',[date],'+7 day') Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-7 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-14 day'));"
+			echo "SELECT '$metric' Metric,strftime('%s',[date],'+7 day') Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
 		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
 			sleep 1
@@ -937,7 +937,7 @@ Generate_CSVs(){
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_summary_this_${metric}.tmp"
-			echo "SELECT '$metric' Metric,'Current 7 days' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-7 day'));"
+			echo "SELECT '$metric' Metric,'Current 7 days' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
 		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
 			sleep 1
@@ -946,7 +946,7 @@ Generate_CSVs(){
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_summary_prev_${metric}.tmp"
-			echo "SELECT '$metric' Metric,'Previous 7 days' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-7 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-14 day'));"
+			echo "SELECT '$metric' Metric,'Previous 7 days' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
 		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
 			sleep 1
@@ -955,7 +955,7 @@ Generate_CSVs(){
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_summary_prev2_${metric}.tmp"
-			echo "SELECT '$metric' Metric,'2 weeks ago' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-14 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','localtime','start of day','utc','+1 day','-21 day'));"
+			echo "SELECT '$metric' Metric,'2 weeks ago' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-21 day'));"
 		} > /tmp/dn-vnstat.sql
 		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
 			sleep 1
