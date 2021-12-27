@@ -2,6 +2,10 @@ var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
 var maxNoCharts = 12;
 var currentNoCharts = 0;
 
+var ShowTrendlines = GetCookie('ShowTrendlines','string');
+if(ShowTrendlines == ''){
+	ShowTrendlines='0';
+}
 var ShowLines = GetCookie('ShowLines','string');
 var ShowFill = GetCookie('ShowFill','string');
 if(ShowFill == ''){
@@ -22,6 +26,7 @@ var timeunitlist = ['hour','day','day'];
 var intervallist = [24,7,30];
 var bordercolourlist= ['#c5c5ce','#0ec009','#956222','#38959d'];
 var backgroundcolourlist = ['rgba(197,197,206,0.5)','rgba(14,192,9,0.5)','rgba(149,98,34,0.5)','rgba(56,149,157,0.5)'];
+var trendcolourlist = ['rgba(197,197,206,'+ShowTrendlines+')','rgba(14,192,9,'+ShowTrendlines+')','rgba(149,98,34,'+ShowTrendlines+')','rgba(56,149,157,'+ShowTrendlines+')'];
 var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage'];
 
 function keyHandler(e){
@@ -237,6 +242,7 @@ function get_conf_file(){
 			var configdata=data.split('\n');
 			configdata = configdata.filter(Boolean);
 			for (var i = 0; i < configdata.length; i++){
+				if(configdata[i].split('=')[0]=="ENFORCEALLOWANCE"){continue;}
 				eval('document.form.dnvnstat_'+configdata[i].split('=')[0].toLowerCase()).value = configdata[i].split('=')[1].replace(/(\r\n|\n|\r)/gm,'');
 			}
 			get_vnstatconf_file();
@@ -321,7 +327,7 @@ function UpdateStats(){
 	document.getElementById('vnstatupdate_text').innerHTML = 'Updating bandwidth usage and vnstat data...';
 	showhide('imgVnStatUpdate',true);
 	showhide('vnstatupdate_text',true);
-	setTimeout(update_vnstat,2000);
+	setTimeout(update_vnstat,5000);
 }
 
 function update_vnstat(){
@@ -1440,7 +1446,7 @@ function getDataSets(objdata,objTrafficTypes,chartunitmultiplier){
 			return item.Metric == objTrafficTypes[i];
 		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
 		
-		datasets.push({ label: objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i]});
+		datasets.push({label: objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i],trendlineLinear: {style: trendcolourlist[i],lineStyle: "dotted",width: 4}});
 	}
 	return datasets;
 }
@@ -1453,14 +1459,14 @@ function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultipli
 			return item.Metric == objTrafficTypes[i];
 		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
 		
-		datasets.push({ label: 'Current 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i]});
+		datasets.push({ label: 'Current 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i],trendlineLinear: {style: trendcolourlist[i],lineStyle: "dotted",width: 4}});
 	}
 	for(var i = 0; i < objTrafficTypes.length; i++){
 		var traffictypedata = objdata1.filter(function(item){
 			return item.Metric == objTrafficTypes[i];
 		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
 		
-		datasets.push({ label: 'Previous 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i+2],borderColor: bordercolourlist[i+2]});
+		datasets.push({ label: 'Previous 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i+2],borderColor: bordercolourlist[i+2],trendlineLinear: {style: trendcolourlist[i+2],lineStyle: "dotted",width: 4}});
 	}
 	
 	return datasets;
@@ -1565,6 +1571,29 @@ function getAverage(datasetname){
 
 function round(value,decimals){
 	return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
+function ToggleTrendlines(){
+	if(ShowTrendlines == '0'){
+		ShowTrendlines = '0.8';
+		SetCookie('ShowTrendlines','0.8');
+	}
+	else{
+		ShowTrendlines = '0';
+		SetCookie('ShowTrendlines','0');
+	}
+	
+	trendcolourlist = ['rgba(197,197,206,'+ShowTrendlines+')','rgba(14,192,9,'+ShowTrendlines+')','rgba(149,98,34,'+ShowTrendlines+')','rgba(56,149,157,'+ShowTrendlines+')'];
+	
+	for(var i = 0; i < chartobjlist.length; i++){
+		var chartobj = window[chartobjlist[i]];
+		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
+		for(var i2 = 0; i2 < chartobj.data.datasets.length; i2++){
+			console.log(chartobj)
+			chartobj.data.datasets[i2].trendlineLinear.style = trendcolourlist[i2];
+		}
+		chartobj.update();
+	}
 }
 
 function ToggleLines(){
