@@ -1,5 +1,7 @@
 #!/bin/sh
+# shellcheck disable=SC1091
 # shellcheck disable=SC2034
+# shellcheck disable=SC2086
 
 if [ -f /opt/etc/init.d/S32vnstat ]; then
 	/opt/etc/init.d/S32vnstat stop
