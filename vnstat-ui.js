@@ -1589,7 +1589,6 @@ function ToggleTrendlines(){
 		var chartobj = window[chartobjlist[i]];
 		if(typeof chartobj === 'undefined' || chartobj === null){ return; }
 		for(var i2 = 0; i2 < chartobj.data.datasets.length; i2++){
-			console.log(chartobj)
 			chartobj.data.datasets[i2].trendlineLinear.style = trendcolourlist[i2];
 		}
 		chartobj.update();
