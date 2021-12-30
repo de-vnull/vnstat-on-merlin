@@ -909,14 +909,14 @@ Generate_CSVs(){
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_this_${metric}.tmp"
-			echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
+			echo "SELECT '$metric' Metric,strftime('%w', [date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
 		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		{
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_prev_${metric}.tmp"
-			echo "SELECT '$metric' Metric,strftime('%s',[date],'+7 day') Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
+			echo "SELECT '$metric' Metric,strftime('%w', [date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
 		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		
