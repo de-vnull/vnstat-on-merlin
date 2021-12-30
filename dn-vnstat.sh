@@ -853,9 +853,7 @@ Generate_CSVs(){
 		echo ".output /tmp/dn-vnstatiface"
 		echo "SELECT id FROM [interface] WHERE [name] = '$interface';"
 	} > /tmp/dn-vnstat.sql
-	while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-		sleep 1
-	done
+	"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 	interfaceid="$(cat /tmp/dn-vnstatiface)"
 	rm -f /tmp/dn-vnstatiface
 	
@@ -871,9 +869,7 @@ Generate_CSVs(){
 				echo ".output $CSV_OUTPUT_DIR/${metric}daily.tmp"
 				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-1 day'));"
 			} > /tmp/dn-vnstat.sql
-			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-				sleep 1
-			done
+			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 			
 			{
 				echo ".mode csv"
@@ -881,9 +877,7 @@ Generate_CSVs(){
 				echo ".output $CSV_OUTPUT_DIR/${metric}weekly.tmp"
 				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-7 day'));"
 			} > /tmp/dn-vnstat.sql
-			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-				sleep 1
-			done
+			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 			
 			{
 				echo ".mode csv"
@@ -891,9 +885,7 @@ Generate_CSVs(){
 				echo ".output $CSV_OUTPUT_DIR/${metric}monthly.tmp"
 				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-30 day'));"
 			} > /tmp/dn-vnstat.sql
-			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-				sleep 1
-			done
+			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 			
 			rm -f /tmp/dn-vnstat.sql
 		done
@@ -919,18 +911,14 @@ Generate_CSVs(){
 			echo ".output $CSV_OUTPUT_DIR/week_this_${metric}.tmp"
 			echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		{
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_prev_${metric}.tmp"
 			echo "SELECT '$metric' Metric,strftime('%s',[date],'+7 day') Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		
 		{
 			echo ".mode csv"
@@ -938,27 +926,21 @@ Generate_CSVs(){
 			echo ".output $CSV_OUTPUT_DIR/week_summary_this_${metric}.tmp"
 			echo "SELECT '$metric' Metric,'Current 7 days' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		{
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_summary_prev_${metric}.tmp"
 			echo "SELECT '$metric' Metric,'Previous 7 days' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		{
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_summary_prev2_${metric}.tmp"
 			echo "SELECT '$metric' Metric,'2 weeks ago' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-21 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 	done
 	
 	cat "$CSV_OUTPUT_DIR/week_this_rx.tmp" "$CSV_OUTPUT_DIR/week_this_tx.tmp" > "$CSV_OUTPUT_DIR/WeekThis.htm" 2> /dev/null
@@ -978,9 +960,7 @@ Generate_CSVs(){
 		echo ".output $CSV_OUTPUT_DIR/CompleteResults.htm"
 		echo "SELECT strftime('%s',[date],'utc') Time,[rx],[tx] FROM fiveminute WHERE strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-30 day')) ORDER BY strftime('%s', [date]) DESC;"
 	} > /tmp/dn-vnstat-complete.sql
-	while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat-complete.sql >/dev/null 2>&1; do
-		sleep 1
-	done
+	"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat-complete.sql
 	rm -f /tmp/dn-vnstat-complete.sql
 	
 	dos2unix "$CSV_OUTPUT_DIR/"*.htm
