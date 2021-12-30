@@ -448,7 +448,7 @@ function Draw_Chart(txtchartname){
 	
 	var unique = [];
 	var chartTrafficTypes = [];
-	for(let i = 0; i < dataobject.length; i++){
+	for(var i = 0; i < dataobject.length; i++){
 		if(!unique[dataobject[i].Metric]){
 			chartTrafficTypes.push(dataobject[i].Metric);
 			unique[dataobject[i].Metric] = 1;
@@ -519,12 +519,12 @@ function Draw_Chart(txtchartname){
 					}
 					
 					if(ci.data.datasets[index].label == 'Received'){
-						for(aindex = 0; aindex < 3; aindex++){
+						for(var aindex = 0; aindex < 3; aindex++){
 							ci.options.annotation.annotations[aindex].type=annotationline;
 						}
 					}
 					else if(ci.data.datasets[index].label == 'Sent'){
-						for(aindex = 3; aindex < 6; aindex++){
+						for(var aindex = 3; aindex < 6; aindex++){
 							ci.options.annotation.annotations[aindex].type=annotationline;
 						}
 					}
@@ -860,12 +860,12 @@ function Draw_Chart_Summary(txtchartname){
 					}
 					
 					if(ci.data.datasets[index].label == 'Received'){
-						for(aindex = 0; aindex < 3; aindex++){
+						for(var aindex = 0; aindex < 3; aindex++){
 							ci.options.annotation.annotations[aindex].type=annotationline;
 						}
 					}
 					else if(ci.data.datasets[index].label == 'Sent'){
-						for(aindex = 3; aindex < 6; aindex++){
+						for(var aindex = 3; aindex < 6; aindex++){
 							ci.options.annotation.annotations[aindex].type=annotationline;
 						}
 					}
@@ -1181,12 +1181,12 @@ function Draw_Chart_Compare(txtchartname){
 					}
 					
 					if(ci.data.datasets[index].label == 'Received'){
-						for(aindex = 0; aindex < 3; aindex++){
+						for(var aindex = 0; aindex < 3; aindex++){
 							ci.options.annotation.annotations[aindex].type=annotationline;
 						}
 					}
 					else if(ci.data.datasets[index].label == 'Sent'){
-						for(aindex = 3; aindex < 6; aindex++){
+						for(var aindex = 3; aindex < 6; aindex++){
 							ci.options.annotation.annotations[aindex].type=annotationline;
 						}
 					}
