@@ -1431,53 +1431,6 @@ Process_Upgrade(){
 		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	fi
-	if [ ! -f "$SCRIPT_STORAGE_DIR/.v2upgraded" ]; then
-		/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
-		touch /opt/etc/vnstat.conf
-		mkdir -p "$SCRIPT_STORAGE_DIR/v1"
-		if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
-			if [ ! -d "$SCRIPT_STORAGE_DIR" ]; then
-				mkdir -p "$SCRIPT_STORAGE_DIR"
-			fi
-			$VNSTAT_COMMAND --exportdb > "$SCRIPT_STORAGE_DIR/v1/vnstat-data.bak"
-		fi
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" 2>/dev/null
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.bak" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.bak" 2>/dev/null
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.default" 2>/dev/null
-		opkg update
-		opkg remove --autoremove vnstati
-		opkg remove --autoremove vnstat
-		rm -f /opt/etc/init.d/S33vnstat
-		rm -f /opt/etc/vnstat.conf
-		
-		Update_File vnstat.conf
-		interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-		sed -i 's/^Interface .*$/Interface "'"$interface"'"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-		
-		opkg install vnstat2
-		opkg install vnstati2
-		opkg install libjpeg-turbo >/dev/null 2>&1
-		opkg install jq
-		opkg install sqlite3-cli
-		opkg install p7zip
-		rm -f /opt/etc/vnstat.conf
-		Update_File vnstat-ui.asp
-		Update_File S33vnstat
-		touch "$SCRIPT_STORAGE_DIR/.v2upgraded"
-		if [ -n "$(pidof vnstatd)" ];then
-			Generate_Images
-			Generate_Stats
-			Check_Bandwidth_Usage silent
-			Generate_CSVs
-		else
-			Print_Output false "vnstatd not running, please check system log" "$ERR"
-		fi
-	fi
-	if [ ! -d "$SCRIPT_STORAGE_DIR/v1" ]; then
-		mkdir -p "$SCRIPT_STORAGE_DIR/v1"
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" 2>/dev/null
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default.v1" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.default" 2>/dev/null
-	fi
 	
 	if ! grep -q "^UseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 		sed -i "/^DatabaseSynchronous/a\\\n# Enable or disable using UTC as timezone in the database for all entries.\n# When enabled, all entries added to the database will use UTC regardless of\n# the configured system timezone. When disabled, the configured system timezone\n# will be used. Changing this setting will not result in already existing data to be modified.\n# 1 = enabled, 0 = disabled.\nUseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"
