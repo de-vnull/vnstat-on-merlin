@@ -442,7 +442,7 @@ function Draw_Chart(txtchartname){
 	var chartxaxismax = null;
 	var chartxaxismin = moment().startOf('hour').subtract(numunitx,txtunitx+'s').subtract(30,'minutes');
 	var charttype = 'bar';
-	var dataobject = window[txtchartname+'_'+chartinterval+'_'+chartperiod];
+	var dataobject = window[txtchartname+'_'+chartinterval+'_'+chartperiod].slice();
 	if(typeof dataobject === 'undefined' || dataobject === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	if(dataobject.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	
@@ -795,13 +795,13 @@ function Draw_Chart_Summary(txtchartname){
 	
 	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
 	var charttype = 'bar';
-	var dataobject0 = window[txtchartname+'_WeekSummary'];
+	var dataobject0 = window[txtchartname+'_WeekSummary'].slice();
 	if(typeof dataobject0 === 'undefined' || dataobject0 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	if(dataobject0.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	
 	var unique = [];
 	var chartTrafficTypes = [];
-	for(let i = 0; i < dataobject0.length; i++){
+	for(var i = 0; i < dataobject0.length; i++){
 		if(!unique[dataobject0[i].Metric]){
 			chartTrafficTypes.push(dataobject0[i].Metric);
 			unique[dataobject0[i].Metric] = 1;
@@ -816,19 +816,16 @@ function Draw_Chart_Summary(txtchartname){
 		return item.Metric == metric1;
 	}).map(function(d){return d.Value/chartunitmultiplier});
 	
-	chartData0.reverse();
-	chartData1.reverse();
-	
 	unique = [];
 	var chartLabels = [];
-	for(let i = 0; i < dataobject0.length; i++){
+	for(var i = 0; i < dataobject0.length; i++){
 		if(!unique[dataobject0[i].Time]){
 			chartLabels.push(dataobject0[i].Time);
 			unique[dataobject0[i].Time] = 1;
 		}
 	}
-	
 	chartLabels.reverse();
+	dataobject0.reverse();
 	
 	var objchartname=window['Chart_'+txtchartname];
 	
@@ -880,7 +877,7 @@ function Draw_Chart_Summary(txtchartname){
 					title: function (tooltipItem,data){
 						return data.datasets[tooltipItem[0].datasetIndex].label;
 					},
-					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals)+' '+txtunitytip;}
+					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index],decimals).toFixed(decimals)+' '+txtunitytip;}
 				},
 			itemSort: function(a,b){
 				return b.datasetIndex - a.datasetIndex;
@@ -1090,7 +1087,7 @@ function Draw_Chart_Summary(txtchartname){
 	};
 	var chartDataset = {
 		labels: chartLabels,
-		datasets: getDataSets(dataobject0,chartTrafficTypes,chartunitmultiplier)
+		datasets: getDataSets_Summary(dataobject0,chartTrafficTypes,chartunitmultiplier)
 	};
 	objchartname = new Chart(ctx,{
 		type: charttype,
@@ -1112,44 +1109,108 @@ function Draw_Chart_Compare(txtchartname){
 	}
 	
 	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
-	var txtunitx = 'day';
-	var zoompanxaxismax = moment().endOf('day');
-	var chartxaxismax = moment().endOf('day');
-	var chartxaxismin = moment().endOf('day').subtract(7,'days').subtract(12,'hours');
 	var charttype = 'bar';
-	var dataobject0 = window[txtchartname+'_WeekThis'];
+	var dataobject0 = window[txtchartname+'_WeekThis'].slice();
 	if(typeof dataobject0 === 'undefined' || dataobject0 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	if(dataobject0.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	
-	var dataobject1 = window[txtchartname+'_WeekPrev'];
-	
 	var unique = [];
 	var chartTrafficTypes = [];
-	for(let i = 0; i < dataobject0.length; i++){
+	for(var i = 0; i < dataobject0.length; i++){
 		if(!unique[dataobject0[i].Metric]){
 			chartTrafficTypes.push(dataobject0[i].Metric);
 			unique[dataobject0[i].Metric] = 1;
 		}
 	}
 	
+	var sorteddata = [];
+	baseDate = new Date();
+	for(var i = 0; i < 7; i++){
+			if(dataobject0.filter(function(item){
+				return item.Time == baseDate.getDay();
+			}).length > 0){
+				for(var i2 = 0; i2 < 2; i2++){
+					sorteddata.push(dataobject0.filter(function(item){
+						return item.Time == baseDate.getDay();
+					})[i2]);
+				}
+			}
+			else{
+				var obj = {};
+				obj['Metric'] = 'Received';
+				obj['Time'] = baseDate.getDay();
+				obj['Value'] = 0;
+				sorteddata.push(obj);
+				obj = {};
+				obj['Metric'] = 'Sent';
+				obj['Time'] = baseDate.getDay();
+				obj['Value'] = 0;
+				sorteddata.push(obj);
+			}
+		baseDate.setDate(baseDate.getDate() - 1);
+	}
+	dataobject0 = sorteddata;
+	dataobject0.reverse();
+	
 	var chartData0 = dataobject0.filter(function(item){
 		return item.Metric == metric0;
-	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	}).map(function(d){return d.Value/chartunitmultiplier});
 	
 	var chartData1 = dataobject0.filter(function(item){
 		return item.Metric == metric1;
-	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	}).map(function(d){return d.Value/chartunitmultiplier});
+	
+	var dataobject1 = window[txtchartname+'_WeekPrev'].slice();
+	if(typeof dataobject1 === 'undefined' || dataobject1 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
+	if(dataobject1.length == 0){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
 	
 	var chartData2 = dataobject1.filter(function(item){
 		return item.Metric == metric0;
-	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	}).map(function(d){return d.Value/chartunitmultiplier});
 	
 	var chartData3 = dataobject1.filter(function(item){
 		return item.Metric == metric1;
-	}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+	}).map(function(d){return d.Value/chartunitmultiplier});
+	
+	sorteddata = [];
+	baseDate = new Date();
+	for(var i = 0; i < 7; i++){
+			if(dataobject1.filter(function(item){
+				return item.Time == baseDate.getDay();
+			}).length > 0){
+				for(var i2 = 0; i2 < 2; i2++){
+					sorteddata.push(dataobject1.filter(function(item){
+						return item.Time == baseDate.getDay();
+					})[i2]);
+				}
+			}
+			else{
+				var obj = {};
+				obj['Metric'] = 'Received';
+				obj['Time'] = baseDate.getDay();
+				obj['Value'] = 0;
+				sorteddata.push(obj);
+				obj = {};
+				obj['Metric'] = 'Sent';
+				obj['Time'] = baseDate.getDay();
+				obj['Value'] = 0;
+				sorteddata.push(obj);
+			}
+		baseDate.setDate(baseDate.getDate() - 1);
+	}
+	dataobject1 = sorteddata;
+	dataobject1.reverse();
 	
 	var chartDataRx = chartData0.concat(chartData2);
 	var chartDataTx = chartData1.concat(chartData3);
+	
+	var chartLabels = [];
+	baseDate = new Date();
+	for(var i = 0; i < 7; i++){
+		chartLabels.push(baseDate.toLocaleDateString(navigator.language,{ weekday: 'long' }));
+		baseDate.setDate(baseDate.getDate() - 1);
+	}
+	chartLabels.reverse();
 	
 	var objchartname=window['Chart_'+txtchartname];
 	
@@ -1201,7 +1262,7 @@ function Draw_Chart_Compare(txtchartname){
 					title: function (tooltipItem,data){
 						return data.datasets[tooltipItem[0].datasetIndex].label;
 					},
-					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].y,decimals).toFixed(decimals)+' '+txtunitytip;}
+					label: function (tooltipItem,data){var txtunitytip=txtunity;return round(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index],decimals).toFixed(decimals)+' '+txtunitytip;}
 				},
 			itemSort: function(a,b){
 				return b.datasetIndex - a.datasetIndex;
@@ -1212,18 +1273,10 @@ function Draw_Chart_Compare(txtchartname){
 		},
 		scales: {
 			xAxes: [{
-				type: 'time',
+				type: 'category',
 				gridLines: { display: true,color: '#282828' },
 				ticks: {
-					min: chartxaxismin,
-					max: chartxaxismax,
 					display: true
-				},
-				time: {
-					parser: 'X',
-					unit: txtunitx,
-					stepSize: 1,
-					displayFormats: {day: 'dddd'}
 				}
 			}],
 			yAxes: [{
@@ -1249,28 +1302,18 @@ function Draw_Chart_Compare(txtchartname){
 					enabled: ChartPan,
 					mode: 'xy',
 					rangeMin: {
-						x: chartxaxismin,
 						y: 0
-					},
-					rangeMax: {
-						x: zoompanxaxismax//,
-						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
-					},
+					}
 				},
 				zoom: {
 					enabled: true,
 					drag: DragZoom,
 					mode: 'xy',
 					rangeMin: {
-						x: chartxaxismin,
 						y: 0
 					},
-					rangeMax: {
-						x: zoompanxaxismax//,
-						//y: getLimit(chartData,'y','max',false)+getLimit(chartData,'y','max',false)*0.1
-					},
 					speed: 0.1
-				},
+				}
 			},
 		},
 		annotation: {
@@ -1428,6 +1471,7 @@ function Draw_Chart_Compare(txtchartname){
 		]}
 	};
 	var chartDataset = {
+		labels: chartLabels,
 		datasets: getDataSets_Compare(dataobject0,dataobject1,chartTrafficTypes,chartunitmultiplier)
 	};
 	objchartname = new Chart(ctx,{
@@ -1451,22 +1495,36 @@ function getDataSets(objdata,objTrafficTypes,chartunitmultiplier){
 	return datasets;
 }
 
+function getDataSets_Summary(objdata0,objTrafficTypes,chartunitmultiplier){
+	var datasets = [];
+	
+	for(var i = 0; i < objTrafficTypes.length; i++){
+		var traffictypedata = objdata0.filter(function(item){
+			return item.Metric == objTrafficTypes[i];
+		}).map(function(d){return d.Value/chartunitmultiplier});
+		
+		datasets.push({label: objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i],trendlineLinear: {style: trendcolourlist[i],lineStyle: "dotted",width: 4}});
+	}
+	
+	return datasets;
+}
+
 function getDataSets_Compare(objdata0,objdata1,objTrafficTypes,chartunitmultiplier){
 	var datasets = [];
 	
 	for(var i = 0; i < objTrafficTypes.length; i++){
 		var traffictypedata = objdata0.filter(function(item){
 			return item.Metric == objTrafficTypes[i];
-		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+		}).map(function(d){return d.Value/chartunitmultiplier});
 		
-		datasets.push({ label: 'Current 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i],trendlineLinear: {style: trendcolourlist[i],lineStyle: "dotted",width: 4}});
+		datasets.push({label: 'Current 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i],borderColor: bordercolourlist[i],trendlineLinear: {style: trendcolourlist[i],lineStyle: "dotted",width: 4}});
 	}
 	for(var i = 0; i < objTrafficTypes.length; i++){
 		var traffictypedata = objdata1.filter(function(item){
 			return item.Metric == objTrafficTypes[i];
-		}).map(function(d){return {x: d.Time,y: (d.Value/chartunitmultiplier)}});
+		}).map(function(d){return d.Value/chartunitmultiplier});
 		
-		datasets.push({ label: 'Previous 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i+2],borderColor: bordercolourlist[i+2],trendlineLinear: {style: trendcolourlist[i+2],lineStyle: "dotted",width: 4}});
+		datasets.push({label: 'Previous 7 days - '+objTrafficTypes[i],data: traffictypedata,yAxisID: 'left-y-axis',borderWidth: 1,pointRadius: 1,lineTension: 0,fill: ShowFill,backgroundColor: backgroundcolourlist[i+2],borderColor: bordercolourlist[i+2],trendlineLinear: {style: trendcolourlist[i+2],lineStyle: "dotted",width: 4}});
 	}
 	
 	return datasets;
