@@ -932,7 +932,6 @@ Generate_CSVs(){
 			sleep 1
 		done
 		
-		
 		{
 			echo ".mode csv"
 			echo ".headers off"
