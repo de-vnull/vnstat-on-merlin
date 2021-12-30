@@ -1974,6 +1974,7 @@ Menu_Uninstall(){
 	
 	Reset_Allowance_Warnings force
 	rm -f "$SCRIPT_STORAGE_DIR/.vnstatusage"
+	rm -f "$SCRIPT_STORAGE_DIR/.v2upgraded"
 	rm -rf "$IMAGE_OUTPUT_DIR"
 	rm -rf "$CSV_OUTPUT_DIR"
 	
