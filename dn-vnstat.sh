@@ -26,8 +26,8 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v2.0.3"
-SCRIPT_BRANCH="main"
+readonly SCRIPT_VERSION="v2.0.4"
+SCRIPT_BRANCH="jackyaz-dev"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
@@ -853,9 +853,7 @@ Generate_CSVs(){
 		echo ".output /tmp/dn-vnstatiface"
 		echo "SELECT id FROM [interface] WHERE [name] = '$interface';"
 	} > /tmp/dn-vnstat.sql
-	while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-		sleep 1
-	done
+	"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 	interfaceid="$(cat /tmp/dn-vnstatiface)"
 	rm -f /tmp/dn-vnstatiface
 	
@@ -869,31 +867,25 @@ Generate_CSVs(){
 				echo ".mode csv"
 				echo ".headers off"
 				echo ".output $CSV_OUTPUT_DIR/${metric}daily.tmp"
-				echo "SELECT '$metric' Metric,strftime('%s',[date]) Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','-1 day'));"
+				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-1 day'));"
 			} > /tmp/dn-vnstat.sql
-			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-				sleep 1
-			done
+			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 			
 			{
 				echo ".mode csv"
 				echo ".headers off"
 				echo ".output $CSV_OUTPUT_DIR/${metric}weekly.tmp"
-				echo "SELECT '$metric' Metric,strftime('%s',[date]) Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','-7 day'));"
+				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-7 day'));"
 			} > /tmp/dn-vnstat.sql
-			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-				sleep 1
-			done
+			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 			
 			{
 				echo ".mode csv"
 				echo ".headers off"
 				echo ".output $CSV_OUTPUT_DIR/${metric}monthly.tmp"
-				echo "SELECT '$metric' Metric,strftime('%s',[date]) Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','-30 day'));"
+				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-30 day'));"
 			} > /tmp/dn-vnstat.sql
-			while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-				sleep 1
-			done
+			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 			
 			rm -f /tmp/dn-vnstat.sql
 		done
@@ -917,49 +909,38 @@ Generate_CSVs(){
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_this_${metric}.tmp"
-			echo "SELECT '$metric' Metric,strftime('%s',[date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
+			echo "SELECT '$metric' Metric,strftime('%w', [date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		{
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_prev_${metric}.tmp"
-			echo "SELECT '$metric' Metric,strftime('%s',[date],'+7 day') Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
+			echo "SELECT '$metric' Metric,strftime('%w', [date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
-		
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		
 		{
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_summary_this_${metric}.tmp"
-			echo "SELECT '$metric' Metric,'Current 7 days' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
+			echo "SELECT '$metric' Metric,'Current 7 days' Time,IFNULL(SUM([$metric]),'0') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		{
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_summary_prev_${metric}.tmp"
-			echo "SELECT '$metric' Metric,'Previous 7 days' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
+			echo "SELECT '$metric' Metric,'Previous 7 days' Time,IFNULL(SUM([$metric]),'0') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 		{
 			echo ".mode csv"
 			echo ".headers off"
 			echo ".output $CSV_OUTPUT_DIR/week_summary_prev2_${metric}.tmp"
-			echo "SELECT '$metric' Metric,'2 weeks ago' Time,IFNULL(SUM([$metric]),'NaN') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date]) < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day')) AND strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-21 day'));"
+			echo "SELECT '$metric' Metric,'2 weeks ago' Time,IFNULL(SUM([$metric]),'0') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-21 day'));"
 		} > /tmp/dn-vnstat.sql
-		while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql >/dev/null 2>&1; do
-			sleep 1
-		done
+		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
 	done
 	
 	cat "$CSV_OUTPUT_DIR/week_this_rx.tmp" "$CSV_OUTPUT_DIR/week_this_tx.tmp" > "$CSV_OUTPUT_DIR/WeekThis.htm" 2> /dev/null
@@ -977,11 +958,9 @@ Generate_CSVs(){
 		echo ".mode csv"
 		echo ".headers on"
 		echo ".output $CSV_OUTPUT_DIR/CompleteResults.htm"
-		echo "SELECT strftime('%s',[date]) Time,[rx],[tx] FROM fiveminute WHERE strftime('%s',[date]) >= strftime('%s',datetime($timenow,'unixepoch','-30 day')) ORDER BY strftime('%s', [date]) DESC;"
+		echo "SELECT strftime('%s',[date],'utc') Time,[rx],[tx] FROM fiveminute WHERE strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-30 day')) ORDER BY strftime('%s', [date]) DESC;"
 	} > /tmp/dn-vnstat-complete.sql
-	while ! "$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat-complete.sql >/dev/null 2>&1; do
-		sleep 1
-	done
+	"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat-complete.sql
 	rm -f /tmp/dn-vnstat-complete.sql
 	
 	dos2unix "$CSV_OUTPUT_DIR/"*.htm
@@ -1060,7 +1039,7 @@ Generate_Stats(){
 	else
 		ps | grep -v grep | grep -v $$ | grep -i "$SCRIPT_NAME" | grep generate | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
 	fi
-	sleep 5
+	sleep 3
 	Create_Dirs
 	Conf_Exists
 	ScriptStorageLocation load
@@ -1451,53 +1430,6 @@ Process_Upgrade(){
 		echo "var usagethreshold = false;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
-	fi
-	if [ ! -f "$SCRIPT_STORAGE_DIR/.v2upgraded" ]; then
-		/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
-		touch /opt/etc/vnstat.conf
-		mkdir -p "$SCRIPT_STORAGE_DIR/v1"
-		if [ -n "$(ls -A /opt/var/lib/vnstat 2>/dev/null)" ]; then
-			if [ ! -d "$SCRIPT_STORAGE_DIR" ]; then
-				mkdir -p "$SCRIPT_STORAGE_DIR"
-			fi
-			$VNSTAT_COMMAND --exportdb > "$SCRIPT_STORAGE_DIR/v1/vnstat-data.bak"
-		fi
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" 2>/dev/null
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.bak" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.bak" 2>/dev/null
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.default" 2>/dev/null
-		opkg update
-		opkg remove --autoremove vnstati
-		opkg remove --autoremove vnstat
-		rm -f /opt/etc/init.d/S33vnstat
-		rm -f /opt/etc/vnstat.conf
-		
-		Update_File vnstat.conf
-		interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-		sed -i 's/^Interface .*$/Interface "'"$interface"'"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-		
-		opkg install vnstat2
-		opkg install vnstati2
-		opkg install libjpeg-turbo >/dev/null 2>&1
-		opkg install jq
-		opkg install sqlite3-cli
-		opkg install p7zip
-		rm -f /opt/etc/vnstat.conf
-		Update_File vnstat-ui.asp
-		Update_File S33vnstat
-		touch "$SCRIPT_STORAGE_DIR/.v2upgraded"
-		if [ -n "$(pidof vnstatd)" ];then
-			Generate_Images
-			Generate_Stats
-			Check_Bandwidth_Usage silent
-			Generate_CSVs
-		else
-			Print_Output false "vnstatd not running, please check system log" "$ERR"
-		fi
-	fi
-	if [ ! -d "$SCRIPT_STORAGE_DIR/v1" ]; then
-		mkdir -p "$SCRIPT_STORAGE_DIR/v1"
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.v1" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf" 2>/dev/null
-		mv "$SCRIPT_STORAGE_DIR/vnstat.conf.default.v1" "$SCRIPT_STORAGE_DIR/v1/vnstat.conf.default" 2>/dev/null
 	fi
 	
 	if ! grep -q "^UseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
@@ -2042,6 +1974,7 @@ Menu_Uninstall(){
 	
 	Reset_Allowance_Warnings force
 	rm -f "$SCRIPT_STORAGE_DIR/.vnstatusage"
+	rm -f "$SCRIPT_STORAGE_DIR/.v2upgraded"
 	rm -rf "$IMAGE_OUTPUT_DIR"
 	rm -rf "$CSV_OUTPUT_DIR"
 	
