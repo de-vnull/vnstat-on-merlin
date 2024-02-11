@@ -16,11 +16,37 @@ Note: R1 runs on all supported architectures (ARM, AARCH, MIPS). R2 runs only on
         - Data use trends (current week, previous week, two weeks prior) -
   - Minor changes to the text-based daily reports. These now focus on the most recent periods (last day, previous week, recent 6 months) and include yearly use.
   - Option to save data/configurations to USB rather than JFFS
+
+ ### v 2.0.1 - 16-Aug-2021 ###
+* Minor fixes and addition of trend lines.
+    - Includes the fix for the "month start" issue: remove "month start" field from monthly usage metrics. See notes here: https://www.snbforums.com/goto/post?id=707598.
+    - With this version, there is a new feature: trend lines. These are found in the interactive charts on the R2vnStat-on-Merlin UI page, and show trends in data usage over time - both download and upload.
+    - More information here: https://www.snbforums.com/goto/post?id=707674
+
+### v 2.0.2 - 27-Sep-2021 ###
+  * Minor fix to the email symlinks to address an email piggybacking change.
+    - More details here: https://www.snbforums.com/goto/post?id=715523
+
+### v 2.0.3 - 27-Dec-2021 ###
+  * The primary change is to check for amtm messaging existence. If available, vnStat-on-Merlin will use amtm messaging preferentially.
+    - If amtm messaging is not configured, will continue to use Diversion (for now; see below).
+    Notes:
+    - The Diversion requirement is now deprecated in vnStat-on-Merlin R2. In a future update (TBD), only amtm messaging will be supported. This change is only for R2.
+
+### v 2.0.4 - 31-Dec-2021 ###
+  * End-of-year-housekeeping: this update includes minor updates to charts, interface id, and uninstall functions.
+
+### v 2.0.5 - 11-Feb-2024 ###
+  * Hotfix posted to address iCloud "weird server reply" issue. Only required if you are using iCloud/me.com SMTP services.
         
 # Version R1 (based on vnStat 1.18) #
 
 ### v 1.0.2 - 11-Jul-2021 ###
 * Minor fixes to correct an error which manifested itself as an "arithmetic error"; additional hot-fix to mitigate a related error.
+### v 1.0.3 - 28-Dec-2021 ###
+  * Fix for "false update" message that may show for vnStat-on-Merlin if you update to amtm 3.2.1.
+    - You may be shown that v 2.0.3 is available, but when you attempt to update you are informed - correctly - that the 1.0.2 version is the latest. You should ignore this update prompt in 3.2.1. The R1 update to 1.0.3 appears to fix this notification.
+    - Other minor configuration, performance and back-end tweaks to charts.
 
 ### v 1.0.1 - 11-Apr-2021 ###
 * New format for monthly total in output listing: i.e., `yyyy-mm (dd)` where dd is the start of the cycle in a given period
