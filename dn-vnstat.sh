@@ -26,7 +26,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v2.0.4"
+readonly SCRIPT_VERSION="v2.0.5"
 SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -1176,6 +1176,7 @@ Generate_Email(){
 	--mail-from "$FROM_ADDRESS" --mail-rcpt "$TO_ADDRESS" \
 	--upload-file /tmp/mail.txt \
 	--ssl-reqd \
+ 	--crlf \
 	--user "$USERNAME:$PASSWORD" $SSL_FLAG
 	if [ $? -eq 0 ]; then
 		echo ""
