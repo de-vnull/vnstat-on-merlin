@@ -418,8 +418,13 @@ Create_Symlinks(){
 	fi
 }
 
-Conf_Exists(){
-	if [ -f "$SCRIPT_STORAGE_DIR/vnstat.conf" ]; then
+##----------------------------------------##
+## Modified by Martinski W. [2024-Sep-22] ##
+##----------------------------------------##
+Conf_Exists()
+{
+	if [ -f "$SCRIPT_STORAGE_DIR/vnstat.conf" ]
+	then
 		restartvnstat="false"
 		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
@@ -449,7 +454,7 @@ Conf_Exists(){
 			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		
+
 		if [ "$restartvnstat" = "true" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			Generate_Images silent
@@ -459,20 +464,35 @@ Conf_Exists(){
 	else
 		Update_File vnstat.conf
 	fi
-	
-	if [ -f "$SCRIPT_CONF" ]; then
+
+	if [ -f "$SCRIPT_CONF" ]
+	then
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
 		sed -i -e 's/"//g' "$SCRIPT_CONF"
-		if ! grep -q "STORAGELOCATION" "$SCRIPT_CONF"; then
+		if ! grep -q "^DAILYEMAIL=" "$SCRIPT_CONF"; then
+			echo "DAILYEMAIL=none" >> "$SCRIPT_CONF"
+		fi
+		if ! grep -q "^USAGEEMAIL=" "$SCRIPT_CONF"; then
+			echo "USAGEEMAIL=false" >> "$SCRIPT_CONF"
+		fi
+		if ! grep -q "^DATAALLOWANCE=" "$SCRIPT_CONF"; then
+			echo "DATAALLOWANCE=1200.00" >> "$SCRIPT_CONF"
+		fi
+		if ! grep -q "^ALLOWANCEUNIT=" "$SCRIPT_CONF"; then
+			echo "ALLOWANCEUNIT=G" >> "$SCRIPT_CONF"
+		fi
+		if ! grep -q "^STORAGELOCATION=" "$SCRIPT_CONF"; then
 			echo "STORAGELOCATION=jffs" >> "$SCRIPT_CONF"
 		fi
-		if ! grep -q "OUTPUTTIMEMODE" "$SCRIPT_CONF"; then
+		if ! grep -q "^OUTPUTTIMEMODE=" "$SCRIPT_CONF"; then
 			echo "OUTPUTTIMEMODE=unix" >> "$SCRIPT_CONF"
 		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "OUTPUTTIMEMODE=unix"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=none"; echo "USAGEEMAIL=false"; echo "DATAALLOWANCE=1200.00"
+		  echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "OUTPUTTIMEMODE=unix"
+		} > "$SCRIPT_CONF"
 		return 1
 	fi
 }
@@ -805,11 +825,11 @@ ScriptStorageLocation(){
 			ScriptStorageLocation load
 		;;
 		check)
-			STORAGELOCATION=$(grep "STORAGELOCATION" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$STORAGELOCATION"
+			STORAGELOCATION="$(grep "^STORAGELOCATION=" "$SCRIPT_CONF" | cut -f2 -d"=")"
+			echo "${STORAGELOCATION:=jffs}"
 		;;
 		load)
-			STORAGELOCATION=$(grep "STORAGELOCATION" "$SCRIPT_CONF" | cut -f2 -d"=")
+			STORAGELOCATION="$(grep "^STORAGELOCATION=" "$SCRIPT_CONF" | cut -f2 -d"=")"
 			if [ "$STORAGELOCATION" = "usb" ]; then
 				SCRIPT_STORAGE_DIR="/opt/share/$SCRIPT_NAME.d"
 			elif [ "$STORAGELOCATION" = "jffs" ]; then
@@ -836,8 +856,8 @@ OutputTimeMode(){
 			Generate_CSVs
 		;;
 		check)
-			OUTPUTTIMEMODE=$(grep "OUTPUTTIMEMODE" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$OUTPUTTIMEMODE"
+			OUTPUTTIMEMODE="$(grep "^OUTPUTTIMEMODE=" "$SCRIPT_CONF" | cut -f2 -d"=")"
+			echo "${OUTPUTTIMEMODE:=unix}"
 		;;
 	esac
 }
@@ -1067,7 +1087,8 @@ Generate_Stats(){
 	[ -z "$1" ] && Print_Output false "vnstat_totals summary generated" "$PASS"
 }
 
-Generate_Email(){
+Generate_Email()
+{
 	if [ -f /jffs/addons/amtm/mail/email.conf ] && [ -f /jffs/addons/amtm/mail/emailpw.enc ]; then
 		. /jffs/addons/amtm/mail/email.conf
 		PWENCFILE=/jffs/addons/amtm/mail/emailpw.enc
@@ -1228,17 +1249,22 @@ Encode_Text(){
 	} >> "$3"
 }
 
-DailyEmail(){
+##----------------------------------------##
+## Modified by Martinski W. [2024-Sep-22] ##
+##----------------------------------------##
+DailyEmail()
+{
 	case "$1" in
 		enable)
-			if [ -z "$2" ]; then
+			if [ -z "$2" ]
+			then
 				ScriptHeader
 				exitmenu="false"
 				printf "\\n${BOLD}A choice of emails is available:${CLEARFORMAT}\\n"
 				printf "1.    HTML (includes images from WebUI + summary stats as attachment)\\n"
 				printf "2.    Plain text (summary stats only)\\n"
 				printf "\\ne.    Exit to main menu\\n"
-				
+
 				while true; do
 					printf "\\n${BOLD}Choose an option:${CLEARFORMAT}  "
 					read -r emailtype
@@ -1260,7 +1286,7 @@ DailyEmail(){
 						;;
 					esac
 				done
-				
+
 				printf "\\n"
 				
 				if [ "$exitmenu" = "true" ]; then
@@ -1269,7 +1295,7 @@ DailyEmail(){
 			else
 				sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL='"$2"'/' "$SCRIPT_CONF"
 			fi
-			
+
 			Generate_Email daily
 			if [ $? -eq 1 ]; then
 				DailyEmail disable
@@ -1279,8 +1305,8 @@ DailyEmail(){
 			sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=none/' "$SCRIPT_CONF"
 		;;
 		check)
-			DAILYEMAIL=$(grep "DAILYEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$DAILYEMAIL"
+			DAILYEMAIL="$(grep "^DAILYEMAIL=" "$SCRIPT_CONF" | cut -f2 -d'=')"
+			echo "${DAILYEMAIL:=none}"
 		;;
 	esac
 }
@@ -1295,7 +1321,7 @@ UsageEmail(){
 			sed -i 's/^USAGEEMAIL.*$/USAGEEMAIL=false/' "$SCRIPT_CONF"
 		;;
 		check)
-			USAGEEMAIL=$(grep "USAGEEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
+			USAGEEMAIL="$(grep "^USAGEEMAIL=" "$SCRIPT_CONF" | cut -f2 -d"=")"
 			if [ "$USAGEEMAIL" = "true" ]; then return 0; else return 1; fi
 		;;
 	esac
@@ -1312,8 +1338,8 @@ BandwidthAllowance(){
 			Check_Bandwidth_Usage
 		;;
 		check)
-			DATAALLOWANCE=$(grep "DATAALLOWANCE" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$DATAALLOWANCE"
+			DATAALLOWANCE="$(grep "^DATAALLOWANCE=" "$SCRIPT_CONF" | cut -f2 -d"=")"
+			echo "${DATAALLOWANCE:=1200.00}"
 		;;
 	esac
 }
@@ -1341,8 +1367,8 @@ AllowanceUnit(){
 		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
 		;;
 		check)
-			ALLOWANCEUNIT=$(grep "ALLOWANCEUNIT" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "${ALLOWANCEUNIT}B"
+			ALLOWANCEUNIT="$(grep "^ALLOWANCEUNIT=" "$SCRIPT_CONF" | cut -f2 -d"=")"
+			echo "${ALLOWANCEUNIT:=G}B"
 		;;
 	esac
 }
