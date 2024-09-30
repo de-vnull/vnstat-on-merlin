@@ -10,6 +10,8 @@
 ##    github.com/de-vnull/vnstat-on-merlin     ##
 ##                                             ##
 #################################################
+# Last Modified: 2024-Sep-22
+#------------------------------------------------
 
 ########         Shellcheck directives     ######
 # shellcheck disable=SC1091
@@ -26,7 +28,7 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v2.0.5"
+readonly SCRIPT_VERSION="v2.0.6"
 SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
@@ -35,7 +37,7 @@ readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
 readonly SHARED_WEB_DIR="$SCRIPT_WEBPAGE_DIR/shared-jy"
-[ -z "$(nvram get odmpid)" ] && ROUTER_MODEL=$(nvram get productid) || ROUTER_MODEL=$(nvram get odmpid)
+[ -z "$(nvram get odmpid)" ] && ROUTER_MODEL="$(nvram get productid)" || ROUTER_MODEL="$(nvram get odmpid)"
 [ -f /opt/bin/sqlite3 ] && SQLITE3_PATH=/opt/bin/sqlite3 || SQLITE3_PATH=/usr/sbin/sqlite3
 ### End of script variables ###
 
@@ -416,8 +418,13 @@ Create_Symlinks(){
 	fi
 }
 
-Conf_Exists(){
-	if [ -f "$SCRIPT_STORAGE_DIR/vnstat.conf" ]; then
+##----------------------------------------##
+## Modified by Martinski W. [2024-Sep-22] ##
+##----------------------------------------##
+Conf_Exists()
+{
+	if [ -f "$SCRIPT_STORAGE_DIR/vnstat.conf" ]
+	then
 		restartvnstat="false"
 		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
@@ -447,7 +454,7 @@ Conf_Exists(){
 			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
 			restartvnstat="true"
 		fi
-		
+
 		if [ "$restartvnstat" = "true" ]; then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			Generate_Images silent
@@ -457,20 +464,35 @@ Conf_Exists(){
 	else
 		Update_File vnstat.conf
 	fi
-	
-	if [ -f "$SCRIPT_CONF" ]; then
+
+	if [ -f "$SCRIPT_CONF" ]
+	then
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
 		sed -i -e 's/"//g' "$SCRIPT_CONF"
-		if ! grep -q "STORAGELOCATION" "$SCRIPT_CONF"; then
+		if ! grep -q "^DAILYEMAIL=" "$SCRIPT_CONF"; then
+			echo "DAILYEMAIL=none" >> "$SCRIPT_CONF"
+		fi
+		if ! grep -q "^USAGEEMAIL=" "$SCRIPT_CONF"; then
+			echo "USAGEEMAIL=false" >> "$SCRIPT_CONF"
+		fi
+		if ! grep -q "^DATAALLOWANCE=" "$SCRIPT_CONF"; then
+			echo "DATAALLOWANCE=1200.00" >> "$SCRIPT_CONF"
+		fi
+		if ! grep -q "^ALLOWANCEUNIT=" "$SCRIPT_CONF"; then
+			echo "ALLOWANCEUNIT=G" >> "$SCRIPT_CONF"
+		fi
+		if ! grep -q "^STORAGELOCATION=" "$SCRIPT_CONF"; then
 			echo "STORAGELOCATION=jffs" >> "$SCRIPT_CONF"
 		fi
-		if ! grep -q "OUTPUTTIMEMODE" "$SCRIPT_CONF"; then
+		if ! grep -q "^OUTPUTTIMEMODE=" "$SCRIPT_CONF"; then
 			echo "OUTPUTTIMEMODE=unix" >> "$SCRIPT_CONF"
 		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=none";  echo "DATAALLOWANCE=1200.00"; echo "USAGEEMAIL=false"; echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "OUTPUTTIMEMODE=unix"; } > "$SCRIPT_CONF"
+		{ echo "DAILYEMAIL=none"; echo "USAGEEMAIL=false"; echo "DATAALLOWANCE=1200.00"
+		  echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "OUTPUTTIMEMODE=unix"
+		} > "$SCRIPT_CONF"
 		return 1
 	fi
 }
@@ -640,7 +662,8 @@ Get_WebUI_URL(){
 ### ###
 
 ### locking mechanism code credit to Martineau (@MartineauUK) ###
-Mount_WebUI(){
+Mount_WebUI()
+{
 	Print_Output true "Mounting WebUI tab for $SCRIPT_NAME" "$PASS"
 	LOCKFILE=/tmp/addonwebui.lock
 	FD=386
@@ -654,32 +677,32 @@ Mount_WebUI(){
 	fi
 	cp -f "$SCRIPT_DIR/vnstat-ui.asp" "$SCRIPT_WEBPAGE_DIR/$MyPage"
 	echo "$SCRIPT_NAME" > "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
-	
+
 	if [ "$(uname -o)" = "ASUSWRT-Merlin" ]; then
 		if [ ! -f /tmp/index_style.css ]; then
 			cp -f /www/index_style.css /tmp/
 		fi
-		
+
 		if ! grep -q '.menu_Addons' /tmp/index_style.css ; then
 			echo ".menu_Addons { background: url(ext/shared-jy/addons.png); }" >> /tmp/index_style.css
 		fi
-		
+
 		umount /www/index_style.css 2>/dev/null
 		mount -o bind /tmp/index_style.css /www/index_style.css
-		
+
 		if [ ! -f /tmp/menuTree.js ]; then
 			cp -f /www/require/modules/menuTree.js /tmp/
 		fi
-		
+
 		sed -i "\\~$MyPage~d" /tmp/menuTree.js
-		
+
 		if ! grep -q 'menuName: "Addons"' /tmp/menuTree.js ; then
 			lineinsbefore="$(( $(grep -n "exclude:" /tmp/menuTree.js | cut -f1 -d':') - 1))"
 			sed -i "$lineinsbefore"'i,\n{\nmenuName: "Addons",\nindex: "menu_Addons",\ntab: [\n{url: "javascript:var helpwindow=window.open('"'"'/ext/shared-jy/redirect.htm'"'"')", tabName: "Help & Support"},\n{url: "NULL", tabName: "__INHERIT__"}\n]\n}' /tmp/menuTree.js
 		fi
-		
+
 		sed -i "/url: \"javascript:var helpwindow=window.open('\/ext\/shared-jy\/redirect.htm'/i {url: \"$MyPage\", tabName: \"$SCRIPT_NAME\"}," /tmp/menuTree.js
-		
+
 		umount /www/require/modules/menuTree.js 2>/dev/null
 		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 	fi
@@ -802,11 +825,11 @@ ScriptStorageLocation(){
 			ScriptStorageLocation load
 		;;
 		check)
-			STORAGELOCATION=$(grep "STORAGELOCATION" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$STORAGELOCATION"
+			STORAGELOCATION="$(grep "^STORAGELOCATION=" "$SCRIPT_CONF" | cut -f2 -d"=")"
+			echo "${STORAGELOCATION:=jffs}"
 		;;
 		load)
-			STORAGELOCATION=$(grep "STORAGELOCATION" "$SCRIPT_CONF" | cut -f2 -d"=")
+			STORAGELOCATION="$(grep "^STORAGELOCATION=" "$SCRIPT_CONF" | cut -f2 -d"=")"
 			if [ "$STORAGELOCATION" = "usb" ]; then
 				SCRIPT_STORAGE_DIR="/opt/share/$SCRIPT_NAME.d"
 			elif [ "$STORAGELOCATION" = "jffs" ]; then
@@ -833,8 +856,8 @@ OutputTimeMode(){
 			Generate_CSVs
 		;;
 		check)
-			OUTPUTTIMEMODE=$(grep "OUTPUTTIMEMODE" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$OUTPUTTIMEMODE"
+			OUTPUTTIMEMODE="$(grep "^OUTPUTTIMEMODE=" "$SCRIPT_CONF" | cut -f2 -d"=")"
+			echo "${OUTPUTTIMEMODE:=unix}"
 		;;
 	esac
 }
@@ -1064,7 +1087,8 @@ Generate_Stats(){
 	[ -z "$1" ] && Print_Output false "vnstat_totals summary generated" "$PASS"
 }
 
-Generate_Email(){
+Generate_Email()
+{
 	if [ -f /jffs/addons/amtm/mail/email.conf ] && [ -f /jffs/addons/amtm/mail/emailpw.enc ]; then
 		. /jffs/addons/amtm/mail/email.conf
 		PWENCFILE=/jffs/addons/amtm/mail/emailpw.enc
@@ -1225,17 +1249,22 @@ Encode_Text(){
 	} >> "$3"
 }
 
-DailyEmail(){
+##----------------------------------------##
+## Modified by Martinski W. [2024-Sep-22] ##
+##----------------------------------------##
+DailyEmail()
+{
 	case "$1" in
 		enable)
-			if [ -z "$2" ]; then
+			if [ -z "$2" ]
+			then
 				ScriptHeader
 				exitmenu="false"
 				printf "\\n${BOLD}A choice of emails is available:${CLEARFORMAT}\\n"
 				printf "1.    HTML (includes images from WebUI + summary stats as attachment)\\n"
 				printf "2.    Plain text (summary stats only)\\n"
 				printf "\\ne.    Exit to main menu\\n"
-				
+
 				while true; do
 					printf "\\n${BOLD}Choose an option:${CLEARFORMAT}  "
 					read -r emailtype
@@ -1257,7 +1286,7 @@ DailyEmail(){
 						;;
 					esac
 				done
-				
+
 				printf "\\n"
 				
 				if [ "$exitmenu" = "true" ]; then
@@ -1266,7 +1295,7 @@ DailyEmail(){
 			else
 				sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL='"$2"'/' "$SCRIPT_CONF"
 			fi
-			
+
 			Generate_Email daily
 			if [ $? -eq 1 ]; then
 				DailyEmail disable
@@ -1276,8 +1305,8 @@ DailyEmail(){
 			sed -i 's/^DAILYEMAIL.*$/DAILYEMAIL=none/' "$SCRIPT_CONF"
 		;;
 		check)
-			DAILYEMAIL=$(grep "DAILYEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$DAILYEMAIL"
+			DAILYEMAIL="$(grep "^DAILYEMAIL=" "$SCRIPT_CONF" | cut -f2 -d'=')"
+			echo "${DAILYEMAIL:=none}"
 		;;
 	esac
 }
@@ -1292,7 +1321,7 @@ UsageEmail(){
 			sed -i 's/^USAGEEMAIL.*$/USAGEEMAIL=false/' "$SCRIPT_CONF"
 		;;
 		check)
-			USAGEEMAIL=$(grep "USAGEEMAIL" "$SCRIPT_CONF" | cut -f2 -d"=")
+			USAGEEMAIL="$(grep "^USAGEEMAIL=" "$SCRIPT_CONF" | cut -f2 -d"=")"
 			if [ "$USAGEEMAIL" = "true" ]; then return 0; else return 1; fi
 		;;
 	esac
@@ -1309,8 +1338,8 @@ BandwidthAllowance(){
 			Check_Bandwidth_Usage
 		;;
 		check)
-			DATAALLOWANCE=$(grep "DATAALLOWANCE" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "$DATAALLOWANCE"
+			DATAALLOWANCE="$(grep "^DATAALLOWANCE=" "$SCRIPT_CONF" | cut -f2 -d"=")"
+			echo "${DATAALLOWANCE:=1200.00}"
 		;;
 	esac
 }
@@ -1338,8 +1367,8 @@ AllowanceUnit(){
 		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
 		;;
 		check)
-			ALLOWANCEUNIT=$(grep "ALLOWANCEUNIT" "$SCRIPT_CONF" | cut -f2 -d"=")
-			echo "${ALLOWANCEUNIT}B"
+			ALLOWANCEUNIT="$(grep "^ALLOWANCEUNIT=" "$SCRIPT_CONF" | cut -f2 -d"=")"
+			echo "${ALLOWANCEUNIT:=G}B"
 		;;
 	esac
 }
@@ -1937,7 +1966,8 @@ Menu_Edit(){
 	Clear_Lock
 }
 
-Menu_Uninstall(){
+Menu_Uninstall()
+{
 	if [ -n "$PPID" ]; then
 		ps | grep -v grep | grep -v $$ | grep -v "$PPID" | grep -i "$SCRIPT_NAME" | grep generate | awk '{print $1}' | xargs kill -9 >/dev/null 2>&1
 	else
@@ -1947,23 +1977,24 @@ Menu_Uninstall(){
 	Auto_Startup delete 2>/dev/null
 	Auto_Cron delete 2>/dev/null
 	Auto_ServiceEvent delete 2>/dev/null
-	
+
 	LOCKFILE=/tmp/addonwebui.lock
 	FD=386
 	eval exec "$FD>$LOCKFILE"
 	flock -x "$FD"
 	Get_WebUI_Page "$SCRIPT_DIR/vnstat-ui.asp"
-	if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]; then
+	if [ -n "$MyPage" ] && [ "$MyPage" != "none" ] && [ -f "/tmp/menuTree.js" ]
+	then
 		sed -i "\\~$MyPage~d" /tmp/menuTree.js
-		umount /www/require/modules/menuTree.js
+		umount /www/require/modules/menuTree.js 2>/dev/null
 		mount -o bind /tmp/menuTree.js /www/require/modules/menuTree.js
 		rm -f "$SCRIPT_WEBPAGE_DIR/$MyPage"
 		rm -f "$SCRIPT_WEBPAGE_DIR/$(echo $MyPage | cut -f1 -d'.').title"
 	fi
 	flock -u "$FD"
 	rm -f "$SCRIPT_DIR/vnstat-ui.asp"
-	rm -rf "$SCRIPT_WEB_DIR"
-	
+	rm -rf "$SCRIPT_WEB_DIR" 2>/dev/null
+
 	Shortcut_Script delete
 	/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
 	touch /opt/etc/vnstat.conf
@@ -2096,7 +2127,8 @@ VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
 VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
 VNSTAT_OUTPUT_FILE="$SCRIPT_STORAGE_DIR/vnstat.txt"
 
-if [ -z "$1" ]; then
+if [ $# -eq 0 ] || [ -z "$1" ]
+then
 	NTP_Ready
 	Entware_Ready
 	Create_Dirs

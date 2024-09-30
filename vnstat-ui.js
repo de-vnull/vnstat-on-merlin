@@ -1,4 +1,3 @@
-var $j = jQuery.noConflict(); //avoid conflicts on John's fork (state.js)
 var maxNoCharts = 12;
 var currentNoCharts = 0;
 
@@ -31,26 +30,26 @@ var chartobjlist = ['Chart_DataUsage','Chart_CompareUsage'];
 
 function keyHandler(e){
 	if(e.keyCode == 82){
-		$j(document).off('keydown');
+		$(document).off('keydown');
 		ResetZoom();
 	}
 	else if(e.keyCode == 68){
-		$j(document).off('keydown');
+		$(document).off('keydown');
 		ToggleDragZoom(document.form.btnDragZoom);
 	}
 	else if(e.keyCode == 70){
-		$j(document).off('keydown');
+		$(document).off('keydown');
 		ToggleFill();
 	}
 	else if(e.keyCode == 76){
-		$j(document).off('keydown');
+		$(document).off('keydown');
 		ToggleLines();
 	}
 }
 
-$j(document).keydown(function(e){keyHandler(e);});
-$j(document).keyup(function(e){
-	$j(document).keydown(function(e){
+$(document).keydown(function(e){keyHandler(e);});
+$(document).keyup(function(e){
+	$(document).keydown(function(e){
 		keyHandler(e);
 	});
 });
@@ -69,11 +68,11 @@ function Validate_AllowanceStartDay(forminput){
 	var inputvalue = forminput.value*1;
 	
 	if(inputvalue > 28 || inputvalue < 1){
-		$j(forminput).addClass('invalid');
+		$(forminput).addClass('invalid');
 		return false;
 	}
 	else{
-		$j(forminput).removeClass('invalid');
+		$(forminput).removeClass('invalid');
 		return true;
 	}
 }
@@ -83,11 +82,11 @@ function Validate_DataAllowance(forminput){
 	var inputvalue = forminput.value*1;
 	
 	if(inputvalue < 0 || forminput.value.length == 0 || inputvalue == NaN || forminput.value == '.'){
-		$j(forminput).addClass('invalid');
+		$(forminput).addClass('invalid');
 		return false;
 	}
 	else{
-		$j(forminput).removeClass('invalid');
+		$(forminput).removeClass('invalid');
 		return true;
 	}
 }
@@ -136,10 +135,10 @@ function SetCookie(cookiename,cookievalue){
 function ScriptUpdateLayout(){
 	var localver = GetVersionNumber('local');
 	var serverver = GetVersionNumber('server');
-	$j('#dnvnstat_version_local').text(localver);
+	$('#dnvnstat_version_local').text(localver);
 	
 	if(localver != serverver && serverver != 'N/A'){
-		$j('#dnvnstat_version_server').text('Updated version available: '+serverver);
+		$('#dnvnstat_version_server').text('Updated version available: '+serverver);
 		showhide('btnChkUpdate',false);
 		showhide('dnvnstat_version_server',true);
 		showhide('btnDoUpdate',true);
@@ -147,7 +146,7 @@ function ScriptUpdateLayout(){
 }
 
 function update_status(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/dn-vnstat/detect_update.js',
 		dataType: 'script',
 		error: function(xhr){
@@ -161,12 +160,12 @@ function update_status(){
 				document.getElementById('imgChkUpdate').style.display = 'none';
 				showhide('dnvnstat_version_server',true);
 				if(updatestatus != 'None'){
-					$j('#dnvnstat_version_server').text('Updated version available: '+updatestatus);
+					$('#dnvnstat_version_server').text('Updated version available: '+updatestatus);
 					showhide('btnChkUpdate',false);
 					showhide('btnDoUpdate',true);
 				}
 				else{
-					$j('#dnvnstat_version_server').text('No update available');
+					$('#dnvnstat_version_server').text('No update available');
 					showhide('btnChkUpdate',true);
 					showhide('btnDoUpdate',false);
 				}
@@ -207,10 +206,10 @@ function GetVersionNumber(versiontype){
 	}
 }
 
-$j.fn.serializeObject = function(){
+$.fn.serializeObject = function(){
 	var o = custom_settings;
 	var a = this.serializeArray();
-	$j.each(a,function(){
+	$.each(a,function(){
 		if (o[this.name] !== undefined && this.name.indexOf('dnvnstat') != -1 && this.name.indexOf('version') == -1){
 			if (!o[this.name].push){
 				o[this.name] = [o[this.name]];
@@ -224,7 +223,7 @@ $j.fn.serializeObject = function(){
 };
 
 function SaveConfig(){
-	document.getElementById('amng_custom').value = JSON.stringify($j('form').serializeObject());
+	document.getElementById('amng_custom').value = JSON.stringify($('form').serializeObject());
 	document.form.action_script.value = 'start_dn-vnstatconfig';
 	document.form.action_wait.value = 15;
 	showLoading();
@@ -232,7 +231,7 @@ function SaveConfig(){
 }
 
 function get_conf_file(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/dn-vnstat/config.htm',
 		dataType: 'text',
 		error: function(xhr){
@@ -251,7 +250,7 @@ function get_conf_file(){
 }
 
 function get_vnstatconf_file(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/dn-vnstat/vnstatconf.htm',
 		dataType: 'text',
 		error: function(xhr){
@@ -270,7 +269,7 @@ function get_vnstatconf_file(){
 }
 
 function loadVnStatOutput(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/dn-vnstat/vnstatoutput.htm',
 		dataType: 'text',
 		error: function(xhr){
@@ -283,7 +282,7 @@ function loadVnStatOutput(){
 }
 
 function get_vnstatusage_file(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/dn-vnstat/vnstatusage.js',
 		dataType: 'script',
 		error: function(xhr){
@@ -307,8 +306,8 @@ function ShowHideDataUsageWarning(showusage){
 }
 
 function UpdateText(){
-	$j('#statstitle').html('The statistics and graphs on this page were last refreshed at: '+daterefeshed);
-	$j('#spandatausage').html(usagestring);
+	$('#statstitle').html('The statistics and graphs on this page were last refreshed at: '+daterefeshed);
+	$('#spandatausage').html(usagestring);
 	ShowHideDataUsageWarning(usagethreshold);
 }
 
@@ -331,7 +330,7 @@ function UpdateStats(){
 }
 
 function update_vnstat(){
-	$j.ajax({
+	$.ajax({
 		url: '/ext/dn-vnstat/detect_vnstat.js',
 		dataType: 'script',
 		error: function(xhr){
@@ -363,23 +362,23 @@ function update_vnstat(){
 }
 
 function AddEventHandlers(){
-	$j('.collapsible-jquery').off('click').on('click',function(){
-		$j(this).siblings().toggle('fast',function(){
-			if($j(this).css('display') == 'none'){
-				SetCookie($j(this).siblings()[0].id,'collapsed');
+	$('.collapsible-jquery').off('click').on('click',function(){
+		$(this).siblings().toggle('fast',function(){
+			if($(this).css('display') == 'none'){
+				SetCookie($(this).siblings()[0].id,'collapsed');
 			}
 			else{
-				SetCookie($j(this).siblings()[0].id,'expanded');
+				SetCookie($(this).siblings()[0].id,'expanded');
 			}
 		})
 	});
 	
-	$j('.collapsible-jquery').each(function(index,element){
-		if(GetCookie($j(this)[0].id,'string') == 'collapsed'){
-			$j(this).siblings().toggle(false);
+	$('.collapsible-jquery').each(function(index,element){
+		if(GetCookie($(this)[0].id,'string') == 'collapsed'){
+			$(this).siblings().toggle(false);
 		}
 		else{
-			$j(this).siblings().toggle(true);
+			$(this).siblings().toggle(true);
 		}
 	});
 }
@@ -399,7 +398,7 @@ function initial(){
 	get_vnstatusage_file();
 	UpdateImages();
 	loadVnStatOutput();
-	$j('#Time_Format').val(GetCookie('Time_Format','number'));
+	$('#Time_Format').val(GetCookie('Time_Format','number'));
 	RedrawAllCharts();
 }
 
@@ -423,7 +422,7 @@ function Draw_Chart_NoData(txtchartname,texttodisplay){
 }
 
 function Draw_Chart(txtchartname){
-	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
+	var txtunity = $('#'+txtchartname+'_Unit option:selected').text();
 	var txttitle = 'Data Usage';
 	var metric0 = 'Received';
 	var metric1 = 'Sent';
@@ -433,11 +432,11 @@ function Draw_Chart(txtchartname){
 		decimals = 0;
 	}
 	
-	var chartperiod = getChartPeriod($j('#'+txtchartname+'_Period option:selected').val());
-	var chartinterval = getChartInterval($j('#'+txtchartname+'_Interval option:selected').val());
-	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
-	var txtunitx = timeunitlist[$j('#'+txtchartname+'_Period option:selected').val()];
-	var numunitx = intervallist[$j('#'+txtchartname+'_Period option:selected').val()];
+	var chartperiod = getChartPeriod($('#'+txtchartname+'_Period option:selected').val());
+	var chartinterval = getChartInterval($('#'+txtchartname+'_Interval option:selected').val());
+	var chartunitmultiplier = getChartUnitMultiplier($('#'+txtchartname+'_Unit option:selected').val());
+	var txtunitx = timeunitlist[$('#'+txtchartname+'_Period option:selected').val()];
+	var numunitx = intervallist[$('#'+txtchartname+'_Period option:selected').val()];
 	var zoompanxaxismax = moment();
 	var chartxaxismax = null;
 	var chartxaxismin = moment().startOf('hour').subtract(numunitx,txtunitx+'s').subtract(30,'minutes');
@@ -465,8 +464,8 @@ function Draw_Chart(txtchartname){
 	
 	var objchartname=window['Chart_'+txtchartname];
 	
-	var timeaxisformat = getTimeFormat($j('#Time_Format option:selected').val(),'axis');
-	var timetooltipformat = getTimeFormat($j('#Time_Format option:selected').val(),'tooltip');
+	var timeaxisformat = getTimeFormat($('#Time_Format option:selected').val(),'axis');
+	var timetooltipformat = getTimeFormat($('#Time_Format option:selected').val(),'tooltip');
 	
 	if(chartinterval == 'fiveminute'){
 		charttype = 'line';
@@ -570,7 +569,7 @@ function Draw_Chart(txtchartname){
 				}
 			}],
 			yAxes: [{
-				type: getChartScale($j('#'+txtchartname+'_Scale option:selected').val()),
+				type: getChartScale($('#'+txtchartname+'_Scale option:selected').val()),
 				gridLines: { display: false,color: '#282828' },
 				scaleLabel: { display: false,labelString: txtunity },
 				id: 'left-y-axis',
@@ -783,7 +782,7 @@ function Draw_Chart(txtchartname){
 
 
 function Draw_Chart_Summary(txtchartname){
-	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
+	var txtunity = $('#'+txtchartname+'_Unit option:selected').text();
 	var txttitle = 'Summary Usage';
 	var metric0 = 'Received';
 	var metric1 = 'Sent';
@@ -793,7 +792,7 @@ function Draw_Chart_Summary(txtchartname){
 		decimals = 0;
 	}
 	
-	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
+	var chartunitmultiplier = getChartUnitMultiplier($('#'+txtchartname+'_Unit option:selected').val());
 	var charttype = 'bar';
 	var dataobject0 = window[txtchartname+'_WeekSummary'].slice();
 	if(typeof dataobject0 === 'undefined' || dataobject0 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
@@ -895,7 +894,7 @@ function Draw_Chart_Summary(txtchartname){
 				}
 			}],
 			yAxes: [{
-				type: getChartScale($j('#'+txtchartname+'_Scale option:selected').val()),
+				type: getChartScale($('#'+txtchartname+'_Scale option:selected').val()),
 				gridLines: { display: false,color: '#282828' },
 				scaleLabel: { display: false,labelString: txtunity },
 				id: 'left-y-axis',
@@ -1098,7 +1097,7 @@ function Draw_Chart_Summary(txtchartname){
 }
 
 function Draw_Chart_Compare(txtchartname){
-	var txtunity = $j('#'+txtchartname+'_Unit option:selected').text();
+	var txtunity = $('#'+txtchartname+'_Unit option:selected').text();
 	var txttitle = 'Compare Usage';
 	var metric0 = 'Received';
 	var metric1 = 'Sent';
@@ -1108,7 +1107,7 @@ function Draw_Chart_Compare(txtchartname){
 		decimals = 0;
 	}
 	
-	var chartunitmultiplier = getChartUnitMultiplier($j('#'+txtchartname+'_Unit option:selected').val());
+	var chartunitmultiplier = getChartUnitMultiplier($('#'+txtchartname+'_Unit option:selected').val());
 	var charttype = 'bar';
 	var dataobject0 = window[txtchartname+'_WeekThis'].slice();
 	if(typeof dataobject0 === 'undefined' || dataobject0 === null){ Draw_Chart_NoData(txtchartname,'No data to display'); return; }
@@ -1280,7 +1279,7 @@ function Draw_Chart_Compare(txtchartname){
 				}
 			}],
 			yAxes: [{
-				type: getChartScale($j('#'+txtchartname+'_Scale option:selected').val()),
+				type: getChartScale($('#'+txtchartname+'_Scale option:selected').val()),
 				gridLines: { display: false,color: '#282828' },
 				scaleLabel: { display: false,labelString: txtunity },
 				id: 'left-y-axis',
@@ -1730,11 +1729,11 @@ function ResetZoom(){
 }
 
 function RedrawAllCharts(){
-	$j('#DataUsage_Interval').val(GetCookie('DataUsage_Interval','number'));
+	$('#DataUsage_Interval').val(GetCookie('DataUsage_Interval','number'));
 	changePeriod(document.getElementById('DataUsage_Interval'));
-	$j('#DataUsage_Period').val(GetCookie('DataUsage_Period','number'));
-	$j('#DataUsage_Unit').val(GetCookie('DataUsage_Unit','number'));
-	$j('#DataUsage_Scale').val(GetCookie('DataUsage_Scale','number'));
+	$('#DataUsage_Period').val(GetCookie('DataUsage_Period','number'));
+	$('#DataUsage_Unit').val(GetCookie('DataUsage_Unit','number'));
+	$('#DataUsage_Scale').val(GetCookie('DataUsage_Scale','number'));
 	Draw_Chart_NoData('DataUsage','Data loading...');
 	Draw_Chart_NoData('CompareUsage','Data loading...');
 	for(var i = 0; i < chartlist.length; i++){
@@ -1742,9 +1741,9 @@ function RedrawAllCharts(){
 			d3.csv('/ext/dn-vnstat/csv/DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]+'.htm').then(SetGlobalDataset.bind(null,'DataUsage_'+dataintervallist[i2]+'_'+chartlist[i]));
 		}
 	}
-	$j('#CompareUsage_Interval').val(GetCookie('CompareUsage_Interval','number'));
-	$j('#CompareUsage_Unit').val(GetCookie('CompareUsage_Unit','number'));
-	$j('#CompareUsage_Scale').val(GetCookie('CompareUsage_Scale','number'));
+	$('#CompareUsage_Interval').val(GetCookie('CompareUsage_Interval','number'));
+	$('#CompareUsage_Unit').val(GetCookie('CompareUsage_Unit','number'));
+	$('#CompareUsage_Scale').val(GetCookie('CompareUsage_Scale','number'));
 	d3.csv('/ext/dn-vnstat/csv/WeekThis.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekThis'));
 	d3.csv('/ext/dn-vnstat/csv/WeekPrev.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekPrev'));
 	d3.csv('/ext/dn-vnstat/csv/WeekSummary.htm').then(SetGlobalDataset.bind(null,'CompareUsage_WeekSummary'));
@@ -1755,10 +1754,10 @@ function SetGlobalDataset(txtchartname,dataobject){
 	currentNoCharts++;
 	if(currentNoCharts == maxNoCharts){
 		Draw_Chart('DataUsage');
-		if(getSummaryInterval($j('#CompareUsage_Interval option:selected').val()) == 'week'){
+		if(getSummaryInterval($('#CompareUsage_Interval option:selected').val()) == 'week'){
 			Draw_Chart_Summary('CompareUsage');
 		}
-		else if(getSummaryInterval($j('#CompareUsage_Interval option:selected').val()) == 'day'){
+		else if(getSummaryInterval($('#CompareUsage_Interval option:selected').val()) == 'day'){
 			Draw_Chart_Compare('CompareUsage');
 		}
 	}
@@ -1839,10 +1838,10 @@ function changeAllCharts(e){
 	value = e.value * 1;
 	SetCookie(e.id,value);
 	Draw_Chart('DataUsage');
-	if(getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'week'){
+	if(getSummaryInterval($('#'+name+'_Interval option:selected').val()) == 'week'){
 		Draw_Chart_Compare('CompareUsage');
 	}
-	else if(getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'day'){
+	else if(getSummaryInterval($('#'+name+'_Interval option:selected').val()) == 'day'){
 		Draw_Chart_Summary('CompareUsage');
 	}
 }
@@ -1854,10 +1853,10 @@ function changeChart(e){
 	if(name == 'DataUsage'){
 		Draw_Chart(name);
 	}
-	else if(name == 'CompareUsage' && getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'week'){
+	else if(name == 'CompareUsage' && getSummaryInterval($('#'+name+'_Interval option:selected').val()) == 'week'){
 		Draw_Chart_Summary(name);
 	}
-	else if(name == 'CompareUsage' && getSummaryInterval($j('#'+name+'_Interval option:selected').val()) == 'day'){
+	else if(name == 'CompareUsage' && getSummaryInterval($('#'+name+'_Interval option:selected').val()) == 'day'){
 		Draw_Chart_Compare(name);
 	}
 }
@@ -1866,9 +1865,9 @@ function changePeriod(e){
 	value = e.value * 1;
 	name = e.id.substring(0,e.id.indexOf('_'));
 	if(value == 2){
-		$j('select[id="'+name+'_Period"] option:contains(24)').text('Today');
+		$('select[id="'+name+'_Period"] option:contains(24)').text('Today');
 	}
 	else{
-		$j('select[id="'+name+'_Period"] option:contains("Today")').text('Last 24 hours');
+		$('select[id="'+name+'_Period"] option:contains("Today")').text('Last 24 hours');
 	}
 }
