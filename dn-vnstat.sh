@@ -10,7 +10,7 @@
 ##    github.com/de-vnull/vnstat-on-merlin     ##
 ##                                             ##
 #################################################
-# Last Modified: 2024-Sep-22
+# Last Modified: 2025-Apr-13
 #------------------------------------------------
 
 ########         Shellcheck directives     ######
@@ -28,11 +28,11 @@
 
 ### Start of script variables ###
 readonly SCRIPT_NAME="dn-vnstat"
-readonly SCRIPT_VERSION="v2.0.6"
+readonly SCRIPT_VERSION="v2.0.7"
 SCRIPT_BRANCH="main"
 SCRIPT_REPO="https://raw.githubusercontent.com/de-vnull/vnstat-on-merlin/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME.d"
-readonly SCRIPT_WEBPAGE_DIR="$(readlink /www/user)"
+readonly SCRIPT_WEBPAGE_DIR="$(readlink -f /www/user)"
 readonly SCRIPT_WEB_DIR="$SCRIPT_WEBPAGE_DIR/$SCRIPT_NAME"
 readonly SHARED_DIR="/jffs/addons/shared-jy"
 readonly SHARED_REPO="https://raw.githubusercontent.com/jackyaz/shared-jy/master"
@@ -51,8 +51,12 @@ readonly SETTING="${BOLD}\\e[36m"
 readonly CLEARFORMAT="\\e[0m"
 ### End of output format variables ###
 
+# Give priority to built-in binaries #
+export PATH="/bin:/usr/bin:/sbin:/usr/sbin:$PATH"
+
 # $1 = print to syslog, $2 = message to print, $3 = log level
-Print_Output(){
+Print_Output()
+{
 	if [ "$1" = "true" ]; then
 		logger -t "$SCRIPT_NAME" "$2"
 	fi
@@ -60,7 +64,8 @@ Print_Output(){
 }
 
 ### Check firmware version contains the "am_addons" feature flag ###
-Firmware_Version_Check(){
+Firmware_Version_Check()
+{
 	if nvram get rc_support | grep -qF "am_addons"; then
 		return 0
 	else
@@ -70,10 +75,13 @@ Firmware_Version_Check(){
 
 ### Create "lock" file to ensure script only allows 1 concurrent process for certain actions ###
 ### Code for these functions inspired by https://github.com/Adamm00 - credit to @Adamm ###
-Check_Lock(){
-	if [ -f "/tmp/$SCRIPT_NAME.lock" ]; then
-		ageoflock=$(($(date +%s) - $(date +%s -r /tmp/$SCRIPT_NAME.lock)))
-		if [ "$ageoflock" -gt 600 ]; then
+Check_Lock()
+{
+	if [ -f "/tmp/$SCRIPT_NAME.lock" ]
+	then
+		ageoflock="$(($(date +%s) - $(date +%s -r /tmp/$SCRIPT_NAME.lock)))"
+		if [ "$ageoflock" -gt 600 ]  #10 minutes#
+		then
 			Print_Output true "Stale lock file found (>600 seconds old) - purging lock" "$ERR"
 			kill "$(sed -n '1p' /tmp/$SCRIPT_NAME.lock)" >/dev/null 2>&1
 			Clear_Lock
@@ -81,10 +89,12 @@ Check_Lock(){
 			return 0
 		else
 			Print_Output true "Lock file found (age: $ageoflock seconds)" "$ERR"
-			if [ -z "$1" ]; then
+			if [ $# -eq 0 ] || [ -z "$1" ]
+			then
 				exit 1
 			else
-				if [ "$1" = "webui" ]; then
+				if [ "$1" = "webui" ]
+				then
 					echo 'var vnstatstatus = "LOCKED";' > /tmp/detect_vnstat.js
 					exit 1
 				fi
@@ -97,7 +107,8 @@ Check_Lock(){
 	fi
 }
 
-Clear_Lock(){
+Clear_Lock()
+{
 	rm -f "/tmp/$SCRIPT_NAME.lock" 2>/dev/null
 	return 0
 }
@@ -105,7 +116,8 @@ Clear_Lock(){
 
 ### Create "settings" in the custom_settings file, used by the WebUI for version information and script updates ###
 ### local is the version of the script installed, server is the version on Github ###
-Set_Version_Custom_Settings(){
+Set_Version_Custom_Settings()
+{
 	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	case "$1" in
 		local)
@@ -167,8 +179,13 @@ Update_Check(){
 ### Accepts arguments of:
 ### force - download from server even if no change detected
 ### unattended - don't return user to script CLI menu
-Update_Version(){
-	if [ -z "$1" ]; then
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-13] ##
+##----------------------------------------##
+Update_Version()
+{
+	if [ $# -eq 0 ] || [ -z "$1" ]
+	then
 		updatecheckresult="$(Update_Check)"
 		isupdate="$(echo "$updatecheckresult" | cut -f1 -d',')"
 		localver="$(echo "$updatecheckresult" | cut -f2 -d',')"
@@ -180,7 +197,8 @@ Update_Version(){
 			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available - $serverver" "$PASS"
 		fi
 
-		if [ "$isupdate" != "false" ]; then
+		if [ "$isupdate" != "false" ]
+		then
 			printf "\\n${BOLD}Do you want to continue with the update? (y/n)${CLEARFORMAT}  "
 			read -r confirm
 			case "$confirm" in
@@ -211,7 +229,8 @@ Update_Version(){
 		fi
 	fi
 	
-	if [ "$1" = "force" ]; then
+	if [ "$1" = "force" ]
+	then
 		serverver=$(/usr/sbin/curl -fsL --retry 3 "$SCRIPT_REPO/$SCRIPT_NAME.sh" | grep "SCRIPT_VERSION=" | grep -m1 -oE 'v[0-9]{1,2}([.][0-9]{1,2})([.][0-9]{1,2})')
 		Print_Output true "Downloading latest version ($serverver) of $SCRIPT_NAME" "$PASS"
 		Update_File shared-jy.tar.gz
@@ -223,17 +242,20 @@ Update_Version(){
 		Set_Version_Custom_Settings local "$serverver"
 		Set_Version_Custom_Settings server "$serverver"
 		Clear_Lock
-		if [ -z "$2" ]; then
+		if [ $# -lt 2 ] || [ -z "$2" ]
+		then
 			PressEnter
 			exec "$0"
-		elif [ "$2" = "unattended" ]; then
+		elif [ "$2" = "unattended" ]
+		then
 			exec "$0" postupdate
 		fi
 		exit 0
 	fi
 }
 
-Validate_Number(){
+Validate_Number()
+{
 	if [ "$1" -eq "$1" ] 2>/dev/null; then
 		return 0
 	else
@@ -241,7 +263,8 @@ Validate_Number(){
 	fi
 }
 
-Validate_Bandwidth(){
+Validate_Bandwidth()
+{
 	if echo "$1" | /bin/grep -oq "^[0-9]*\.\?[0-9]\?[0-9]$"; then
 		return 0
 	else
@@ -250,12 +273,16 @@ Validate_Bandwidth(){
 }
 
 ### Perform relevant actions for secondary files when being updated ###
-Update_File(){
-	if [ "$1" = "vnstat-ui.asp" ]; then ### WebUI page
+Update_File()
+{
+	if [ "$1" = "vnstat-ui.asp" ]
+	then  ## WebUI page ##
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
-		if ! diff -q "$tmpfile" "$SCRIPT_DIR/$1" >/dev/null 2>&1; then
-			if [ -f "$SCRIPT_DIR/$1" ]; then
+		if ! diff -q "$tmpfile" "$SCRIPT_DIR/$1" >/dev/null 2>&1
+		then
+			if [ -f "$SCRIPT_DIR/$1" ]
+			then
 				Get_WebUI_Page "$SCRIPT_DIR/$1"
 				sed -i "\\~$MyPage~d" /tmp/menuTree.js
 				rm -f "$SCRIPT_WEBPAGE_DIR/$MyPage" 2>/dev/null
@@ -265,7 +292,8 @@ Update_File(){
 			Mount_WebUI
 		fi
 		rm -f "$tmpfile"
-	elif [ "$1" = "shared-jy.tar.gz" ]; then ### shared web resources
+	elif [ "$1" = "shared-jy.tar.gz" ]
+	then  ## shared web resources ##
 		if [ ! -f "$SHARED_DIR/$1.md5" ]; then
 			Download_File "$SHARED_REPO/$1" "$SHARED_DIR/$1"
 			Download_File "$SHARED_REPO/$1.md5" "$SHARED_DIR/$1.md5"
@@ -283,10 +311,12 @@ Update_File(){
 				Print_Output true "New version of $1 downloaded" "$PASS"
 			fi
 		fi
-	elif [ "$1" = "S33vnstat" ]; then ### Entware S script to launch vnstat
+	elif [ "$1" = "S33vnstat" ]
+	then  ## Entware S script to launch vnstat ##
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
-		if ! diff -q "$tmpfile" "/opt/etc/init.d/$1" >/dev/null 2>&1; then
+		if ! diff -q "$tmpfile" "/opt/etc/init.d/$1" >/dev/null 2>&1
+		then
 			if [ -f /opt/etc/init.d/S33vnstat ]; then
 				/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
 				sleep 2
@@ -297,14 +327,17 @@ Update_File(){
 			Print_Output true "New version of $1 downloaded" "$PASS"
 		fi
 		rm -f "$tmpfile"
-	elif [ "$1" = "vnstat.conf" ]; then ### vnstat config file
+	elif [ "$1" = "vnstat.conf" ]
+	then  ## vnstat config file ##
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
-		if [ ! -f "$SCRIPT_STORAGE_DIR/$1" ]; then
+		if [ ! -f "$SCRIPT_STORAGE_DIR/$1" ]
+		then
 			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_STORAGE_DIR/$1.default"
 			Download_File "$SCRIPT_REPO/$1" "$SCRIPT_STORAGE_DIR/$1"
 			Print_Output true "$SCRIPT_STORAGE_DIR/$1 does not exist, downloading now." "$PASS"
-		elif [ -f "$SCRIPT_STORAGE_DIR/$1.default" ]; then
+		elif [ -f "$SCRIPT_STORAGE_DIR/$1.default" ]
+		then
 			if ! diff -q "$tmpfile" "$SCRIPT_STORAGE_DIR/$1.default" >/dev/null 2>&1; then
 				Download_File "$SCRIPT_REPO/$1" "$SCRIPT_STORAGE_DIR/$1.default"
 				Print_Output true "New default version of $1 downloaded to $SCRIPT_STORAGE_DIR/$1.default, please compare against your $SCRIPT_STORAGE_DIR/$1" "$PASS"
@@ -319,18 +352,22 @@ Update_File(){
 	fi
 }
 
-Conf_FromSettings(){
+Conf_FromSettings()
+{
 	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	TMPFILE="/tmp/dnvnstat_settings.txt"
-	if [ -f "$SETTINGSFILE" ]; then
-		if [ "$(grep "dnvnstat_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]; then
+	if [ -f "$SETTINGSFILE" ]
+	then
+		if [ "$(grep "dnvnstat_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]
+		then
 			Print_Output true "Updated settings from WebUI found, merging..." "$PASS"
 			cp -a "$SCRIPT_CONF" "$SCRIPT_CONF.bak"
 			cp -a "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/vnstat.conf.bak"
 			grep "dnvnstat_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
 			sed -i "s/dnvnstat_//g;s/ /=/g" "$TMPFILE"
 			warningresetrequired="false"
-			while IFS='' read -r line || [ -n "$line" ]; do
+			while IFS='' read -r line || [ -n "$line" ]
+			do
 				SETTINGNAME="$(echo "$line" | cut -f1 -d'=' | awk '{ print toupper($1) }')"
 				SETTINGVALUE="$(echo "$line" | cut -f2 -d'=')"
 				if [ "$SETTINGNAME" != "MONTHROTATE" ]; then
@@ -371,7 +408,8 @@ Conf_FromSettings(){
 }
 
 ### Create directories in filesystem if they do not exist ###
-Create_Dirs(){
+Create_Dirs()
+{
 	if [ ! -d "$SCRIPT_DIR" ]; then
 		mkdir -p "$SCRIPT_DIR"
 	fi
@@ -402,7 +440,8 @@ Create_Dirs(){
 }
 
 ### Create symbolic links to /www/user for WebUI files to avoid file duplication ###
-Create_Symlinks(){
+Create_Symlinks()
+{
 	rm -rf "${SCRIPT_WEB_DIR:?}/"* 2>/dev/null
 	
 	ln -s /tmp/detect_vnstat.js "$SCRIPT_WEB_DIR/detect_vnstat.js" 2>/dev/null
@@ -419,43 +458,46 @@ Create_Symlinks(){
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2024-Sep-22] ##
+## Modified by Martinski W. [2025-Apr-13] ##
 ##----------------------------------------##
 Conf_Exists()
 {
+	local restartvnstat=false
+
 	if [ -f "$SCRIPT_STORAGE_DIR/vnstat.conf" ]
 	then
-		restartvnstat="false"
+		restartvnstat=false
 		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-			restartvnstat="true"
+			restartvnstat=true
 		fi
 		if ! grep -q "^TimeSyncWait 10" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-			restartvnstat="true"
+			restartvnstat=true
 		fi
 		if ! grep -q "^UpdateInterval 30" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-			restartvnstat="true"
+			restartvnstat=true
 		fi
 		if ! grep -q "^UnitMode 2" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^UnitMode.*$/UnitMode 2/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-			restartvnstat="true"
+			restartvnstat=true
 		fi
 		if ! grep -q "^RateUnitMode 1" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^RateUnitMode.*$/RateUnitMode 1/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-			restartvnstat="true"
+			restartvnstat=true
 		fi
 		if ! grep -q "^OutputStyle 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^OutputStyle.*$/OutputStyle 0/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-			restartvnstat="true"
+			restartvnstat=true
 		fi
 		if ! grep -q '^MonthFormat "%Y-%m"' "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
 			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-			restartvnstat="true"
+			restartvnstat=true
 		fi
 
-		if [ "$restartvnstat" = "true" ]; then
+		if [ "$restartvnstat" = "true" ]
+		then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			Generate_Images silent
 			Generate_Stats silent
@@ -498,7 +540,8 @@ Conf_Exists()
 }
 
 ### Add script hook to service-event and pass service_event argument and all other arguments passed to the service call ###
-Auto_ServiceEvent(){
+Auto_ServiceEvent()
+{
 	case $1 in
 		create)
 			if [ -f /jffs/scripts/service-event ]; then
@@ -786,7 +829,8 @@ Get_WAN_IFace(){
 	echo "$IFACE_WAN"
 }
 
-ScriptStorageLocation(){
+ScriptStorageLocation()
+{
 	case "$1" in
 		usb)
 			sed -i 's/^STORAGELOCATION.*$/STORAGELOCATION=usb/' "$SCRIPT_CONF"
@@ -1015,7 +1059,8 @@ Generate_CSVs(){
 	renice 0 $$
 }
 
-Generate_Images(){
+Generate_Images()
+{
 	Create_Dirs
 	Conf_Exists
 	ScriptStorageLocation load
@@ -1051,7 +1096,8 @@ Generate_Images(){
 	done
 }
 
-Generate_Stats(){
+Generate_Stats()
+{
 	if [ ! -f /opt/bin/xargs ]; then
 		Print_Output true "Installing findutils from Entware"
 		opkg update
@@ -1455,19 +1501,28 @@ Check_Bandwidth_Usage(){
 	printf "var daterefeshed = \"%s\";\\n" "$(date +"%Y-%m-%d %T")" >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 }
 
-Process_Upgrade(){
-	if [ ! -f "$SCRIPT_STORAGE_DIR/.vnstatusage" ]; then
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-13] ##
+##----------------------------------------##
+Process_Upgrade()
+{
+	local restartvnstat=false
+
+	if [ ! -f "$SCRIPT_STORAGE_DIR/.vnstatusage" ]
+	then
 		echo "var usagethreshold = false;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	fi
 	
-	if ! grep -q "^UseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
+	if ! grep -q "^UseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"
+	then
 		sed -i "/^DatabaseSynchronous/a\\\n# Enable or disable using UTC as timezone in the database for all entries.\n# When enabled, all entries added to the database will use UTC regardless of\n# the configured system timezone. When disabled, the configured system timezone\n# will be used. Changing this setting will not result in already existing data to be modified.\n# 1 = enabled, 0 = disabled.\nUseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"
-		restartvnstat="true"
+		restartvnstat=true
 	fi
 	
-	if [ "$restartvnstat" = "true" ]; then
+	if [ "$restartvnstat" = "true" ]
+	then
 		/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 		Generate_Images silent
 		Generate_Stats silent
@@ -1475,23 +1530,28 @@ Process_Upgrade(){
 	fi
 }
 
-ScriptHeader(){
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-13] ##
+##----------------------------------------##
+ScriptHeader()
+{
 	clear
-	printf "\\n"
-	printf "${BOLD}##################################################${CLEARFORMAT}\\n"
-	printf "${BOLD}##                                              ##${CLEARFORMAT}\\n"
-	printf "${BOLD}##             vnStat on Merlin                 ##${CLEARFORMAT}\\n"
-	printf "${BOLD}##        for AsusWRT-Merlin routers            ##${CLEARFORMAT}\\n"
-	printf "${BOLD}##                                              ##${CLEARFORMAT}\\n"
-	printf "${BOLD}##             %s on %-11s            ##${CLEARFORMAT}\\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
-	printf "${BOLD}##                                              ## ${CLEARFORMAT}\\n"
-	printf "${BOLD}## https://github.com/de-vnull/vnstat-on-merlin ##${CLEARFORMAT}\\n"
-	printf "${BOLD}##                                              ##${CLEARFORMAT}\\n"
-	printf "${BOLD}##################################################${CLEARFORMAT}\\n"
-	printf "\\n"
+	printf "\n"
+	printf "${BOLD}##################################################${CLEARFORMAT}\n"
+	printf "${BOLD}##                                              ##${CLEARFORMAT}\n"
+	printf "${BOLD}##             vnStat on Merlin                 ##${CLEARFORMAT}\n"
+	printf "${BOLD}##        for AsusWRT-Merlin routers            ##${CLEARFORMAT}\n"
+	printf "${BOLD}##                                              ##${CLEARFORMAT}\n"
+	printf "${BOLD}##         %9s on %-18s      ##${CLEARFORMAT}\n" "$SCRIPT_VERSION" "$ROUTER_MODEL"
+	printf "${BOLD}##                                              ## ${CLEARFORMAT}\n"
+	printf "${BOLD}## https://github.com/de-vnull/vnstat-on-merlin ##${CLEARFORMAT}\n"
+	printf "${BOLD}##                                              ##${CLEARFORMAT}\n"
+	printf "${BOLD}##################################################${CLEARFORMAT}\n"
+	printf "\n"
 }
 
-MainMenu(){
+MainMenu()
+{
 	MENU_DAILYEMAIL="$(DailyEmail check)"
 	if [ "$MENU_DAILYEMAIL" = "html" ]; then
 		MENU_DAILYEMAIL="${PASS}ENABLED - HTML"
@@ -1527,7 +1587,8 @@ MainMenu(){
 	printf "${BOLD}##################################################${CLEARFORMAT}\\n"
 	printf "\\n"
 	
-	while true; do
+	while true
+	do
 		printf "Choose an option:  "
 		read -r menu
 		case "$menu" in
@@ -1670,14 +1731,19 @@ MainMenu(){
 	MainMenu
 }
 
-Menu_Install(){
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-13] ##
+##----------------------------------------##
+Menu_Install()
+{
 	ScriptHeader
-	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz"
+	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz" "$PASS"
 	sleep 1
 	
-	Print_Output false "Checking your router meets the requirements for $SCRIPT_NAME"
+	Print_Output false "Checking your router meets the requirements for $SCRIPT_NAME" "$PASS"
 	
-	if ! Check_Requirements; then
+	if ! Check_Requirements
+	then
 		Print_Output false "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
 		PressEnter
 		Clear_Lock
@@ -1686,9 +1752,10 @@ Menu_Install(){
 	fi
 	
 	IFACE=""
-	printf "\\n${BOLD}WAN Interface detected as %s${CLEARFORMAT}\\n" "$(Get_WAN_IFace)"
-	while true; do
-		printf "\\n${BOLD}Is this correct? (y/n)${CLEARFORMAT}  "
+	printf "\n${BOLD}WAN Interface detected as %s${CLEARFORMAT}\n" "$(Get_WAN_IFace)"
+	while true
+	do
+		printf "\n${BOLD}Is this correct? (y/n)${CLEARFORMAT}  "
 		read -r confirm
 		case "$confirm" in
 			y|Y)
@@ -1696,16 +1763,20 @@ Menu_Install(){
 				break
 			;;
 			n|N)
-				while true; do
-					printf "\\n${BOLD}Please enter correct interface:${CLEARFORMAT}  "
+				while true
+				do
+					printf "\n${BOLD}Please enter correct interface:${CLEARFORMAT}  "
 					read -r iface
 					iface_lower="$(echo "$iface" | tr "A-Z" "a-z")"
-					if [ "$iface" = "e" ]; then
+					if [ "$iface" = "e" ]
+					then
 						Clear_Lock
 						rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 						exit 1
-					elif [ ! -f "/sys/class/net/$iface_lower/operstate" ] || [ "$(cat "/sys/class/net/$iface_lower/operstate")" = "down" ]; then
-						printf "\\n\\e[31mInput is not a valid interface or interface not up, please try again${CLEARFORMAT}\\n"
+					elif [ ! -f "/sys/class/net/$iface_lower/operstate" ] || \
+					     [ "$(cat "/sys/class/net/$iface_lower/operstate")" = "down" ]
+					then
+						printf "\n\\e[31mInput is not a valid interface or interface not up, please try again.${CLEARFORMAT}\n"
 					else
 						IFACE="$iface_lower"
 						break
@@ -1718,7 +1789,7 @@ Menu_Install(){
 		esac
 	done
 	
-	printf "\\n"
+	printf "\n"
 	
 	Create_Dirs
 	Conf_Exists
@@ -1739,13 +1810,15 @@ Menu_Install(){
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
 	
-	if [ ! -f "$SCRIPT_STORAGE_DIR/.vnstatusage" ]; then
+	if [ ! -f "$SCRIPT_STORAGE_DIR/.vnstatusage" ]
+	then
 		echo "var usagethreshold = false;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	fi
 	
-	if [ -n "$(pidof vnstatd)" ];then
+	if [ -n "$(pidof vnstatd)" ]
+	then
 		Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
 		sleep 60
 		Generate_Images
@@ -1761,12 +1834,19 @@ Menu_Install(){
 	MainMenu
 }
 
-Menu_Startup(){
-	if [ -z "$1" ]; then
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-13] ##
+##----------------------------------------##
+Menu_Startup()
+{
+	if [ $# -eq 0 ] || [ -z "$1" ]
+	then
 		Print_Output true "Missing argument for startup, not starting $SCRIPT_NAME" "$WARN"
 		exit 1
-	elif [ "$1" != "force" ]; then
-		if [ ! -f "$1/entware/bin/opkg" ]; then
+	elif [ "$1" != "force" ]
+	then
+		if [ ! -f "$1/entware/bin/opkg" ]
+		then
 			Print_Output true "$1 does not contain Entware, not starting $SCRIPT_NAME" "$WARN"
 			exit 1
 		else
@@ -1774,8 +1854,7 @@ Menu_Startup(){
 		fi
 	fi
 	
-	NTP_Ready
-	
+	NTP_Ready startup
 	Check_Lock
 	
 	if [ "$1" != "force" ]; then
@@ -1793,7 +1872,8 @@ Menu_Startup(){
 	Clear_Lock
 }
 
-Menu_BandwidthAllowance(){
+Menu_BandwidthAllowance()
+{
 	exitmenu="false"
 	bandwidthallowance=""
 	ScriptHeader
@@ -2032,21 +2112,45 @@ Menu_Uninstall()
 	Print_Output true "Uninstall completed" "$PASS"
 }
 
-NTP_Ready(){
-	if [ "$(nvram get ntp_ready)" -eq 0 ]; then
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-13] ##
+##----------------------------------------##
+NTP_Ready()
+{
+	if [ "$(nvram get ntp_ready)" -eq 1 ]
+	then
+		if [ $# -gt 0 ] && [ "$1" = "startup" ]
+        then
+			Print_Output true "NTP is synced." "$PASS"
+			/opt/etc/init.d/S33vnstat start >/dev/null 2>&1
+        fi
+		return 0
+	fi
+
+	local theSleepDelay=15  ntpMaxWaitSecs=600  ntpWaitSecs
+
+	if [ "$(nvram get ntp_ready)" -eq 0 ]
+	then
 		Check_Lock
-		ntpwaitcount=0
-		while [ "$(nvram get ntp_ready)" -eq 0 ] && [ "$ntpwaitcount" -lt 600 ]; do
-			ntpwaitcount="$((ntpwaitcount + 30))"
-			Print_Output true "Waiting for NTP to sync..." "$WARN"
-			sleep 30
+		ntpWaitSecs=0
+		Print_Output true "Waiting for NTP to sync..." "$WARN"
+
+		while [ "$(nvram get ntp_ready)" -eq 0 ] && [ "$ntpWaitSecs" -lt "$ntpMaxWaitSecs" ]
+		do
+			if [ "$ntpWaitSecs" -gt 0 ] && [ "$((ntpWaitSecs % 30))" -eq 0 ]
+			then
+			    Print_Output true "Waiting for NTP to sync [$ntpWaitSecs secs]..." "$WARN"
+			fi
+			sleep "$theSleepDelay"
+			ntpWaitSecs="$((ntpWaitSecs + theSleepDelay))"
 		done
-		if [ "$ntpwaitcount" -ge 600 ]; then
+		if [ "$ntpWaitSecs" -ge "$ntpMaxWaitSecs" ]
+		then
 			Print_Output true "NTP failed to sync after 10 minutes. Please resolve!" "$CRIT"
 			Clear_Lock
 			exit 1
 		else
-			Print_Output true "NTP synced, $SCRIPT_NAME will now continue" "$PASS"
+			Print_Output true "NTP has synced [$ntpWaitSecs secs], $SCRIPT_NAME will now continue." "$PASS"
 			/opt/etc/init.d/S33vnstat start >/dev/null 2>&1
 			Clear_Lock
 		fi
@@ -2054,16 +2158,20 @@ NTP_Ready(){
 }
 
 ### function based on @Adamm00's Skynet USB wait function ###
-Entware_Ready(){
-	if [ ! -f /opt/bin/opkg ]; then
+Entware_Ready()
+{
+	if [ ! -f /opt/bin/opkg ]
+	then
 		Check_Lock
 		sleepcount=1
-		while [ ! -f /opt/bin/opkg ] && [ "$sleepcount" -le 10 ]; do
+		while [ ! -f /opt/bin/opkg ] && [ "$sleepcount" -le 10 ]
+		do
 			Print_Output true "Entware not found, sleeping for 10s (attempt $sleepcount of 10)" "$ERR"
 			sleepcount="$((sleepcount + 1))"
 			sleep 10
 		done
-		if [ ! -f /opt/bin/opkg ]; then
+		if [ ! -f /opt/bin/opkg ]
+		then
 			Print_Output true "Entware not found and is required for $SCRIPT_NAME to run, please resolve" "$CRIT"
 			Clear_Lock
 			exit 1
@@ -2075,7 +2183,8 @@ Entware_Ready(){
 }
 ### ###
 
-Show_About(){
+Show_About()
+{
 	cat <<EOF
 About
   $SCRIPT_NAME implements an NTP time server for AsusWRT Merlin

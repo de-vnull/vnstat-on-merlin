@@ -4,9 +4,19 @@ Note: R1 runs on all supported architectures (ARM, AARCH, MIPS). R2 runs only on
 
 # Version R2 (based on vnStat 2.x) #
 
+### v 2.0.7 - 13-Apr-2025 ###
+  * Fixes to make sure the vnstat Entware service is started during the reboot sequence after NTP is synced.
+  * Added "export PATH" statement to give the built-in binaries higher priority than the equivalent Entware binaries.
+  * Miscellaneous code improvements & fine-tuning.
+
+### v 2.0.6 - 22-Sep-2024 ###
+  * Fixed error when loading the webGUI page on the latest 3006.102.xx F/W version.
+  * Fixed "missing scrollbar" issue on browser windows when the webGUI page was loaded on the latest 3004.386.14 F/W version.
+  * Fixes and improvements when reading and checking for configuration settings.
+  * Removed/modified code related to "var $j = jQuery.noConflict();" which is now considered obsolete.
+
 ### v 2.0.5 - 11-Feb-2024 ###
   * Hotfix posted to address iCloud "weird server reply" issue. Only required if you are using iCloud/me.com SMTP services.
-
 
 ### v 2.0.4 - 31-Dec-2021 ###
   * End-of-year-housekeeping: this update includes minor updates to charts, interface id, and uninstall functions.
