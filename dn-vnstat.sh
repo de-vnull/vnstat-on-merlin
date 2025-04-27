@@ -2120,10 +2120,10 @@ NTP_Ready()
 	if [ "$(nvram get ntp_ready)" -eq 1 ]
 	then
 		if [ $# -gt 0 ] && [ "$1" = "startup" ]
-        then
+		then
 			Print_Output true "NTP is synced." "$PASS"
 			/opt/etc/init.d/S33vnstat start >/dev/null 2>&1
-        fi
+		fi
 		return 0
 	fi
 
