@@ -10,7 +10,7 @@
 ##    github.com/de-vnull/vnstat-on-merlin     ##
 ##                                             ##
 #################################################
-# Last Modified: 2025-Apr-27
+# Last Modified: 2025-Apr-28
 #------------------------------------------------
 
 ########         Shellcheck directives     ######
@@ -65,16 +65,43 @@ readonly PASS="\\e[32m"
 readonly BOLD="\\e[1m"
 readonly SETTING="${BOLD}\\e[36m"
 readonly CLEARFORMAT="\\e[0m"
+
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-28] ##
+##----------------------------------------##
+readonly CLRct="\e[0m"
+readonly REDct="\e[1;31m"
+readonly GRNct="\e[1;32m"
+readonly CritBREDct="\e[30;101m"
+readonly WarnBYLWct="\e[30;103m"
+readonly WarnBMGNct="\e[30;105m"
+
 ### End of output format variables ###
 
 # Give priority to built-in binaries #
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin:$PATH"
 
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-27] ##
+##----------------------------------------##
 # $1 = print to syslog, $2 = message to print, $3 = log level
 Print_Output()
 {
-	if [ "$1" = "true" ]; then
-		logger -t "$SCRIPT_NAME" "$2"
+	local prioStr  prioNum
+	if [ $# -gt 2 ] && [ -n "$3" ]
+	then prioStr="$3"
+	else prioStr="NOTICE"
+	fi
+	if [ "$1" = "true" ]
+	then
+		case "$prioStr" in
+		    "$CRIT") prioNum=2 ;;
+		     "$ERR") prioNum=3 ;;
+		    "$WARN") prioNum=4 ;;
+		    "$PASS") prioNum=6 ;; #INFO#
+		          *) prioNum=5 ;; #NOTICE#
+		esac
+		logger -t "$SCRIPT_NAME" -p $prioNum "$2"
 	fi
 	printf "${BOLD}${3}%s${CLEARFORMAT}\n\n" "$2"
 }
@@ -396,54 +423,64 @@ Update_File()
 	fi
 }
 
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-27] ##
+##----------------------------------------##
 Conf_FromSettings()
 {
 	SETTINGSFILE="/jffs/addons/custom_settings.txt"
 	TMPFILE="/tmp/dnvnstat_settings.txt"
+
 	if [ -f "$SETTINGSFILE" ]
 	then
-		if [ "$(grep "dnvnstat_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]
+		if [ "$(grep "^dnvnstat_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]
 		then
-			Print_Output true "Updated settings from WebUI found, merging..." "$PASS"
-			cp -a "$SCRIPT_CONF" "$SCRIPT_CONF.bak"
-			cp -a "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_STORAGE_DIR/vnstat.conf.bak"
-			grep "dnvnstat_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
-			sed -i "s/dnvnstat_//g;s/ /=/g" "$TMPFILE"
+			Print_Output true "Updated settings from WebUI found, merging into $SCRIPT_CONF..." "$PASS"
+			cp -a "$SCRIPT_CONF" "${SCRIPT_CONF}.bak"
+			cp -a "$VNSTAT_CONFIG" "${VNSTAT_CONFIG}.bak"
+			grep "^dnvnstat_" "$SETTINGSFILE" | grep -v "version" > "$TMPFILE"
+			sed -i "s/^dnvnstat_//g;s/ /=/g" "$TMPFILE"
 			warningresetrequired="false"
 			while IFS='' read -r line || [ -n "$line" ]
 			do
 				SETTINGNAME="$(echo "$line" | cut -f1 -d'=' | awk '{ print toupper($1) }')"
 				SETTINGVALUE="$(echo "$line" | cut -f2 -d'=')"
-				if [ "$SETTINGNAME" != "MONTHROTATE" ]; then
-					if [ "$SETTINGNAME" = "DATAALLOWANCE" ]; then
-						if [ "$(echo "$SETTINGVALUE $(BandwidthAllowance check)" | awk '{print ($1 != $2)}')" -eq 1 ]; then
+				if [ "$SETTINGNAME" != "MONTHROTATE" ]
+				then
+					if [ "$SETTINGNAME" = "DATAALLOWANCE" ]
+					then
+						if [ "$(echo "$SETTINGVALUE $(BandwidthAllowance check)" | awk '{print ($1 != $2)}')" -eq 1 ]
+						then
 							warningresetrequired="true"
 						fi
 					fi
 					sed -i "s/$SETTINGNAME=.*/$SETTINGNAME=$SETTINGVALUE/" "$SCRIPT_CONF"
-				elif [ "$SETTINGNAME" = "MONTHROTATE" ]; then
-					if [ "$SETTINGVALUE" != "$(AllowanceStartDay check)" ]; then
+				elif [ "$SETTINGNAME" = "MONTHROTATE" ]
+				then
+					if [ "$SETTINGVALUE" != "$(AllowanceStartDay check)" ]
+					then
 						warningresetrequired="true"
 					fi
-					sed -i 's/^MonthRotate .*$/MonthRotate '"$SETTINGVALUE"'/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+					sed -i 's/^MonthRotate .*$/MonthRotate '"$SETTINGVALUE"'/' "$VNSTAT_CONFIG"
 				fi
 			done < "$TMPFILE"
-			grep 'dnvnstat_version' "$SETTINGSFILE" > "$TMPFILE"
+
+			grep '^dnvnstat_version' "$SETTINGSFILE" > "$TMPFILE"
 			sed -i "\\~dnvnstat_~d" "$SETTINGSFILE"
-			mv "$SETTINGSFILE" "$SETTINGSFILE.bak"
-			cat "$SETTINGSFILE.bak" "$TMPFILE" > "$SETTINGSFILE"
+			mv -f "$SETTINGSFILE" "${SETTINGSFILE}.bak"
+			cat "${SETTINGSFILE}.bak" "$TMPFILE" > "$SETTINGSFILE"
 			rm -f "$TMPFILE"
-			rm -f "$SETTINGSFILE.bak"
-			
+			rm -f "${SETTINGSFILE}.bak"
+
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
-			
+
 			if [ "$warningresetrequired" = "true" ]; then
 				Reset_Allowance_Warnings force
 			fi
 			Check_Bandwidth_Usage silent
-			
+
 			Print_Output true "Merge of updated settings from WebUI completed successfully" "$PASS"
 		else
 			Print_Output false "No updated settings from WebUI found, no merge necessary" "$PASS"
@@ -501,7 +538,7 @@ Create_Symlinks()
 	ln -s "$SCRIPT_STORAGE_DIR/.vnstatusage" "$SCRIPT_WEB_DIR/vnstatusage.js" 2>/dev/null
 	ln -s "$VNSTAT_OUTPUT_FILE" "$SCRIPT_WEB_DIR/vnstatoutput.htm" 2>/dev/null
 	ln -s "$SCRIPT_CONF" "$SCRIPT_WEB_DIR/config.htm" 2>/dev/null
-	ln -s "$SCRIPT_STORAGE_DIR/vnstat.conf" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
+	ln -s "$VNSTAT_CONFIG" "$SCRIPT_WEB_DIR/vnstatconf.htm" 2>/dev/null
 	ln -s "$IMAGE_OUTPUT_DIR" "$SCRIPT_WEB_DIR/images" 2>/dev/null
 	ln -s "$CSV_OUTPUT_DIR" "$SCRIPT_WEB_DIR/csv" 2>/dev/null
 
@@ -511,41 +548,41 @@ Create_Symlinks()
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Apr-13] ##
+## Modified by Martinski W. [2025-Apr-27] ##
 ##----------------------------------------##
 Conf_Exists()
 {
 	local restartvnstat=false
 
-	if [ -f "$SCRIPT_STORAGE_DIR/vnstat.conf" ]
+	if [ -f "$VNSTAT_CONFIG" ]
 	then
 		restartvnstat=false
-		if ! grep -q "^MaxBandwidth 1000" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		if ! grep -q "^MaxBandwidth 1000" "$VNSTAT_CONFIG"; then
+			sed -i 's/^MaxBandwidth.*$/MaxBandwidth 1000/' "$VNSTAT_CONFIG"
 			restartvnstat=true
 		fi
-		if ! grep -q "^TimeSyncWait 10" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		if ! grep -q "^TimeSyncWait 10" "$VNSTAT_CONFIG"; then
+			sed -i 's/^TimeSyncWait.*$/TimeSyncWait 10/' "$VNSTAT_CONFIG"
 			restartvnstat=true
 		fi
-		if ! grep -q "^UpdateInterval 30" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		if ! grep -q "^UpdateInterval 30" "$VNSTAT_CONFIG"; then
+			sed -i 's/^UpdateInterval.*$/UpdateInterval 30/' "$VNSTAT_CONFIG"
 			restartvnstat=true
 		fi
-		if ! grep -q "^UnitMode 2" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^UnitMode.*$/UnitMode 2/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		if ! grep -q "^UnitMode 2" "$VNSTAT_CONFIG"; then
+			sed -i 's/^UnitMode.*$/UnitMode 2/' "$VNSTAT_CONFIG"
 			restartvnstat=true
 		fi
-		if ! grep -q "^RateUnitMode 1" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^RateUnitMode.*$/RateUnitMode 1/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		if ! grep -q "^RateUnitMode 1" "$VNSTAT_CONFIG"; then
+			sed -i 's/^RateUnitMode.*$/RateUnitMode 1/' "$VNSTAT_CONFIG"
 			restartvnstat=true
 		fi
-		if ! grep -q "^OutputStyle 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^OutputStyle.*$/OutputStyle 0/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		if ! grep -q "^OutputStyle 0" "$VNSTAT_CONFIG"; then
+			sed -i 's/^OutputStyle.*$/OutputStyle 0/' "$VNSTAT_CONFIG"
 			restartvnstat=true
 		fi
-		if ! grep -q '^MonthFormat "%Y-%m"' "$SCRIPT_STORAGE_DIR/vnstat.conf"; then
-			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		if ! grep -q '^MonthFormat "%Y-%m"' "$VNSTAT_CONFIG"; then
+			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m"/' "$VNSTAT_CONFIG"
 			restartvnstat=true
 		fi
 
@@ -967,61 +1004,72 @@ Get_WAN_IFace()
 	echo "$IFACE_WAN"
 }
 
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-27] ##
+##----------------------------------------##
 ScriptStorageLocation()
 {
 	case "$1" in
 		usb)
+			printf "Please wait..."
 			sed -i 's/^STORAGELOCATION.*$/STORAGELOCATION=usb/' "$SCRIPT_CONF"
 			mkdir -p "/opt/share/$SCRIPT_NAME.d/"
-			mv "/jffs/addons/$SCRIPT_NAME.d/csv" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/images" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/config" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/config.bak" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf.bak" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf.default" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/.vnstatusage" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/vnstat.txt" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/.v2upgraded" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/jffs/addons/$SCRIPT_NAME.d/v1" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
-			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/csv" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/images" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/config" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/config.bak" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf.bak" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/vnstat.conf.default" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/.vnstatusage" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/vnstat.txt" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/.v2upgraded" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/jffs/addons/$SCRIPT_NAME.d/v1" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
 			SCRIPT_CONF="/opt/share/$SCRIPT_NAME.d/config"
+			VNSTAT_CONFIG="/opt/share/$SCRIPT_NAME.d/vnstat.conf"
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			ScriptStorageLocation load
+			sleep 1
 		;;
 		jffs)
+			printf "Please wait..."
 			sed -i 's/^STORAGELOCATION.*$/STORAGELOCATION=jffs/' "$SCRIPT_CONF"
 			mkdir -p "/jffs/addons/$SCRIPT_NAME.d/"
-			mv "/opt/share/$SCRIPT_NAME.d/csv" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/images" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/config" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/config.bak" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/vnstat.conf" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/vnstat.conf.bak" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/vnstat.conf.default" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/.vnstatusage" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/vnstat.txt" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/.v2upgraded" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			mv "/opt/share/$SCRIPT_NAME.d/v1" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
-			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
+			mv -f "/opt/share/$SCRIPT_NAME.d/csv" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/images" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/config" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/config.bak" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/vnstat.conf" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/vnstat.conf.bak" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/vnstat.conf.default" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/.vnstatusage" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/vnstat.txt" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/.v2upgraded" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
+			mv -f "/opt/share/$SCRIPT_NAME.d/v1" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
 			SCRIPT_CONF="/jffs/addons/$SCRIPT_NAME.d/config"
+			VNSTAT_CONFIG="/jffs/addons/$SCRIPT_NAME.d/vnstat.conf"
+			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			ScriptStorageLocation load
+			sleep 1
 		;;
 		check)
 			STORAGELOCATION="$(grep "^STORAGELOCATION=" "$SCRIPT_CONF" | cut -f2 -d"=")"
 			echo "${STORAGELOCATION:=jffs}"
 		;;
 		load)
-			STORAGELOCATION="$(grep "^STORAGELOCATION=" "$SCRIPT_CONF" | cut -f2 -d"=")"
-			if [ "$STORAGELOCATION" = "usb" ]; then
+			STORAGELOCATION="$(ScriptStorageLocation check)"
+			if [ "$STORAGELOCATION" = "usb" ]
+			then
 				SCRIPT_STORAGE_DIR="/opt/share/$SCRIPT_NAME.d"
-			elif [ "$STORAGELOCATION" = "jffs" ]; then
+			elif [ "$STORAGELOCATION" = "jffs" ]
+			then
 				SCRIPT_STORAGE_DIR="/jffs/addons/$SCRIPT_NAME.d"
 			fi
-			
+			chmod 777 "$SCRIPT_STORAGE_DIR"
 			CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
 			IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
-			VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
-			VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+			VNSTAT_COMMAND="vnstat --config $VNSTAT_CONFIG"
+			VNSTATI_COMMAND="vnstati --config $VNSTAT_CONFIG"
 			VNSTAT_OUTPUT_FILE="$SCRIPT_STORAGE_DIR/vnstat.txt"
 		;;
 	esac
@@ -1045,11 +1093,90 @@ OutputTimeMode()
 	esac
 }
 
+##-------------------------------------##
+## Added by Martinski W. [2025-Apr-28] ##
+##-------------------------------------##
+_GetFileSize_()
+{
+   local sizeUnits  sizeInfo  fileSize
+   if [ $# -eq 0 ] || [ -z "$1" ] || [ ! -s "$1" ]
+   then echo 0; return 1 ; fi
+
+   if [ $# -lt 2 ] || [ -z "$2" ] || \
+      ! echo "$2" | grep -qE "^(B|KB|MB|GB|HR|HRx)$"
+   then sizeUnits="B" ; else sizeUnits="$2" ; fi
+
+   _GetNum_() { printf "%.1f" "$(echo "$1" | awk "{print $1}")" ; }
+
+   case "$sizeUnits" in
+       B|KB|MB|GB)
+           fileSize="$(ls -1l "$1" | awk -F ' ' '{print $3}')"
+           case "$sizeUnits" in
+               KB) fileSize="$(_GetNum_ "($fileSize / $oneKByte)")" ;;
+               MB) fileSize="$(_GetNum_ "($fileSize / $oneMByte)")" ;;
+               GB) fileSize="$(_GetNum_ "($fileSize / $oneGByte)")" ;;
+           esac
+           echo "$fileSize"
+           ;;
+       HR|HRx)
+           fileSize="$(ls -1lh "$1" | awk -F ' ' '{print $3}')"
+           sizeInfo="${fileSize}B"
+           if [ "$sizeUnits" = "HR" ]
+           then echo "$sizeInfo" ; return 0 ; fi
+           sizeUnits="$(echo "$sizeInfo" | tr -d '.0-9')"
+           case "$sizeUnits" in
+               MB) fileSize="$(_GetFileSize_ "$1" KB)"
+                   sizeInfo="$sizeInfo [${fileSize}KB]"
+                   ;;
+               GB) fileSize="$(_GetFileSize_ "$1" MB)"
+                   sizeInfo="$sizeInfo [${fileSize}MB]"
+                   ;;
+           esac
+           echo "$sizeInfo"
+           ;;
+       *) echo 0 ;;
+   esac
+   return 0
+}
+
+##-------------------------------------##
+## Added by Martinski W. [2025-Apr-28] ##
+##-------------------------------------##
+_GetVNStatDatabaseFilePath_()
+{
+    local dbaseDirPath  dbaseFilePath
+    if [ ! -s "$VNSTAT_CONFIG" ] ; then echo ; return 1 ; fi
+    dbaseDirPath="$(grep "^DatabaseDir " "$VNSTAT_CONFIG" | awk '{print $2}' | sed 's/"//g')"
+    dbaseFilePath="${dbaseDirPath}/vnstat.db"
+    echo "$dbaseFilePath"
+    return 0
+}
+
+##-------------------------------------##
+## Added by Martinski W. [2025-Apr-27] ##
+##-------------------------------------##
+_GetInterfaceNameFromConfig_()
+{
+    local iFaceName
+    if [ ! -s "$VNSTAT_CONFIG" ] ; then echo ; return 1 ; fi
+    iFaceName="$(grep "^Interface" "$VNSTAT_CONFIG" | awk '{print $2}' | sed 's/"//g')"
+    echo "$iFaceName"
+    return 0
+}
+
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-28] ##
+##----------------------------------------##
 Generate_CSVs()
 {
+	interface="$(_GetInterfaceNameFromConfig_)"
+	VNSTAT_DBASE="$(_GetVNStatDatabaseFilePath_)"
+	if [ -z "$interface" ] || [ -z "$VNSTAT_DBASE" ] || [ ! -f "$VNSTAT_DBASE" ]
+	then
+		Print_Output true "**ERROR** Unable to generate CSVs" "$CRIT"
+		return 1
+	fi
 	renice 15 $$
-	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
-	dbdir="$(grep "^DatabaseDir " "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
 	TZ=$(cat /etc/TZ)
 	export TZ
 
@@ -1060,7 +1187,7 @@ Generate_CSVs()
 		echo ".output /tmp/dn-vnstatiface"
 		echo "SELECT id FROM [interface] WHERE [name] = '$interface';"
 	} > /tmp/dn-vnstat.sql
-	"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+	"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 	interfaceid="$(cat /tmp/dn-vnstatiface)"
 	rm -f /tmp/dn-vnstatiface
 
@@ -1078,7 +1205,7 @@ Generate_CSVs()
 				echo ".output $CSV_OUTPUT_DIR/${metric}daily.tmp"
 				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-1 day'));"
 			} > /tmp/dn-vnstat.sql
-			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+			"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 
 			{
 				echo ".mode csv"
@@ -1086,7 +1213,7 @@ Generate_CSVs()
 				echo ".output $CSV_OUTPUT_DIR/${metric}weekly.tmp"
 				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-7 day'));"
 			} > /tmp/dn-vnstat.sql
-			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+			"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 
 			{
 				echo ".mode csv"
@@ -1094,7 +1221,7 @@ Generate_CSVs()
 				echo ".output $CSV_OUTPUT_DIR/${metric}monthly.tmp"
 				echo "SELECT '$metric' Metric,strftime('%s',[date],'utc') Time,[$metric] Value FROM $interval WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-30 day'));"
 			} > /tmp/dn-vnstat.sql
-			"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+			"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 
 			rm -f /tmp/dn-vnstat.sql
 		done
@@ -1121,7 +1248,7 @@ Generate_CSVs()
 			echo ".output $CSV_OUTPUT_DIR/week_this_${metric}.tmp"
 			echo "SELECT '$metric' Metric,strftime('%w', [date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
-		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+		"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 
 		{
 			echo ".mode csv"
@@ -1129,7 +1256,7 @@ Generate_CSVs()
 			echo ".output $CSV_OUTPUT_DIR/week_prev_${metric}.tmp"
 			echo "SELECT '$metric' Metric,strftime('%w', [date]) Time,[$metric] Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
-		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+		"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 
 		{
 			echo ".mode csv"
@@ -1137,7 +1264,7 @@ Generate_CSVs()
 			echo ".output $CSV_OUTPUT_DIR/week_summary_this_${metric}.tmp"
 			echo "SELECT '$metric' Metric,'Current 7 days' Time,IFNULL(SUM([$metric]),'0') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day'));"
 		} > /tmp/dn-vnstat.sql
-		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+		"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 
 		{
 			echo ".mode csv"
@@ -1145,7 +1272,7 @@ Generate_CSVs()
 			echo ".output $CSV_OUTPUT_DIR/week_summary_prev_${metric}.tmp"
 			echo "SELECT '$metric' Metric,'Previous 7 days' Time,IFNULL(SUM([$metric]),'0') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-7 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day'));"
 		} > /tmp/dn-vnstat.sql
-		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+		"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 
 		{
 			echo ".mode csv"
@@ -1153,7 +1280,7 @@ Generate_CSVs()
 			echo ".output $CSV_OUTPUT_DIR/week_summary_prev2_${metric}.tmp"
 			echo "SELECT '$metric' Metric,'2 weeks ago' Time,IFNULL(SUM([$metric]),'0') Value FROM day WHERE [interface] = '$interfaceid' AND strftime('%s',[date],'utc') < strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-14 day')) AND strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','start of day','+1 day','-21 day'));"
 		} > /tmp/dn-vnstat.sql
-		"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat.sql
+		"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat.sql
 	done
 
 	cat "$CSV_OUTPUT_DIR/week_this_rx.tmp" "$CSV_OUTPUT_DIR/week_this_tx.tmp" > "$CSV_OUTPUT_DIR/WeekThis.htm" 2> /dev/null
@@ -1173,7 +1300,7 @@ Generate_CSVs()
 		echo ".output $CSV_OUTPUT_DIR/CompleteResults.htm"
 		echo "SELECT strftime('%s',[date],'utc') Time,[rx],[tx] FROM fiveminute WHERE strftime('%s',[date],'utc') >= strftime('%s',datetime($timenow,'unixepoch','-30 day')) ORDER BY strftime('%s', [date]) DESC;"
 	} > /tmp/dn-vnstat-complete.sql
-	"$SQLITE3_PATH" "$dbdir/vnstat.db" < /tmp/dn-vnstat-complete.sql
+	"$SQLITE3_PATH" "$VNSTAT_DBASE" < /tmp/dn-vnstat-complete.sql
 	rm -f /tmp/dn-vnstat-complete.sql
 
 	dos2unix "$CSV_OUTPUT_DIR/"*.htm
@@ -1232,7 +1359,7 @@ Generate_Images()
 	if [ $# -eq 0 ] || [ -z "$1" ]
 	then Print_Output false "vnstati updating stats for UI" "$PASS" ; fi
 
-	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	interface="$(_GetInterfaceNameFromConfig_)"
 	outputs="s hg d t m"   # what images to generate #
 
 	$VNSTATI_COMMAND -s -i "$interface" -o "$IMAGE_OUTPUT_DIR/vnstat_s.png"
@@ -1275,7 +1402,7 @@ Generate_Stats()
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
 	Process_Upgrade
-	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	interface="$(_GetInterfaceNameFromConfig_)"
 	TZ=$(cat /etc/TZ)
 	export TZ
 	printf "vnstats as of: %s\n\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
@@ -1419,7 +1546,8 @@ Generate_Email()
 	--ssl-reqd \
  	--crlf \
 	--user "$USERNAME:$PASSWORD" $SSL_FLAG
-	if [ $? -eq 0 ]; then
+	if [ $? -eq 0 ]
+	then
 		echo ""
 		[ -z "$5" ] && Print_Output true "Email sent successfully" "$PASS"
 		rm -f /tmp/mail.txt
@@ -1438,7 +1566,8 @@ Generate_Email()
 # $1 : image content id filename (match the cid:filename.png in html document)
 # $2 : image content base64 encoded
 # $3 : output file
-Encode_Image(){
+Encode_Image()
+{
 	{
 		echo "";
 		echo "--MULTIPART-RELATED-BOUNDARY";
@@ -1454,7 +1583,8 @@ Encode_Image(){
 # encode text for email inline
 # $1 : text content base64 encoded
 # $2 : output file
-Encode_Text(){
+Encode_Text()
+{
 	{
 		echo "";
 		echo "--MULTIPART-RELATED-BOUNDARY";
@@ -1467,23 +1597,24 @@ Encode_Text(){
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2024-Sep-22] ##
+## Modified by Martinski W. [2025-Apr-28] ##
 ##----------------------------------------##
 DailyEmail()
 {
 	case "$1" in
 		enable)
-			if [ -z "$2" ]
+			if [ $# -lt 2 ] || [ -z "$2" ]
 			then
 				ScriptHeader
 				exitmenu="false"
-				printf "\\n${BOLD}A choice of emails is available:${CLEARFORMAT}\\n"
-				printf "1.    HTML (includes images from WebUI + summary stats as attachment)\\n"
-				printf "2.    Plain text (summary stats only)\\n"
-				printf "\\ne.    Exit to main menu\\n"
+				printf "\n${BOLD}A choice of emails is available:${CLEARFORMAT}\n"
+				printf " 1.  HTML (includes images from WebUI + summary stats as attachment)\n"
+				printf " 2.  Plain text (summary stats only)\n\n"
+				printf " e.  Exit to main menu\n"
 
-				while true; do
-					printf "\\n${BOLD}Choose an option:${CLEARFORMAT}  "
+				while true
+				do
+					printf "\n${BOLD}Choose an option:${CLEARFORMAT}  "
 					read -r emailtype
 					case "$emailtype" in
 						1)
@@ -1499,13 +1630,12 @@ DailyEmail()
 							break
 						;;
 						*)
-							printf "\\nPlease choose a valid option\\n\\n"
+							printf "\nPlease choose a valid option\n\n"
 						;;
 					esac
 				done
+				printf "\n"
 
-				printf "\\n"
-				
 				if [ "$exitmenu" = "true" ]; then
 					return
 				fi
@@ -1528,7 +1658,8 @@ DailyEmail()
 	esac
 }
 
-UsageEmail(){
+UsageEmail()
+{
 	case "$1" in
 		enable)
 			sed -i 's/^USAGEEMAIL.*$/USAGEEMAIL=true/' "$SCRIPT_CONF"
@@ -1544,12 +1675,17 @@ UsageEmail(){
 	esac
 }
 
-BandwidthAllowance(){
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-27] ##
+##----------------------------------------##
+BandwidthAllowance()
+{
 	case "$1" in
 		update)
 			bandwidth="$(echo "$2" | awk '{printf("%.2f", $1);}')"
 			sed -i 's/^DATAALLOWANCE.*$/DATAALLOWANCE='"$bandwidth"'/' "$SCRIPT_CONF"
-			if [ -z "$3" ]; then
+			if [ $# -lt 3 ] || [ -z "$3" ]
+			then
 				Reset_Allowance_Warnings force
 			fi
 			Check_Bandwidth_Usage
@@ -1561,10 +1697,11 @@ BandwidthAllowance(){
 	esac
 }
 
-AllowanceStartDay(){
+AllowanceStartDay()
+{
 	case "$1" in
 		update)
-			sed -i 's/^MonthRotate .*$/MonthRotate '"$2"'/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
+			sed -i 's/^MonthRotate .*$/MonthRotate '"$2"'/' "$VNSTAT_CONFIG"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
 			export TZ
@@ -1572,13 +1709,14 @@ AllowanceStartDay(){
 			Check_Bandwidth_Usage
 		;;
 		check)
-			MonthRotate=$(grep "^MonthRotate " "$SCRIPT_STORAGE_DIR/vnstat.conf" | cut -f2 -d" ")
+			MonthRotate=$(grep "^MonthRotate " "$VNSTAT_CONFIG" | cut -f2 -d" ")
 			echo "$MonthRotate"
 		;;
 	esac
 }
 
-AllowanceUnit(){
+AllowanceUnit()
+{
 	case "$1" in
 		update)
 		sed -i 's/^ALLOWANCEUNIT.*$/ALLOWANCEUNIT='"$2"'/' "$SCRIPT_CONF"
@@ -1616,7 +1754,7 @@ Check_Bandwidth_Usage()
 	TZ=$(cat /etc/TZ)
 	export TZ
 
-	interface="$(grep "^Interface" "$SCRIPT_STORAGE_DIR/vnstat.conf" | awk '{print $2}' | sed 's/"//g')"
+	interface="$(_GetInterfaceNameFromConfig_)"
 
 	rawbandwidthused="$($VNSTAT_COMMAND -i "$interface" --json m | jq -r '.interfaces[].traffic.month[-1] | .rx + .tx')"
 	userLimit="$(BandwidthAllowance check)"
@@ -1709,9 +1847,9 @@ Process_Upgrade()
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	fi
 	
-	if ! grep -q "^UseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"
+	if ! grep -q "^UseUTC 0" "$VNSTAT_CONFIG"
 	then
-		sed -i "/^DatabaseSynchronous/a\\\n# Enable or disable using UTC as timezone in the database for all entries.\n# When enabled, all entries added to the database will use UTC regardless of\n# the configured system timezone. When disabled, the configured system timezone\n# will be used. Changing this setting will not result in already existing data to be modified.\n# 1 = enabled, 0 = disabled.\nUseUTC 0" "$SCRIPT_STORAGE_DIR/vnstat.conf"
+		sed -i "/^DatabaseSynchronous/a\\\n# Enable or disable using UTC as timezone in the database for all entries.\n# When enabled, all entries added to the database will use UTC regardless of\n# the configured system timezone. When disabled, the configured system timezone\n# will be used. Changing this setting will not result in already existing data to be modified.\n# 1 = enabled, 0 = disabled.\nUseUTC 0" "$VNSTAT_CONFIG"
 		restartvnstat=true
 	fi
 	
@@ -1744,8 +1882,13 @@ ScriptHeader()
 	printf "\n"
 }
 
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-28] ##
+##----------------------------------------##
 MainMenu()
 {
+	local menuOption  storageLocStr
+
 	MENU_DAILYEMAIL="$(DailyEmail check)"
 	if [ "$MENU_DAILYEMAIL" = "html" ]; then
 		MENU_DAILYEMAIL="${PASS}ENABLED - HTML"
@@ -1755,40 +1898,57 @@ MainMenu()
 		MENU_DAILYEMAIL="${ERR}DISABLED"
 	fi
 	MENU_USAGE_ENABLED=""
-	if UsageEmail check; then MENU_USAGE_ENABLED="${PASS}ENABLED"; else MENU_USAGE_ENABLED="${ERR}DISABLED"; fi
+	if UsageEmail check
+	then MENU_USAGE_ENABLED="${PASS}ENABLED"
+	else MENU_USAGE_ENABLED="${ERR}DISABLED"
+	fi
 	MENU_BANDWIDTHALLOWANCE=""
 	if [ "$(echo "$(BandwidthAllowance check) 0" | awk '{print ($1 == $2)}')" -eq 1 ]; then
 		MENU_BANDWIDTHALLOWANCE="UNLIMITED"
 	else
 		MENU_BANDWIDTHALLOWANCE="$(BandwidthAllowance check)$(AllowanceUnit check)"
 	fi
-	printf "WebUI for %s is available at:\\n${SETTING}%s${CLEARFORMAT}\\n\\n" "$SCRIPT_NAME" "$(Get_WebUI_URL)"
-	printf "1.    Update stats now\\n\\n"
-	printf "2.    Toggle emails for daily summary stats\\n      Currently: ${BOLD}$MENU_DAILYEMAIL${CLEARFORMAT}\\n\\n"
-	printf "3.    Toggle emails for data usage warnings\\n      Currently: ${BOLD}$MENU_USAGE_ENABLED${CLEARFORMAT}\\n\\n"
-	printf "4.    Set bandwidth allowance for data usage warnings\\n      Currently: ${SETTING}%s${CLEARFORMAT}\\n\\n" "$MENU_BANDWIDTHALLOWANCE"
-	printf "5.    Set unit for bandwidth allowance\\n      Currently: ${SETTING}%s${CLEARFORMAT}\\n\\n" "$(AllowanceUnit check)"
-	printf "6.    Set start day of cycle for bandwidth allowance\\n      Currently: ${SETTING}%s${CLEARFORMAT}\\n\\n" "Day $(AllowanceStartDay check) of month"
-	printf "b.    Check bandwidth usage now\\n      ${SETTING}%s${CLEARFORMAT}\\n\\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
-	printf "v.    Edit vnstat config\\n\\n"
-	printf "t.    Toggle time output mode\\n      Currently ${SETTING}%s${CLEARFORMAT} time values will be used for CSV exports\\n\\n" "$(OutputTimeMode check)"
-	printf "s.    Toggle storage location for stats and config\\n      Current location is ${SETTING}%s${CLEARFORMAT} \\n\\n" "$(ScriptStorageLocation check)"
-	printf "u.    Check for updates\\n"
-	printf "uf.   Force update %s with latest version\\n\\n" "$SCRIPT_NAME"
-	printf "e.    Exit menu for %s\\n\\n" "$SCRIPT_NAME"
-	printf "z.    Uninstall %s\\n" "$SCRIPT_NAME"
-	printf "\\n"
-	printf "${BOLD}##################################################${CLEARFORMAT}\\n"
-	printf "\\n"
-	
+
+	storageLocStr="$(ScriptStorageLocation check | tr 'a-z' 'A-Z')"
+
+	printf "WebUI for %s is available at:\n${SETTING}%s${CLEARFORMAT}\n\n" "$SCRIPT_NAME" "$(Get_WebUI_URL)"
+
+	printf "1.    Update stats now\n"
+	printf "      Database size: ${SETTING}%s${CLEARFORMAT}\n\n" "$(_GetFileSize_ "$(_GetVNStatDatabaseFilePath_)" HRx)"
+	printf "2.    Toggle emails for daily summary stats\n"
+	printf "      Currently: ${BOLD}$MENU_DAILYEMAIL${CLEARFORMAT}\n\n"
+	printf "3.    Toggle emails for data usage warnings\n"
+	printf "      Currently: ${BOLD}$MENU_USAGE_ENABLED${CLEARFORMAT}\n\n"
+	printf "4.    Set bandwidth allowance for data usage warnings\n"
+	printf "      Currently: ${SETTING}%s${CLEARFORMAT}\n\n" "$MENU_BANDWIDTHALLOWANCE"
+	printf "5.    Set unit for bandwidth allowance\n"
+	printf "      Currently: ${SETTING}%s${CLEARFORMAT}\n\n" "$(AllowanceUnit check)"
+	printf "6.    Set start day of cycle for bandwidth allowance\n"
+	printf "      Currently: ${SETTING}%s${CLEARFORMAT}\n\n" "Day $(AllowanceStartDay check) of month"
+	printf "b.    Check bandwidth usage now\n"
+	printf "      ${SETTING}%s${CLEARFORMAT}\n\n" "$(grep " usagestring" "$SCRIPT_STORAGE_DIR/.vnstatusage" | cut -f2 -d'"')"
+	printf "v.    Edit vnstat config\n\n"
+	printf "t.    Toggle time output mode\n"
+	printf "      Currently ${SETTING}%s${CLEARFORMAT} time values will be used for CSV exports\n\n" "$(OutputTimeMode check)"
+	printf "s.    Toggle storage location for stats and config\n"
+	printf "      Current location: ${SETTING}%s${CLEARFORMAT}\n\n" "$storageLocStr"
+	printf "u.    Check for updates\n"
+	printf "uf.   Force update %s with latest version\n\n" "$SCRIPT_NAME"
+	printf "e.    Exit %s\n\n" "$SCRIPT_NAME"
+	printf "z.    Uninstall %s\n" "$SCRIPT_NAME"
+	printf "\n"
+	printf "${BOLD}##################################################${CLEARFORMAT}\n"
+	printf "\n"
+
 	while true
 	do
 		printf "Choose an option:  "
-		read -r menu
-		case "$menu" in
+		read -r menuOption
+		case "$menuOption" in
 			1)
-				printf "\\n"
-				if Check_Lock menu; then
+				printf "\n"
+				if Check_Lock menu
+				then
 					Generate_Images
 					Generate_Stats
 					Generate_CSVs
@@ -1798,7 +1958,7 @@ MainMenu()
 				break
 			;;
 			2)
-				printf "\\n"
+				printf "\n"
 				if [ "$(DailyEmail check)" != "none" ]; then
 					DailyEmail disable
 				elif [ "$(DailyEmail check)" = "none" ]; then
@@ -1808,7 +1968,7 @@ MainMenu()
 				break
 			;;
 			3)
-				printf "\\n"
+				printf "\n"
 				if UsageEmail check; then
 					UsageEmail disable
 				elif ! UsageEmail check; then
@@ -1818,7 +1978,7 @@ MainMenu()
 				break
 			;;
 			4)
-				printf "\\n"
+				printf "\n"
 				if Check_Lock menu; then
 					Menu_BandwidthAllowance
 				fi
@@ -1826,7 +1986,7 @@ MainMenu()
 				break
 			;;
 			5)
-				printf "\\n"
+				printf "\n"
 				if Check_Lock menu; then
 					Menu_AllowanceUnit
 				fi
@@ -1834,7 +1994,7 @@ MainMenu()
 				break
 			;;
 			6)
-				printf "\\n"
+				printf "\n"
 				if Check_Lock menu; then
 					Menu_AllowanceStartDay
 				fi
@@ -1842,7 +2002,7 @@ MainMenu()
 				break
 			;;
 			b)
-				printf "\\n"
+				printf "\n"
 				if Check_Lock menu; then
 					Check_Bandwidth_Usage
 					Clear_Lock
@@ -1851,14 +2011,14 @@ MainMenu()
 				break
 			;;
 			v)
-				printf "\\n"
+				printf "\n"
 				if Check_Lock menu; then
 					Menu_Edit
 				fi
 				break
 			;;
 			t)
-				printf "\\n"
+				printf "\n"
 				if [ "$(OutputTimeMode check)" = "unix" ]; then
 					OutputTimeMode non-unix
 				elif [ "$(OutputTimeMode check)" = "non-unix" ]; then
@@ -1867,18 +2027,23 @@ MainMenu()
 				break
 			;;
 			s)
-				printf "\\n"
-				if [ "$(ScriptStorageLocation check)" = "jffs" ]; then
-					ScriptStorageLocation usb
+				printf "\n"
+				if Check_Lock menu
+				then
+					if [ "$(ScriptStorageLocation check)" = "jffs" ]
+					then
+					    ScriptStorageLocation usb
+					elif [ "$(ScriptStorageLocation check)" = "usb" ]
+					then
+					    ScriptStorageLocation jffs
+					fi
 					Create_Symlinks
-				elif [ "$(ScriptStorageLocation check)" = "usb" ]; then
-					ScriptStorageLocation jffs
-					Create_Symlinks
+					Clear_Lock
 				fi
 				break
 			;;
 			u)
-				printf "\\n"
+				printf "\n"
 				if Check_Lock menu; then
 					Update_Version
 					Clear_Lock
@@ -1887,7 +2052,7 @@ MainMenu()
 				break
 			;;
 			uf)
-				printf "\\n"
+				printf "\n"
 				if Check_Lock menu; then
 					Update_Version force
 					Clear_Lock
@@ -1897,30 +2062,33 @@ MainMenu()
 			;;
 			e)
 				ScriptHeader
-				printf "\\n${BOLD}Thanks for using %s!${CLEARFORMAT}\\n\\n\\n" "$SCRIPT_NAME"
+				printf "\n${BOLD}Thanks for using %s!${CLEARFORMAT}\n\n\n" "$SCRIPT_NAME"
 				exit 0
 			;;
 			z)
-				while true; do
-					printf "\\n${BOLD}Are you sure you want to uninstall %s? (y/n)${CLEARFORMAT}  " "$SCRIPT_NAME"
+				while true
+				do
+					printf "\n${BOLD}Are you sure you want to uninstall %s? (y/n)${CLEARFORMAT}  " "$SCRIPT_NAME"
 					read -r confirm
 					case "$confirm" in
 						y|Y)
 							Menu_Uninstall
 							exit 0
 						;;
-						*)
-							break
-						;;
+						*) break ;;
 					esac
 				done
 			;;
 			*)
-				printf "\\nPlease choose a valid option\\n\\n"
+				[ -n "$menuOption" ] && \
+				printf "\n${REDct}INVALID input [$menuOption]${CLEARFORMAT}"
+				printf "\nPlease choose a valid option\n\n"
+				PressEnter
+				break
 			;;
 		esac
 	done
-	
+
 	ScriptHeader
 	MainMenu
 }
@@ -1933,9 +2101,9 @@ Menu_Install()
 	ScriptHeader
 	Print_Output true "Welcome to $SCRIPT_NAME $SCRIPT_VERSION, a script by dev_null and Jack Yaz" "$PASS"
 	sleep 1
-	
+
 	Print_Output false "Checking your router meets the requirements for $SCRIPT_NAME" "$PASS"
-	
+
 	if ! Check_Requirements
 	then
 		Print_Output false "Requirements for $SCRIPT_NAME not met, please see above for the reason(s)" "$CRIT"
@@ -1944,7 +2112,7 @@ Menu_Install()
 		rm -f "/jffs/scripts/$SCRIPT_NAME" 2>/dev/null
 		exit 1
 	fi
-	
+
 	IFACE=""
 	printf "\n${BOLD}WAN Interface detected as %s${CLEARFORMAT}\n" "$(Get_WAN_IFace)"
 	while true
@@ -1970,7 +2138,7 @@ Menu_Install()
 					elif [ ! -f "/sys/class/net/$iface_lower/operstate" ] || \
 					     [ "$(cat "/sys/class/net/$iface_lower/operstate")" = "down" ]
 					then
-						printf "\n\\e[31mInput is not a valid interface or interface not up, please try again.${CLEARFORMAT}\n"
+						printf "\n${ERR}Input is not a valid interface or interface not up, please try again.${CLEARFORMAT}\n"
 					else
 						IFACE="$iface_lower"
 						break
@@ -1982,35 +2150,34 @@ Menu_Install()
 			;;
 		esac
 	done
-	
 	printf "\n"
-	
+
 	Create_Dirs
 	Conf_Exists
 	Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 	Set_Version_Custom_Settings server "$SCRIPT_VERSION"
 	ScriptStorageLocation load
 	Create_Symlinks
-	
+
 	Update_File vnstat.conf
-	sed -i 's/^Interface .*$/Interface "'"$IFACE"'"/' "$SCRIPT_STORAGE_DIR/vnstat.conf"
-	
+	sed -i 's/^Interface .*$/Interface "'"$IFACE"'"/' "$VNSTAT_CONFIG"
+
 	Update_File vnstat-ui.asp
 	Update_File S33vnstat
 	Update_File shared-jy.tar.gz
-	
+
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
 	Auto_ServiceEvent create 2>/dev/null
 	Shortcut_Script create
-	
+
 	if [ ! -f "$SCRIPT_STORAGE_DIR/.vnstatusage" ]
 	then
 		echo "var usagethreshold = false;" > "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var thresholdstring = "";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 		echo 'var usagestring = "Not enough data gathered by vnstat";' >> "$SCRIPT_STORAGE_DIR/.vnstatusage"
 	fi
-	
+
 	if [ -n "$(pidof vnstatd)" ]
 	then
 		Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
@@ -2022,7 +2189,7 @@ Menu_Install()
 	else
 		Print_Output false "vnstatd not running, please check system log" "$ERR"
 	fi
-	
+
 	Clear_Lock
 	ScriptHeader
 	MainMenu
@@ -2067,6 +2234,9 @@ Menu_Startup()
 	Clear_Lock
 }
 
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-27] ##
+##----------------------------------------##
 Menu_BandwidthAllowance()
 {
 	exitmenu="false"
@@ -2075,28 +2245,35 @@ Menu_BandwidthAllowance()
 
 	while true
 	do
-		printf "\\n${BOLD}Please enter your monthly bandwidth allowance\\n(%s, 0 = unlimited, max. 2 decimals):${CLEARFORMAT}  " "$(AllowanceUnit check)"
+		printf "\n${BOLD}Please enter your monthly bandwidth allowance\n"
+		printf "(%s, 0 = unlimited, max. 2 decimals):${CLEARFORMAT}  " "$(AllowanceUnit check)"
 		read -r allowance
-		
-		if [ "$allowance" = "e" ]; then
+
+		if [ "$allowance" = "e" ]
+		then
 			exitmenu="exit"
+			printf "\n"
 			break
-		elif ! Validate_Bandwidth "$allowance"; then
-			printf "\\n\\e[31mPlease enter a valid number (%s, 0 = unlimited, max. 2 decimals)${CLEARFORMAT}\\n" "$(AllowanceUnit check)"
+		elif ! Validate_Bandwidth "$allowance"
+		then
+			printf "\n${ERR}Please enter a valid number (%s, 0 = unlimited, max. 2 decimals)${CLEARFORMAT}\n" "$(AllowanceUnit check)"
 		else
 			bandwidthallowance="$allowance"
-			printf "\\n"
+			printf "\n"
 			break
 		fi
 	done
-	
+
 	if [ "$exitmenu" != "exit" ]; then
 		BandwidthAllowance update "$bandwidthallowance"
 	fi
-	
+
 	Clear_Lock
 }
 
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-27] ##
+##----------------------------------------##
 Menu_AllowanceUnit()
 {
 	exitmenu="false"
@@ -2104,50 +2281,57 @@ Menu_AllowanceUnit()
 	prevallowanceunit="$(AllowanceUnit check)"
 	unitsuffix="$(AllowanceUnit check | sed 's/T//;s/G//;')"
 	ScriptHeader
-	
-	while true; do
-		printf "\\n${BOLD}Please select the unit to use for bandwidth allowance:${CLEARFORMAT}\\n"
-		printf "1.    G%s\\n" "$unitsuffix"
-		printf "2.    T%s\\n\\n" "$unitsuffix"
-		printf "Choose an option:  "
+
+	while true
+	do
+		printf "\n${BOLD}Please select the unit to use for bandwidth allowance:${CLEARFORMAT}\n"
+		printf " 1.  G%s\n" "$unitsuffix"
+		printf " 2.  T%s\n\n" "$unitsuffix"
+		printf " Choose an option:  "
 		read -r unitchoice
 		case "$unitchoice" in
 			1)
 				allowanceunit="G"
-				printf "\\n"
+				printf "\n"
 				break
 			;;
 			2)
 				allowanceunit="T"
-				printf "\\n"
+				printf "\n"
 				break
 			;;
 			e)
 				exitmenu="exit"
+				printf "\n"
 				break
 			;;
 			*)
-				printf "\\nPlease choose a valid option\\n\\n"
+				printf "\nPlease choose a valid option\n\n"
 			;;
 		esac
 	done
-	if [ "$exitmenu" != "exit" ]; then
+
+	if [ "$exitmenu" != "exit" ]
+	then
 		AllowanceUnit update "$allowanceunit"
-		
+
 		allowanceunit="$(AllowanceUnit check)"
-		if [ "$prevallowanceunit" != "$allowanceunit" ]; then
+		if [ "$prevallowanceunit" != "$allowanceunit" ]
+		then
 			scalefactor=1000
-			
+
 			scaletype="none"
-			if [ "$prevallowanceunit" != "$(AllowanceUnit check)" ]; then
+			if [ "$prevallowanceunit" != "$(AllowanceUnit check)" ]
+			then
 				if echo "$prevallowanceunit" | grep -q G && AllowanceUnit check | grep -q T; then
 					scaletype="divide"
 				elif echo "$prevallowanceunit" | grep -q T && AllowanceUnit check | grep -q G; then
 					scaletype="multiply"
 				fi
 			fi
-		
-			if [ "$scaletype" != "none" ]; then
+
+			if [ "$scaletype" != "none" ]
+			then
 				bandwidthallowance="$(BandwidthAllowance check)"
 				if [ "$scaletype" = "multiply" ]; then
 					bandwidthallowance=$(echo "$(BandwidthAllowance check) $scalefactor" | awk '{printf("%.2f\n", $1*$2);}')
@@ -2158,7 +2342,7 @@ Menu_AllowanceUnit()
 			fi
 		fi
 	fi
-	
+
 	Clear_Lock
 }
 
@@ -2167,47 +2351,55 @@ Menu_AllowanceStartDay()
 	exitmenu="false"
 	allowancestartday=""
 	ScriptHeader
-	
-	while true; do
-		printf "\\n${BOLD}Please enter day of month that your bandwidth allowance\\nresets (1-28):${CLEARFORMAT}  "
+
+	while true
+	do
+		printf "\n${BOLD}Please enter day of month that your bandwidth allowance\nresets (1-28):${CLEARFORMAT}  "
 		read -r startday
-		
-		if [ "$startday" = "e" ]; then
+
+		if [ "$startday" = "e" ]
+		then
 			exitmenu="exit"
+			printf "\n"
 			break
-		elif ! Validate_Number "$startday"; then
-			printf "\\n\\e[31mPlease enter a valid number (1-28)${CLEARFORMAT}\\n"
+		elif ! Validate_Number "$startday"
+		then
+			printf "\n${ERR}Please enter a valid number (1-28)${CLEARFORMAT}\n"
 		else
-			if [ "$startday" -lt 1 ] || [ "$startday" -gt 28 ]; then
-				printf "\\n\\e[31mPlease enter a number between 1 and 28${CLEARFORMAT}\\n"
+			if [ "$startday" -lt 1 ] || [ "$startday" -gt 28 ]
+			then
+				printf "\n${ERR}Please enter a number between 1 and 28${CLEARFORMAT}\n"
 			else
 				allowancestartday="$startday"
-				printf "\\n"
+				printf "\n"
 				break
 			fi
 		fi
 	done
-	
+
 	if [ "$exitmenu" != "exit" ]; then
 		AllowanceStartDay update "$allowancestartday"
 	fi
-	
+
 	Clear_Lock
 }
 
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-28] ##
+##----------------------------------------##
 Menu_Edit()
 {
 	texteditor=""
 	exitmenu="false"
-	
-	printf "\\n${BOLD}A choice of text editors is available:${CLEARFORMAT}\\n"
-	printf "1.    nano (recommended for beginners)\\n"
-	printf "2.    vi\\n"
-	printf "\\ne.    Exit to main menu\\n"
-	
+
+	printf "\n${BOLD}A choice of text editors is available:${CLEARFORMAT}\n"
+	printf " 1.  nano (recommended for beginners)\n"
+	printf " 2.  vi\n\n"
+	printf " e.  Exit to main menu\n"
+
 	while true
 	do
-		printf "\\n${BOLD}Choose an option:${CLEARFORMAT}  "
+		printf "\n${BOLD}Choose an option:${CLEARFORMAT}  "
 		read -r editor
 		case "$editor" in
 			1)
@@ -2223,17 +2415,16 @@ Menu_Edit()
 				break
 			;;
 			*)
-				printf "\\nPlease choose a valid option\\n\\n"
+				printf "\nPlease choose a valid option\n\n"
 			;;
 		esac
 	done
-	
+
 	if [ "$exitmenu" != "true" ]
 	then
-		CONFFILE="$SCRIPT_STORAGE_DIR/vnstat.conf"
-		oldmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
-		$texteditor "$CONFFILE"
-		newmd5="$(md5sum "$CONFFILE" | awk '{print $1}')"
+		oldmd5="$(md5sum "$VNSTAT_CONFIG" | awk '{print $1}')"
+		$texteditor "$VNSTAT_CONFIG"
+		newmd5="$(md5sum "$VNSTAT_CONFIG" | awk '{print $1}')"
 		if [ "$oldmd5" != "$newmd5" ]
 		then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
@@ -2241,7 +2432,7 @@ Menu_Edit()
 			export TZ
 			Check_Bandwidth_Usage silent
 			Clear_Lock
-			printf "\\n"
+			printf "\n"
 			PressEnter
 		fi
 	fi
@@ -2357,7 +2548,7 @@ Menu_Uninstall()
 	sed -i '/dnvnstat_version_local/d' "$SETTINGSFILE"
 	sed -i '/dnvnstat_version_server/d' "$SETTINGSFILE"
 
-	printf "\\n${BOLD}Would you like to keep the vnstat\\ndata files and configuration? (y/n)${CLEARFORMAT}  "
+	printf "\n${BOLD}Would you like to keep the vnstat\ndata files and configuration? (y/n)${CLEARFORMAT}  "
 	read -r confirm
 	case "$confirm" in
 		y|Y)
@@ -2498,8 +2689,9 @@ fi
 SCRIPT_CONF="$SCRIPT_STORAGE_DIR/config"
 CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
 IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
-VNSTAT_COMMAND="vnstat --config $SCRIPT_STORAGE_DIR/vnstat.conf"
-VNSTATI_COMMAND="vnstati --config $SCRIPT_STORAGE_DIR/vnstat.conf"
+VNSTAT_CONFIG="$SCRIPT_STORAGE_DIR/vnstat.conf"
+VNSTAT_COMMAND="vnstat --config $VNSTAT_CONFIG"
+VNSTATI_COMMAND="vnstati --config $VNSTAT_CONFIG"
 VNSTAT_OUTPUT_FILE="$SCRIPT_STORAGE_DIR/vnstat.txt"
 
 ##----------------------------------------##

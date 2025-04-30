@@ -4,10 +4,12 @@ Note: R1 runs on all supported architectures (ARM, AARCH, MIPS). R2 runs only on
 
 # Version R2 (based on vnStat 2.x) #
 
-### v 2.0.7 - 27-Apr-2025 ###
+### v 2.0.7 - 28-Apr-2025 ###
   * Fixes to make sure the vnstat Entware service is started during the reboot sequence after NTP is synced.
   * Modified code so that every time the SSH CLI menu is run, it checks if the WebGUI page has already been mounted. If not found mounted, the script will run the code to remount the WebGUI.
   * Improved code that creates (during installation) and removes (during uninstallation) the "AddOns" menu tab entry for the WebGUI to make sure it checks for and takes into account other add-ons that may have been installed before or were later installed after the initial installation.
+  * Added code to show the current database file size information on the SSH CLI menu.
+  * Modified code to set the corresponding priority level of log entries when calling the built-in logger utility.
   * Added "export PATH" statement to give the built-in binaries higher priority than the equivalent Entware binaries.
   * Miscellaneous code improvements & fine-tuning.
 
