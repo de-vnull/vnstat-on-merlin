@@ -10,7 +10,7 @@
 ##    github.com/de-vnull/vnstat-on-merlin     ##
 ##                                             ##
 #################################################
-# Last Modified: 2025-Apr-28
+# Last Modified: 2025-Apr-29
 #------------------------------------------------
 
 ########         Shellcheck directives     ######
@@ -994,14 +994,32 @@ Check_Requirements()
 }
 
 ### Determine WAN interface using nvram ###
+##----------------------------------------##
+## Modified by Martinski W. [2025-Apr-29] ##
+##----------------------------------------##
 Get_WAN_IFace()
 {
-	if [ "$(nvram get wan0_proto)" = "pppoe" ] || [ "$(nvram get wan0_proto)" = "pptp" ] || [ "$(nvram get wan0_proto)" = "l2tp" ]; then
-		IFACE_WAN="ppp0"
-	else
-		IFACE_WAN="$(nvram get wan0_ifname)"
-	fi
-	echo "$IFACE_WAN"
+    local wanPrefix=""  wanProto
+    for ifaceNum in 0 1
+    do
+        if [ "$(nvram get "wan${ifaceNum}_primary")" = "1" ]
+        then wanPrefix="wan${ifaceNum}" ; break
+        fi
+    done
+    if [ -z "$wanPrefix" ] ; then echo "ERROR" ; return 1
+    fi
+
+    wanProto="$(nvram get "${wanPrefix}_proto")"
+    if [ "$wanProto" = "pptp" ] || \
+       [ "$wanProto" = "l2tp" ] || \
+       [ "$wanProto" = "pppoe" ]
+    then
+        IFACE_WAN="$(nvram get "${wanPrefix}_pppoe_ifname")"
+    else
+        IFACE_WAN="$(nvram get "${wanPrefix}_ifname")"
+    fi
+    echo "$IFACE_WAN"
+    return 0
 }
 
 ##----------------------------------------##
@@ -1144,11 +1162,10 @@ _GetFileSize_()
 ##-------------------------------------##
 _GetVNStatDatabaseFilePath_()
 {
-    local dbaseDirPath  dbaseFilePath
+    local dbaseDirPath
     if [ ! -s "$VNSTAT_CONFIG" ] ; then echo ; return 1 ; fi
-    dbaseDirPath="$(grep "^DatabaseDir " "$VNSTAT_CONFIG" | awk '{print $2}' | sed 's/"//g')"
-    dbaseFilePath="${dbaseDirPath}/vnstat.db"
-    echo "$dbaseFilePath"
+    dbaseDirPath="$(grep '^DatabaseDir ' "$VNSTAT_CONFIG" | awk -F ' ' '{print $2}' | sed 's/"//g')"
+    echo "${dbaseDirPath}/vnstat.db"
     return 0
 }
 
@@ -1159,7 +1176,7 @@ _GetInterfaceNameFromConfig_()
 {
     local iFaceName
     if [ ! -s "$VNSTAT_CONFIG" ] ; then echo ; return 1 ; fi
-    iFaceName="$(grep "^Interface" "$VNSTAT_CONFIG" | awk '{print $2}' | sed 's/"//g')"
+    iFaceName="$(grep '^Interface ' "$VNSTAT_CONFIG" | awk -F ' ' '{print $2}' | sed 's/"//g')"
     echo "$iFaceName"
     return 0
 }
