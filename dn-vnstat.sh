@@ -10,7 +10,7 @@
 ##    github.com/de-vnull/vnstat-on-merlin     ##
 ##                                             ##
 #################################################
-# Last Modified: 2025-Apr-29
+# Last Modified: 2025-May-01
 #------------------------------------------------
 
 ########         Shellcheck directives     ######
@@ -54,6 +54,17 @@ readonly webPageLineRegExp="${webPageLineTabExp}\"$SCRIPT_NAME\"\},"
 readonly BEGIN_MenuAddOnsTag="/\*\*BEGIN:_AddOns_\*\*/"
 readonly ENDIN_MenuAddOnsTag="/\*\*ENDIN:_AddOns_\*\*/"
 readonly SHARE_TEMP_DIR="/opt/share/tmp"
+
+readonly oneHrSec=3600
+readonly _12Hours=43200
+readonly _24Hours=86400
+readonly _36Hours=129600
+readonly oneKByte=1024
+readonly oneMByte=1048576
+readonly ei8MByte=8388608
+readonly ni9MByte=9437184
+readonly tenMByte=10485760
+readonly oneGByte=1073741824
 
 ### End of script variables ###
 
@@ -122,11 +133,11 @@ Check_Lock()
 {
 	if [ -f "/tmp/$SCRIPT_NAME.lock" ]
 	then
-		ageoflock="$(($(date +%s) - $(date +%s -r /tmp/$SCRIPT_NAME.lock)))"
+		ageoflock="$(($(date +'%s') - $(date +'%s' -r "/tmp/$SCRIPT_NAME.lock")))"
 		if [ "$ageoflock" -gt 600 ]  #10 minutes#
 		then
 			Print_Output true "Stale lock file found (>600 seconds old) - purging lock" "$ERR"
-			kill "$(sed -n '1p' /tmp/$SCRIPT_NAME.lock)" >/dev/null 2>&1
+			kill "$(sed -n '1p' "/tmp/$SCRIPT_NAME.lock")" >/dev/null 2>&1
 			Clear_Lock
 			echo "$$" > "/tmp/$SCRIPT_NAME.lock"
 			return 0
@@ -383,12 +394,13 @@ Update_File()
 			fi
 		fi
 	elif [ "$1" = "S33vnstat" ]
-	then  ## Entware S script to launch vnstat ##
+	then  ## Entware service script to launch vnstatd ##
 		tmpfile="/tmp/$1"
 		Download_File "$SCRIPT_REPO/$1" "$tmpfile"
 		if ! diff -q "$tmpfile" "/opt/etc/init.d/$1" >/dev/null 2>&1
 		then
-			if [ -f /opt/etc/init.d/S33vnstat ]; then
+			if [ -f /opt/etc/init.d/S33vnstat ]
+			then
 				/opt/etc/init.d/S33vnstat stop >/dev/null 2>&1
 				sleep 2
 			fi
@@ -409,7 +421,8 @@ Update_File()
 			Print_Output true "$SCRIPT_STORAGE_DIR/$1 does not exist, downloading now." "$PASS"
 		elif [ -f "$SCRIPT_STORAGE_DIR/$1.default" ]
 		then
-			if ! diff -q "$tmpfile" "$SCRIPT_STORAGE_DIR/$1.default" >/dev/null 2>&1; then
+			if ! diff -q "$tmpfile" "$SCRIPT_STORAGE_DIR/$1.default" >/dev/null 2>&1
+			then
 				Download_File "$SCRIPT_REPO/$1" "$SCRIPT_STORAGE_DIR/$1.default"
 				Print_Output true "New default version of $1 downloaded to $SCRIPT_STORAGE_DIR/$1.default, please compare against your $SCRIPT_STORAGE_DIR/$1" "$PASS"
 			fi
@@ -424,7 +437,7 @@ Update_File()
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Apr-27] ##
+## Modified by Martinski W. [2025-May-01] ##
 ##----------------------------------------##
 Conf_FromSettings()
 {
@@ -433,7 +446,7 @@ Conf_FromSettings()
 
 	if [ -f "$SETTINGSFILE" ]
 	then
-		if [ "$(grep "^dnvnstat_" $SETTINGSFILE | grep -v "version" -c)" -gt 0 ]
+		if [ "$(grep "^dnvnstat_" "$SETTINGSFILE" | grep -v "version" -c)" -gt 0 ]
 		then
 			Print_Output true "Updated settings from WebUI found, merging into $SCRIPT_CONF..." "$PASS"
 			cp -a "$SCRIPT_CONF" "${SCRIPT_CONF}.bak"
@@ -471,6 +484,23 @@ Conf_FromSettings()
 			cat "${SETTINGSFILE}.bak" "$TMPFILE" > "$SETTINGSFILE"
 			rm -f "$TMPFILE"
 			rm -f "${SETTINGSFILE}.bak"
+
+			if diff "$SCRIPT_CONF" "${SCRIPT_CONF}.bak" | grep -q "STORAGELOCATION="
+			then
+				STORAGEtype="$(ScriptStorageLocation check)"
+				if [ "$STORAGEtype" = "jffs" ]
+				then
+				    ## Check if enough free space is available in JFFS ##
+				    if _Check_JFFS_SpaceAvailable_ "$SCRIPT_STORAGE_DIR"
+				    then ScriptStorageLocation jffs
+				    else ScriptStorageLocation usb
+				    fi
+				elif [ "$STORAGEtype" = "usb" ]
+				then
+				    ScriptStorageLocation usb
+				fi
+				Create_Symlinks
+			fi
 
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
 			TZ=$(cat /etc/TZ)
@@ -1023,7 +1053,7 @@ Get_WAN_IFace()
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Apr-27] ##
+## Modified by Martinski W. [2025-May-01] ##
 ##----------------------------------------##
 ScriptStorageLocation()
 {
@@ -1032,6 +1062,8 @@ ScriptStorageLocation()
 			printf "Please wait..."
 			sed -i 's/^STORAGELOCATION.*$/STORAGELOCATION=usb/' "$SCRIPT_CONF"
 			mkdir -p "/opt/share/$SCRIPT_NAME.d/"
+			rm -fr "/opt/share/$SCRIPT_NAME.d/csv" 2>/dev/null
+			rm -fr "/opt/share/$SCRIPT_NAME.d/images" 2>/dev/null
 			mv -f "/jffs/addons/$SCRIPT_NAME.d/csv" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
 			mv -f "/jffs/addons/$SCRIPT_NAME.d/images" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
 			mv -f "/jffs/addons/$SCRIPT_NAME.d/config" "/opt/share/$SCRIPT_NAME.d/" 2>/dev/null
@@ -1046,13 +1078,15 @@ ScriptStorageLocation()
 			SCRIPT_CONF="/opt/share/$SCRIPT_NAME.d/config"
 			VNSTAT_CONFIG="/opt/share/$SCRIPT_NAME.d/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
-			ScriptStorageLocation load
+			ScriptStorageLocation load true
 			sleep 1
 		;;
 		jffs)
 			printf "Please wait..."
 			sed -i 's/^STORAGELOCATION.*$/STORAGELOCATION=jffs/' "$SCRIPT_CONF"
 			mkdir -p "/jffs/addons/$SCRIPT_NAME.d/"
+			rm -fr "/jffs/addons/$SCRIPT_NAME.d/csv" 2>/dev/null
+			rm -fr "/jffs/addons/$SCRIPT_NAME.d/images" 2>/dev/null
 			mv -f "/opt/share/$SCRIPT_NAME.d/csv" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
 			mv -f "/opt/share/$SCRIPT_NAME.d/images" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
 			mv -f "/opt/share/$SCRIPT_NAME.d/config" "/jffs/addons/$SCRIPT_NAME.d/" 2>/dev/null
@@ -1067,7 +1101,7 @@ ScriptStorageLocation()
 			SCRIPT_CONF="/jffs/addons/$SCRIPT_NAME.d/config"
 			VNSTAT_CONFIG="/jffs/addons/$SCRIPT_NAME.d/vnstat.conf"
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
-			ScriptStorageLocation load
+			ScriptStorageLocation load true
 			sleep 1
 		;;
 		check)
@@ -1089,6 +1123,8 @@ ScriptStorageLocation()
 			VNSTAT_COMMAND="vnstat --config $VNSTAT_CONFIG"
 			VNSTATI_COMMAND="vnstati --config $VNSTAT_CONFIG"
 			VNSTAT_OUTPUT_FILE="$SCRIPT_STORAGE_DIR/vnstat.txt"
+			if [ $# -gt 1 ] && [ "$2" = "true" ]
+			then _UpdateJFFS_FreeSpaceInfo_ ; fi
 		;;
 	esac
 }
@@ -1155,6 +1191,241 @@ _GetFileSize_()
        *) echo 0 ;;
    esac
    return 0
+}
+
+##-------------------------------------##
+## Added by Martinski W. [2025-May-01] ##
+##-------------------------------------##
+_Get_JFFS_Space_()
+{
+   local typex  total  usedx  freex  totalx
+   local sizeUnits  sizeType  sizeInfo  sizeNum
+   local jffsMountStr  jffsUsageStr  percentNum  percentStr
+
+   if [ $# -lt 1 ] || [ -z "$1" ] || \
+      ! echo "$1" | grep -qE "^(ALL|USED|FREE)$"
+   then sizeType="ALL" ; else sizeType="$1" ; fi
+
+   if [ $# -lt 2 ] || [ -z "$2" ] || \
+      ! echo "$2" | grep -qE "^(KB|KBP|MBP|GBP|HR|HRx)$"
+   then sizeUnits="KB" ; else sizeUnits="$2" ; fi
+
+   _GetNum_() { printf "%.2f" "$(echo "$1" | awk "{print $1}")" ; }
+
+   jffsMountStr="$(mount | grep '/jffs')"
+   jffsUsageStr="$(df -kT /jffs | grep -E '.*[[:blank:]]+/jffs$')"
+
+   if [ -z "$jffsMountStr" ] || [ -z "$jffsUsageStr" ]
+   then echo "**ERROR**: JFFS is *NOT* mounted." ; return 1
+   fi
+   if echo "$jffsMountStr" | grep -qE "[[:blank:]]+[(]?ro[[:blank:],]"
+   then echo "**ERROR**: JFFS is mounted READ-ONLY." ; return 2
+   fi
+
+   typex="$(echo "$jffsUsageStr" | awk -F ' ' '{print $2}')"
+   total="$(echo "$jffsUsageStr" | awk -F ' ' '{print $3}')"
+   usedx="$(echo "$jffsUsageStr" | awk -F ' ' '{print $4}')"
+   freex="$(echo "$jffsUsageStr" | awk -F ' ' '{print $5}')"
+   totalx="$total"
+   if [ "$typex" = "ubifs" ] && [ "$((usedx + freex))" -ne "$total" ]
+   then totalx="$((usedx + freex))" ; fi
+
+   if [ "$sizeType" = "ALL" ] ; then echo "$totalx" ; return 0 ; fi
+
+   case "$sizeUnits" in
+       KB|KBP|MBP|GBP)
+           case "$sizeType" in
+               USED) sizeNum="$usedx"
+                     percentNum="$(printf "%.1f" "$(_GetNum_ "($usedx * 100 / $totalx)")")"
+                     percentStr="[${percentNum}%]"
+                     ;;
+               FREE) sizeNum="$freex"
+                     percentNum="$(printf "%.1f" "$(_GetNum_ "($freex * 100 / $totalx)")")"
+                     percentStr="[${percentNum}%]"
+                     ;;
+           esac
+           case "$sizeUnits" in
+                KB) sizeInfo="$sizeNum"
+                    ;;
+               KBP) sizeInfo="${sizeNum}.0KB $percentStr"
+                    ;;
+               MBP) sizeNum="$(_GetNum_ "($sizeNum / $oneKByte)")"
+                    sizeInfo="${sizeNum}MB $percentStr"
+                    ;;
+               GBP) sizeNum="$(_GetNum_ "($sizeNum / $oneMByte)")"
+                    sizeInfo="${sizeNum}GB $percentStr"
+                    ;;
+           esac
+           echo "$sizeInfo"
+           ;;
+       HR|HRx)
+           jffsUsageStr="$(df -hT /jffs | grep -E '.*[[:blank:]]+/jffs$')"
+           case "$sizeType" in
+               USED) usedx="$(echo "$jffsUsageStr" | awk -F ' ' '{print $4}')"
+                     sizeInfo="${usedx}B"
+                     ;;
+               FREE) freex="$(echo "$jffsUsageStr" | awk -F ' ' '{print $5}')"
+                     sizeInfo="${freex}B"
+                     ;;
+           esac
+           if [ "$sizeUnits" = "HR" ]
+           then echo "$sizeInfo" ; return 0 ; fi
+           sizeUnits="$(echo "$sizeInfo" | tr -d '.0-9')"
+           case "$sizeUnits" in
+               KB) sizeInfo="$(_Get_JFFS_Space_ "$sizeType" KBP)" ;;
+               MB) sizeInfo="$(_Get_JFFS_Space_ "$sizeType" MBP)" ;;
+               GB) sizeInfo="$(_Get_JFFS_Space_ "$sizeType" GBP)" ;;
+           esac
+           echo "$sizeInfo"
+           ;;
+       *) echo 0 ;;
+   esac
+   return 0
+}
+
+##----------------------------------------##
+## Modified by Martinski W. [2025-May-01] ##
+##----------------------------------------##
+##--------------------------------------------------------##
+## Minimum Reserved JFFS Available Free Space is roughly
+## about 20% of total space or about 9MB to 10MB.
+##--------------------------------------------------------##
+_JFFS_MinReservedFreeSpace_()
+{
+   local jffsAllxSpace  jffsMinxSpace
+
+   if ! jffsAllxSpace="$(_Get_JFFS_Space_ ALL KB)"
+   then echo "$jffsAllxSpace" ; return 1 ; fi
+   jffsAllxSpace="$(echo "$jffsAllxSpace" | awk '{printf("%s", $1 * 1024);}')"
+
+   jffsMinxSpace="$(echo "$jffsAllxSpace" | awk '{printf("%d", $1 * 20 / 100);}')"
+   if [ "$(echo "$jffsMinxSpace $ni9MByte" | awk -F ' ' '{print ($1 < $2)}')" -eq 1 ]
+   then jffsMinxSpace="$ni9MByte"
+   elif [ "$(echo "$jffsMinxSpace $tenMByte" | awk -F ' ' '{print ($1 > $2)}')" -eq 1 ]
+   then jffsMinxSpace="$tenMByte"
+   fi
+   echo "$jffsMinxSpace" ; return 0
+}
+
+##----------------------------------------##
+## Modified by Martinski W. [2025-May-01] ##
+##----------------------------------------##
+##--------------------------------------------------------##
+## Check JFFS free space *BEFORE* moving files from USB.
+##--------------------------------------------------------##
+_Check_JFFS_SpaceAvailable_()
+{
+   local requiredSpace  jffsFreeSpace  jffsMinxSpace
+   if [ $# -eq 0 ] || [ -z "$1" ] || [ ! -d "$1" ] ; then return 0 ; fi
+
+   [ "$1" = "/jffs/addons/${SCRIPT_NAME}.d" ] && return 0
+
+   if ! jffsFreeSpace="$(_Get_JFFS_Space_ FREE KB)" ; then return 1 ; fi
+   if ! jffsMinxSpace="$(_JFFS_MinReservedFreeSpace_)" ; then return 1 ; fi
+   jffsFreeSpace="$(echo "$jffsFreeSpace" | awk '{printf("%s", $1 * 1024);}')"
+
+   requiredSpace="$(du -kc "$1" | grep -w 'total$' | awk -F ' ' '{print $1}')"
+   requiredSpace="$(echo "$requiredSpace" | awk '{printf("%s", $1 * 1024);}')"
+   requiredSpace="$(echo "$requiredSpace $jffsMinxSpace" | awk -F ' ' '{printf("%s", $1 + $2);}')"
+   if [ "$(echo "$requiredSpace $jffsFreeSpace" | awk -F ' ' '{print ($1 < $2)}')" -eq 1 ]
+   then return 0 ; fi
+
+   ## Current JFFS Available Free Space is NOT sufficient ##
+   requiredSpace="$(du -hc "$1" | grep -w 'total$' | awk -F ' ' '{print $1}')"
+   errorMsg1="Not enough free space [$(_Get_JFFS_Space_ FREE HR)] available in JFFS."
+   errorMsg2="Minimum storage space required: $requiredSpace"
+   Print_Output true "${errorMsg1} ${errorMsg2}" "$CRIT"
+   return 1
+}
+
+##-------------------------------------##
+## Added by Martinski W. [2025-May-01] ##
+##-------------------------------------##
+JFFS_WarningLogTime()
+{
+   case "$1" in
+       update)
+           sed -i 's/^JFFS_MSGLOGTIME=.*$/JFFS_MSGLOGTIME='"$2"'/' "$SCRIPT_CONF"
+           ;;
+       check)
+           JFFS_MSGLOGTIME="$(grep "^JFFS_MSGLOGTIME=" "$SCRIPT_CONF" | cut -f2 -d'=')"
+           echo "${JFFS_MSGLOGTIME:=0}"
+           ;;
+   esac
+}
+
+##-------------------------------------##
+## Added by Martinski W. [2025-May-01] ##
+##-------------------------------------##
+_JFFS_WarnLowFreeSpace_()
+{
+   if [ $# -eq 0 ] || [ -z "$1" ] ; then return 0 ; fi
+   local jffsWarningLogFreq  jffsWarningLogTime  storageLocStr
+   local logPriNum  logTagStr  logMsgStr  currTimeSecs  currTimeDiff
+
+   storageLocStr="$(ScriptStorageLocation check | tr 'a-z' 'A-Z')"
+   if [ "$storageLocStr" = "JFFS" ]
+   then
+       if [ "$JFFS_LowFreeSpaceStatus" = "WARNING2" ]
+       then
+           logPriNum=2
+           logTagStr="**ALERT**"
+           jffsWarningLogFreq="$_12Hours"
+       else
+           logPriNum=3
+           logTagStr="**WARNING**"
+           jffsWarningLogFreq="$_24Hours"
+       fi
+   else
+       if [ "$JFFS_LowFreeSpaceStatus" = "WARNING2" ]
+       then
+           logPriNum=3
+           logTagStr="**WARNING**"
+           jffsWarningLogFreq="$_24Hours"
+       else
+           logPriNum=4
+           logTagStr="**NOTICE**"
+           jffsWarningLogFreq="$_36Hours"
+       fi
+   fi
+   jffsWarningLogTime="$(JFFS_WarningLogTime check)"
+
+   currTimeSecs="$(date +'%s')"
+   currTimeDiff="$(echo "$currTimeSecs $jffsWarningLogTime" | awk -F ' ' '{printf("%s", $1 - $2);}')"
+   if [ "$currTimeDiff" -ge "$jffsWarningLogFreq" ]
+   then
+       JFFS_WarningLogTime update "$currTimeSecs"
+       logMsgStr="${logTagStr} JFFS Available Free Space ($1) is getting LOW."
+       logger -t "$SCRIPT_NAME" -p $logPriNum "$logMsgStr"
+   fi
+}
+
+##-------------------------------------##
+## Added by Martinski W. [2025-May-01] ##
+##-------------------------------------##
+_UpdateJFFS_FreeSpaceInfo_()
+{
+   local jffsFreeSpaceHR  jffsFreeSpace  jffsMinxSpace
+   [ ! -d "$SCRIPT_STORAGE_DIR" ] && return 1
+
+   jffsFreeSpaceHR="$(_Get_JFFS_Space_ FREE HRx)"
+
+   if ! jffsFreeSpace="$(_Get_JFFS_Space_ FREE KB)" ; then return 1 ; fi
+   if ! jffsMinxSpace="$(_JFFS_MinReservedFreeSpace_)" ; then return 1 ; fi
+   jffsFreeSpace="$(echo "$jffsFreeSpace" | awk '{printf("%s", $1 * 1024);}')"
+
+   JFFS_LowFreeSpaceStatus="OK"
+   ## Warning Level 1 if JFFS Available Free Space is LESS than Minimum Reserved ##
+   if [ "$(echo "$jffsFreeSpace $jffsMinxSpace" | awk -F ' ' '{print ($1 < $2)}')" -eq 1 ]
+   then
+       JFFS_LowFreeSpaceStatus="WARNING1"
+       ## Warning Level 2 if JFFS Available Free Space is LESS than 8.0MB ##
+       if [ "$(echo "$jffsFreeSpace $ei8MByte" | awk -F ' ' '{print ($1 < $2)}')" -eq 1 ]
+       then
+           JFFS_LowFreeSpaceStatus="WARNING2"
+       fi
+       _JFFS_WarnLowFreeSpace_ "$jffsFreeSpaceHR"
+   fi
 }
 
 ##-------------------------------------##
@@ -1349,6 +1620,7 @@ Generate_CSVs()
 	/opt/bin/7za a -y -bsp0 -bso0 -tzip "/tmp/${SCRIPT_NAME}data.zip" "$tmpoutputdir/*"
 	mv -f "/tmp/${SCRIPT_NAME}data.zip" "$CSV_OUTPUT_DIR"
 	rm -rf "$tmpoutputdir"
+    _UpdateJFFS_FreeSpaceInfo_
 	renice 0 $$
 }
 
@@ -1900,11 +2172,12 @@ ScriptHeader()
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Apr-28] ##
+## Modified by Martinski W. [2025-May-01] ##
 ##----------------------------------------##
 MainMenu()
 {
 	local menuOption  storageLocStr
+	local jffsFreeSpace  jffsFreeSpaceStr  jffsSpaceMsgTag
 
 	MENU_DAILYEMAIL="$(DailyEmail check)"
 	if [ "$MENU_DAILYEMAIL" = "html" ]; then
@@ -1928,6 +2201,18 @@ MainMenu()
 
 	storageLocStr="$(ScriptStorageLocation check | tr 'a-z' 'A-Z')"
 
+	jffsFreeSpace="$(_Get_JFFS_Space_ FREE HRx | sed 's/%/%%/')"
+	if ! echo "$JFFS_LowFreeSpaceStatus" | grep -E "^WARNING[0-9]$"
+	then
+		jffsFreeSpaceStr="${SETTING}$jffsFreeSpace"
+	else
+		if [ "$storageLocStr" = "JFFS" ]
+		then jffsSpaceMsgTag="${CritBREDct} <<< WARNING! "
+		else jffsSpaceMsgTag="${WarnBMGNct} <<< NOTICE! "
+		fi
+		jffsFreeSpaceStr="${WarnBYLWct} $jffsFreeSpace ${CLRct}  ${jffsSpaceMsgTag}${CLRct}"
+	fi
+
 	printf "WebUI for %s is available at:\n${SETTING}%s${CLEARFORMAT}\n\n" "$SCRIPT_NAME" "$(Get_WebUI_URL)"
 
 	printf "1.    Update stats now\n"
@@ -1948,7 +2233,8 @@ MainMenu()
 	printf "t.    Toggle time output mode\n"
 	printf "      Currently ${SETTING}%s${CLEARFORMAT} time values will be used for CSV exports\n\n" "$(OutputTimeMode check)"
 	printf "s.    Toggle storage location for stats and config\n"
-	printf "      Current location: ${SETTING}%s${CLEARFORMAT}\n\n" "$storageLocStr"
+	printf "      Current location: ${SETTING}%s${CLEARFORMAT}\n" "$storageLocStr"
+	printf "      JFFS Available: ${jffsFreeSpaceStr}${CLEARFORMAT}\n\n"
 	printf "u.    Check for updates\n"
 	printf "uf.   Force update %s with latest version\n\n" "$SCRIPT_NAME"
 	printf "e.    Exit %s\n\n" "$SCRIPT_NAME"
@@ -2052,6 +2338,12 @@ MainMenu()
 					    ScriptStorageLocation usb
 					elif [ "$(ScriptStorageLocation check)" = "usb" ]
 					then
+					    if ! _Check_JFFS_SpaceAvailable_ "$SCRIPT_STORAGE_DIR"
+					    then
+					        Clear_Lock
+					        PressEnter
+					        break
+					    fi
 					    ScriptStorageLocation jffs
 					fi
 					Create_Symlinks
@@ -2111,7 +2403,7 @@ MainMenu()
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Apr-13] ##
+## Modified by Martinski W. [2025-Apr-30] ##
 ##----------------------------------------##
 Menu_Install()
 {
@@ -2173,7 +2465,7 @@ Menu_Install()
 	Conf_Exists
 	Set_Version_Custom_Settings local "$SCRIPT_VERSION"
 	Set_Version_Custom_Settings server "$SCRIPT_VERSION"
-	ScriptStorageLocation load
+	ScriptStorageLocation load true
 	Create_Symlinks
 
 	Update_File vnstat.conf
@@ -2197,14 +2489,14 @@ Menu_Install()
 
 	if [ -n "$(pidof vnstatd)" ]
 	then
-		Print_Output false "Sleeping for 60s before generating initial stats" "$WARN"
+		Print_Output true "Sleeping for 60sec before generating initial stats" "$WARN"
 		sleep 60
 		Generate_Images
 		Generate_Stats
 		Check_Bandwidth_Usage silent
 		Generate_CSVs
 	else
-		Print_Output false "vnstatd not running, please check system log" "$ERR"
+		Print_Output true "**ERROR**: vnstatd service NOT running, check system log" "$ERR"
 	fi
 
 	Clear_Lock
@@ -2240,7 +2532,7 @@ Menu_Startup()
 	fi
 	Create_Dirs
 	Conf_Exists
-	ScriptStorageLocation load
+	ScriptStorageLocation load true
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -2703,6 +2995,7 @@ then SCRIPT_STORAGE_DIR="/opt/share/$SCRIPT_NAME.d"
 else SCRIPT_STORAGE_DIR="/jffs/addons/$SCRIPT_NAME.d"
 fi
 
+JFFS_LowFreeSpaceStatus="OK"
 SCRIPT_CONF="$SCRIPT_STORAGE_DIR/config"
 CSV_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/csv"
 IMAGE_OUTPUT_DIR="$SCRIPT_STORAGE_DIR/images"
@@ -2720,7 +3013,7 @@ then
 	Entware_Ready
 	Create_Dirs
 	Conf_Exists
-	ScriptStorageLocation load
+	ScriptStorageLocation load true
 	Create_Symlinks
 	Auto_Startup create 2>/dev/null
 	Auto_Cron create 2>/dev/null
@@ -2787,7 +3080,12 @@ case "$1" in
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}config" ]
 		then
+			Check_Lock webui
+			echo 'var savestatus = "InProgress";' > "$SCRIPT_WEB_DIR/detect_save.js"
+			sleep 1
 			Conf_FromSettings
+			echo 'var savestatus = "Success";' > "$SCRIPT_WEB_DIR/detect_save.js"
+			Clear_Lock
 			exit 0
 		elif [ "$2" = "start" ] && [ "$3" = "${SCRIPT_NAME}checkupdate" ]
 		then
