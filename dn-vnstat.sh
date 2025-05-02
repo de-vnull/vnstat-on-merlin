@@ -16,6 +16,7 @@
 ########         Shellcheck directives     ######
 # shellcheck disable=SC1091
 # shellcheck disable=SC2009
+# shellcheck disable=SC2012
 # shellcheck disable=SC2016
 # shellcheck disable=SC2018
 # shellcheck disable=SC2019
@@ -23,7 +24,10 @@
 # shellcheck disable=SC2086
 # shellcheck disable=SC2154
 # shellcheck disable=SC2155
+# shellcheck disable=SC2174
 # shellcheck disable=SC2181
+# shellcheck disable=SC3043
+# shellcheck disable=SC3045
 #################################################
 
 ### Start of script variables ###
@@ -578,7 +582,7 @@ Create_Symlinks()
 }
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Apr-27] ##
+## Modified by Martinski W. [2025-May-01] ##
 ##----------------------------------------##
 Conf_Exists()
 {
@@ -615,7 +619,6 @@ Conf_Exists()
 			sed -i 's/^MonthFormat.*$/MonthFormat "%Y-%m"/' "$VNSTAT_CONFIG"
 			restartvnstat=true
 		fi
-
 		if [ "$restartvnstat" = "true" ]
 		then
 			/opt/etc/init.d/S33vnstat restart >/dev/null 2>&1
@@ -650,10 +653,16 @@ Conf_Exists()
 		if ! grep -q "^OUTPUTTIMEMODE=" "$SCRIPT_CONF"; then
 			echo "OUTPUTTIMEMODE=unix" >> "$SCRIPT_CONF"
 		fi
+		if ! grep -q "^JFFS_MSGLOGTIME=" "$SCRIPT_CONF"; then
+			echo "JFFS_MSGLOGTIME=0" >> "$SCRIPT_CONF"
+		fi
 		return 0
 	else
-		{ echo "DAILYEMAIL=none"; echo "USAGEEMAIL=false"; echo "DATAALLOWANCE=1200.00"
-		  echo "ALLOWANCEUNIT=G"; echo "STORAGELOCATION=jffs"; echo "OUTPUTTIMEMODE=unix"
+		{
+		   echo "DAILYEMAIL=none"; echo "USAGEEMAIL=false"
+		   echo "DATAALLOWANCE=1200.00"; echo "ALLOWANCEUNIT=G"
+		   echo "STORAGELOCATION=jffs"; echo "OUTPUTTIMEMODE=unix"
+		   echo "JFFS_MSGLOGTIME=0"
 		} > "$SCRIPT_CONF"
 		return 1
 	fi
@@ -664,14 +673,15 @@ Auto_ServiceEvent()
 {
 	case $1 in
 		create)
-			if [ -f /jffs/scripts/service-event ]; then
+			if [ -f /jffs/scripts/service-event ]
+			then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)
 				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" /jffs/scripts/service-event)
-				
+
 				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }; then
 					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/service-event
 				fi
-				
+
 				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
 					echo "/jffs/scripts/$SCRIPT_NAME service_event"' "$@" & # '"$SCRIPT_NAME" >> /jffs/scripts/service-event
 				fi
@@ -683,7 +693,8 @@ Auto_ServiceEvent()
 			fi
 		;;
 		delete)
-			if [ -f /jffs/scripts/service-event ]; then
+			if [ -f /jffs/scripts/service-event ]
+			then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)
 				
 				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
@@ -695,17 +706,20 @@ Auto_ServiceEvent()
 }
 
 ### Add script hook to post-mount and pass startup argument and all other arguments passed with the partition mount ###
-Auto_Startup(){
+Auto_Startup()
+{
 	case $1 in
 		create)
-			if [ -f /jffs/scripts/post-mount ]; then
+			if [ -f /jffs/scripts/post-mount ]
+			then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/post-mount)
 				STARTUPLINECOUNTEX=$(grep -cx "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"$SCRIPT_NAME" /jffs/scripts/post-mount)
-				
-				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }; then
+
+				if [ "$STARTUPLINECOUNT" -gt 1 ] || { [ "$STARTUPLINECOUNTEX" -eq 0 ] && [ "$STARTUPLINECOUNT" -gt 0 ]; }
+				then
 					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/post-mount
 				fi
-				
+
 				if [ "$STARTUPLINECOUNTEX" -eq 0 ]; then
 					echo "/jffs/scripts/$SCRIPT_NAME startup"' "$@" & # '"$SCRIPT_NAME" >> /jffs/scripts/post-mount
 				fi
@@ -717,7 +731,8 @@ Auto_Startup(){
 			fi
 		;;
 		delete)
-			if [ -f /jffs/scripts/post-mount ]; then
+			if [ -f /jffs/scripts/post-mount ]
+			then
 				STARTUPLINECOUNT=$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/post-mount)
 				
 				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
@@ -728,24 +743,25 @@ Auto_Startup(){
 	esac
 }
 
-Auto_Cron(){
+Auto_Cron()
+{
 	case $1 in
 		create)
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_images")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 				cru d "${SCRIPT_NAME}_images"
 			fi
-			
+
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 				cru d "${SCRIPT_NAME}_stats"
 			fi
-			
+
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_generate")
 			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
 				cru a "${SCRIPT_NAME}_generate" "*/5 * * * * /jffs/scripts/$SCRIPT_NAME generate"
 			fi
-			
+
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_summary")
 			if [ "$STARTUPLINECOUNT" -eq 0 ]; then
 				cru a "${SCRIPT_NAME}_summary" "59 23 * * * /jffs/scripts/$SCRIPT_NAME summary"
@@ -756,17 +772,17 @@ Auto_Cron(){
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 				cru d "${SCRIPT_NAME}_images"
 			fi
-			
+
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_stats")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 				cru d "${SCRIPT_NAME}_stats"
 			fi
-			
+
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_generate")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 				cru d "${SCRIPT_NAME}_generate"
 			fi
-			
+
 			STARTUPLINECOUNT=$(cru l | grep -c "${SCRIPT_NAME}_summary")
 			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
 				cru d "${SCRIPT_NAME}_summary"
@@ -1620,7 +1636,7 @@ Generate_CSVs()
 	/opt/bin/7za a -y -bsp0 -bso0 -tzip "/tmp/${SCRIPT_NAME}data.zip" "$tmpoutputdir/*"
 	mv -f "/tmp/${SCRIPT_NAME}data.zip" "$CSV_OUTPUT_DIR"
 	rm -rf "$tmpoutputdir"
-    _UpdateJFFS_FreeSpaceInfo_
+	_UpdateJFFS_FreeSpaceInfo_
 	renice 0 $$
 }
 
@@ -2423,7 +2439,7 @@ Menu_Install()
 	fi
 
 	IFACE=""
-	printf "\n${BOLD}WAN Interface detected as %s${CLEARFORMAT}\n" "$(Get_WAN_IFace)"
+	printf "\n${BOLD}WAN Interface detected as ${GRNct}%s${CLEARFORMAT}\n" "$(Get_WAN_IFace)"
 	while true
 	do
 		printf "\n${BOLD}Is this correct? (y/n)${CLEARFORMAT}  "
