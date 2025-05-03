@@ -1710,7 +1710,7 @@ Generate_Stats()
 	interface="$(_GetInterfaceNameFromConfig_)"
 	TZ=$(cat /etc/TZ)
 	export TZ
-	printf "vnstats as of: %s\n\n" "$(date)" > "$VNSTAT_OUTPUT_FILE"
+	printf "vnstats [%s] as of: %s\n\n" "$interface" "$(date)" > "$VNSTAT_OUTPUT_FILE"
 	{
 		$VNSTAT_COMMAND -h 25 -i "$interface";
 		$VNSTAT_COMMAND -d 8 -i "$interface";
