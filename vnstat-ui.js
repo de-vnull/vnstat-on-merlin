@@ -222,7 +222,8 @@ $.fn.serializeObject = function(){
 	return o;
 };
 
-function SaveConfig(){
+function SaveConfig()
+{
 	document.getElementById('amng_custom').value = JSON.stringify($('form').serializeObject());
 	document.form.action_script.value = 'start_dn-vnstatconfig';
 	document.form.action_wait.value = 15;
@@ -230,37 +231,58 @@ function SaveConfig(){
 	document.form.submit();
 }
 
-function get_conf_file(){
+/**----------------------------------------**/
+/** Modified by Martinski W. [2025-May-11] **/
+/**----------------------------------------**/
+function get_config_file()
+{
 	$.ajax({
 		url: '/ext/dn-vnstat/config.htm',
 		dataType: 'text',
 		error: function(xhr){
-			setTimeout(get_conf_file,1000);
+			setTimeout(get_config_file, 1000);
 		},
-		success: function(data){
-			var configdata=data.split('\n');
+		success: function(data)
+		{
+			let settingname, settingvalue;
+			var configdata = data.split('\n');
 			configdata = configdata.filter(Boolean);
-			for (var i = 0; i < configdata.length; i++){
-				if(configdata[i].split('=')[0]=="ENFORCEALLOWANCE"){continue;}
-				eval('document.form.dnvnstat_'+configdata[i].split('=')[0].toLowerCase()).value = configdata[i].split('=')[1].replace(/(\r\n|\n|\r)/gm,'');
+
+			for (var indx = 0; indx < configdata.length; indx++)
+			{
+				if (configdata[indx].length === 0 || configdata[indx].match('^[ ]*#') !== null)
+				{ continue; }  //Skip comments & empty lines//
+
+				settingname = configdata[indx].split('=')[0];
+				if (settingname === "ENFORCEALLOWANCE" || settingname === "JFFS_MSGLOGTIME")
+				{ continue; }  //Skip these config settings//
+
+				settingname = settingname.toLowerCase();
+				settingvalue = configdata[indx].split('=')[1].replace(/(\r\n|\n|\r)/gm,'');
+				eval('document.form.dnvnstat_' + settingname).value = settingvalue;
 			}
 			get_vnstatconf_file();
 		}
 	});
 }
 
-function get_vnstatconf_file(){
+function get_vnstatconf_file()
+{
 	$.ajax({
 		url: '/ext/dn-vnstat/vnstatconf.htm',
 		dataType: 'text',
 		error: function(xhr){
 			setTimeout(get_vnstatconf_file,1000);
 		},
-		success: function(data){
-			var configdata=data.split('\n');
+		success: function(data)
+		{
+			var configdata = data.split('\n');
 			configdata = configdata.filter(Boolean);
-			for (var i = 0; i < configdata.length; i++){
-				if(configdata[i].startsWith('MonthRotate ')){
+
+			for (var i = 0; i < configdata.length; i++)
+			{
+				if (configdata[i].startsWith('MonthRotate '))
+				{
 					eval('document.form.dnvnstat_'+configdata[i].split(' ')[0].toLowerCase()).value = configdata[i].split(' ')[1].replace(/(\r\n|\n|\r)/gm,'');
 				}
 			}
@@ -268,7 +290,8 @@ function get_vnstatconf_file(){
 	});
 }
 
-function loadVnStatOutput(){
+function loadVnStatOutput()
+{
 	$.ajax({
 		url: '/ext/dn-vnstat/vnstatoutput.htm',
 		dataType: 'text',
@@ -388,12 +411,13 @@ function SetCurrentPage(){
 	document.form.current_page.value = window.location.pathname.substring(1);
 }
 
-function initial(){
+function initial()
+{
 	SetCurrentPage();
 	LoadCustomSettings();
 	ScriptUpdateLayout();
 	show_menu();
-	get_conf_file();
+	get_config_file();
 	AddEventHandlers();
 	get_vnstatusage_file();
 	UpdateImages();
