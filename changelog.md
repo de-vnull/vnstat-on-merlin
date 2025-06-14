@@ -4,9 +4,37 @@ Note: R1 runs on all supported architectures (ARM, AARCH, MIPS). R2 runs only on
 
 # Version R2 (based on vnStat 2.x) #
 
+### v2.0.7 - 2025-May-01 ###
+  * Fixes to make sure the vnstatd Entware service is started during the reboot sequence after NTP is synced.
+
+  * Fixed bug where changing the "Data Storage Location" from JFFS to USB (or viceversa) using the WebGUI page leaves behind some duplicate files and directories. This bug doesn't happen when using the SSH CLI menu option to change the data storage location.
+
+  * Modified code so that every time the SSH CLI menu is run, it checks if the WebGUI page has already been mounted. If not found mounted, the script will run the code to remount the WebGUI.
+
+  * Improved code that creates (during installation) and removes (during uninstallation) the "AddOns" menu tab entry for the WebGUI to make sure it checks for and takes into account other add-ons that may have been installed before or were later installed after the initial installation.
+
+  * Added code to show the current database file size information on the SSH CLI menu.
+
+  * Added code to show the "JFFS Available" space information for the "Data Storage Location" option on the SSH CLI menu.
+
+  * Added code to check if sufficient JFFS storage space is available before moving database-related files/folders from USB location to JFFS partition. An error message is reported if not enough space is available, and the move request is aborted.
+
+  * Added code to check if the available JFFS storage space falls below 20% of total space or 10MB (whichever is lower) and report a warning when it does. A warning message is also shown on the SSH CLI menu.
+
+  * Modified code to set the corresponding priority level of log entries when calling the built-in logger utility.
+
+  * Added "export PATH" statement to give the built-in binaries higher priority than the equivalent Entware binaries.
+
+  * Miscellaneous code improvements & fine-tuning.
+
+### v 2.0.6 - 22-Sep-2024 ###
+  * Fixed error when loading the webGUI page on the latest 3006.102.xx F/W version.
+  * Fixed "missing scrollbar" issue on browser windows when the webGUI page was loaded on the latest 3004.386.14 F/W version.
+  * Fixes and improvements when reading and checking for configuration settings.
+  * Removed/modified code related to "var $j = jQuery.noConflict();" which is now considered obsolete.
+
 ### v 2.0.5 - 11-Feb-2024 ###
   * Hotfix posted to address iCloud "weird server reply" issue. Only required if you are using iCloud/me.com SMTP services.
-
 
 ### v 2.0.4 - 31-Dec-2021 ###
   * End-of-year-housekeeping: this update includes minor updates to charts, interface id, and uninstall functions.
