@@ -1,5 +1,8 @@
 # vnstat-on-merlin - _Release - R1 and R2_
 
+### This app development has been taken over by the AMTM-OSR team as of June 2025. Please report the issue to them in the thread on snbforums (https://www.snbforums.com/threads/announcing-amtm-osr-amtm-orphaned-script-revival-repository.94716/) or on their github page https://github.com/AMTM-OSR. ###
+
+
 ## v2.0.7  [Updated on 2025-May-01]
 
 # README #
